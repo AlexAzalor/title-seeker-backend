@@ -1,0 +1,20 @@
+# ignore directories
+__pycache__/
+env/
+.venv/
+.pytest_cache/
+node_modules/
+
+# ignore files
+.env
+*.pyc
+/*.sqlite3
+database-test-flask.sqlite3-journal
+
+/credentials.json
+/token.json
+/admin_key.json
+.yarn/*
+
+dump.sql
+dump.tgz

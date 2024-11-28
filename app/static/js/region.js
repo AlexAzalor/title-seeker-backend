@@ -1,0 +1,1 @@
+(()=>{var e=document.querySelector("#table-search-regions"),r=document.querySelector("#table-search-region-button");r&&e&&r.addEventListener("click",(function(){var r=new URL(window.location.href);r.searchParams.set("q",e.value),window.location.href="".concat(r.href)}))})();
