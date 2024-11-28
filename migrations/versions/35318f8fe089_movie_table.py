@@ -1,8 +1,8 @@
 """movie_table
 
-Revision ID: e339ac480864
+Revision ID: 35318f8fe089
 Revises: 80c056792df5
-Create Date: 2024-11-28 11:05:59.778779
+Create Date: 2024-11-28 15:00:26.046821
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e339ac480864'
+revision = '35318f8fe089'
 down_revision = '80c056792df5'
 branch_labels = None
 depends_on = None
@@ -26,9 +26,9 @@ def upgrade():
     sa.Column('budget', sa.Integer(), nullable=False),
     sa.Column('domestic_gross', sa.Integer(), nullable=True),
     sa.Column('worldwide_gross', sa.Integer(), nullable=True),
+    sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_movies'))
     )
     op.create_table('movie_translations',

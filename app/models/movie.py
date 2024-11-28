@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import uuid4
 
 
@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy import orm
 
 from app.database import db
+from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
 
 from .utils import ModelMixin
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 # 3. Tags - for filtering movies. May be useful in the future. But with limit, not 1000 tags per movie.
 
 
-class Movie(db.Model, ModelMixin):
+class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "movies"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
@@ -51,16 +52,16 @@ class Movie(db.Model, ModelMixin):
     # screenshots - relationship
     # pegi_rating - enum?
 
-    created_at: orm.Mapped[datetime] = orm.mapped_column(
-        sa.DateTime,
-        default=datetime.now(UTC),
-    )
+    # created_at: orm.Mapped[datetime] = orm.mapped_column(
+    #     sa.DateTime,
+    #     default=datetime.now(UTC),
+    # )
 
-    updated_at: orm.Mapped[sa.DateTime] = orm.mapped_column(
-        sa.DateTime,
-        default=sa.func.now(),
-        onupdate=sa.func.now(),
-    )
+    # updated_at: orm.Mapped[sa.DateTime] = orm.mapped_column(
+    #     sa.DateTime,
+    #     default=sa.func.now(),
+    #     onupdate=sa.func.now(),
+    # )
 
     is_deleted: orm.Mapped[bool] = orm.mapped_column(sa.Boolean, default=False)
 

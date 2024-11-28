@@ -38,7 +38,9 @@ to create an docker container
 flask db upgrade
 ```
 
-6. In main folder need install node_modules to work with tailwind, run
+6. add credentials.json for Google export sheet
+
+7. In main folder need install node_modules to work with tailwind, run
 
 ```bash
 yarn
