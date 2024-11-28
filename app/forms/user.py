@@ -3,12 +3,12 @@ from wtforms import (
     StringField,
     PasswordField,
     SubmitField,
-    ValidationError,
+    # ValidationError,
 )
 from wtforms.validators import DataRequired, Email, Length, EqualTo
 
-from app import models as m
-from app import db
+# from app import models as m
+# from app import db
 
 
 class UserForm(FlaskForm):
@@ -29,15 +29,15 @@ class UserForm(FlaskForm):
     )
     submit = SubmitField("Save")
 
-    def validate_fullname(self, field):
-        query = m.User.select().where(m.User.fullname == field.data).where(m.User.id != int(self.user_id.data))
-        if db.session.scalar(query) is not None:
-            raise ValidationError("This username is taken.")
+    # def validate_fullname(self, field):
+    #     query = m.User.select().where(m.User.fullname == field.data).where(m.User.id != int(self.user_id.data))
+    #     if db.session.scalar(query) is not None:
+    #         raise ValidationError("This username is taken.")
 
-    def validate_email(self, field):
-        query = m.User.select().where(m.User.email == field.data).where(m.User.id != int(self.user_id.data))
-        if db.session.scalar(query) is not None:
-            raise ValidationError("This email is already registered.")
+    # def validate_email(self, field):
+    #     query = m.User.select().where(m.User.email == field.data).where(m.User.id != int(self.user_id.data))
+    #     if db.session.scalar(query) is not None:
+    #         raise ValidationError("This email is already registered.")
 
 
 class CreateUserForm(FlaskForm):
@@ -55,12 +55,12 @@ class CreateUserForm(FlaskForm):
     )
     submit = SubmitField("Save")
 
-    def validate_fullname(self, field):
-        query = m.User.select().where(m.User.fullname == field.data)
-        if db.session.scalar(query) is not None:
-            raise ValidationError("This username is taken.")
+    # def validate_fullname(self, field):
+    #     query = m.User.select().where(m.User.fullname == field.data)
+    #     if db.session.scalar(query) is not None:
+    #         raise ValidationError("This username is taken.")
 
-    def validate_phone(self, field):
-        query = m.User.select().where(m.User.phone == field.data)
-        if db.session.scalar(query) is not None:
-            raise ValidationError("This phone number is already registered.")
+    # def validate_phone(self, field):
+    #     query = m.User.select().where(m.User.phone == field.data)
+    #     if db.session.scalar(query) is not None:
+    #         raise ValidationError("This phone number is already registered.")

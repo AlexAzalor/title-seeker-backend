@@ -1,0 +1,54 @@
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
+
+from config import config
+
+CFG = config()
+
+
+class MovieExportCreate(BaseModel):
+    title_uk: str
+    title_en: str
+    description_uk: str
+    description_en: str
+    release_date: datetime
+    duration: int
+    budget: int
+    domestic_gross: int | None = None
+    worldwide_gross: int | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MoviesJSONFile(BaseModel):
+    movies: list[MovieExportCreate]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieOut(BaseModel):
+    uuid: str
+    title: str
+    description: str
+    release_date: datetime | None = None
+    duration: str
+    budget: str
+    domestic_gross: str | None = None
+    worldwide_gross: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieOutList(BaseModel):
+    movies: list[MovieOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

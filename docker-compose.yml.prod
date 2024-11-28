@@ -13,7 +13,7 @@ services:
       PGUSER: ${POSTGRES_USER:-postgres}
 
   app:
-    image: simple2b/kraftjar:0.1
+    image: imagesimple2b/imagekraftjar:0.1
     restart: always
     command: sh ./start_web.sh
     environment:
@@ -25,7 +25,7 @@ services:
       - db
 
   api:
-    image: simple2b/kraftjar:0.1
+    image: imagesimple2b/imagekraftjar:0.1
     restart: always
     command: sh ./start_api.sh
     environment:

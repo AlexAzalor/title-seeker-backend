@@ -1,7 +1,7 @@
 import logging
 import sys
 
-LOGGER_NAME = "SimpleAppLog"
+LOGGER_NAME = "TitleHuntAppLog"
 
 
 class Logger(object):

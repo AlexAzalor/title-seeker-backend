@@ -18,7 +18,7 @@ class BaseConfig(BaseSettings):
     IS_API: bool = False
 
     ENV: str = "base"
-    APP_NAME: str = "Kraftjar"
+    APP_NAME: str = "Title Hunt"
     SECRET_KEY: str
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
     WTF_CSRF_ENABLED: bool = False
@@ -51,7 +51,7 @@ class BaseConfig(BaseSettings):
     MINIMUM_RATE: int = 1
     MAXIMUM_RATE: int = 5
 
-    UA: str = "ua"
+    UK: str = "uk"
     EN: str = "en"
 
     MAX_USER_SEARCH_RESULTS: int = 10
@@ -60,12 +60,12 @@ class BaseConfig(BaseSettings):
     # for test data from google spreadsheets
 
     SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets"]
-    SPREADSHEET_ID: str = "1Hw5Oh9vtwuPUYJkSGo0uGikRbHeiM52SNdUxwXFU3hQ"
+    SPREADSHEET_ID: str = "1DxRxVDESUw-C6U-DwfpX5d0uTW7-61y49Xuu0yfaJhM"
 
     ALL_UKRAINE: str = "all-ukraine"
     RE_WORD: str = r"[^\w]"
 
-    TEST_USER_PASSWORD: str = "Kraftjar2024"
+    TEST_USER_PASSWORD: str = "Titlehunt2024"
 
     USER_CAROUSEL_LIMIT: int = 16
 
@@ -86,8 +86,6 @@ class BaseConfig(BaseSettings):
     # ID from our db, model Region
     KYIV_ID: int = 1
 
-    MOBILE_APP_ID: str = "net.kraftjar.app"
-
     # GOOGLE AUTH
     GOOGLE_CLIENT_ID: str = ""
 
@@ -100,7 +98,7 @@ class BaseConfig(BaseSettings):
     AWS_ACCESS_KEY: str | None
     AWS_SECRET_KEY: str | None
     AWS_REGION: str | None
-    AWS_S3_BUCKET_NAME: str = "kraftjar"
+    AWS_S3_BUCKET_NAME: str = "titlehunt"
     AWS_S3_BUCKET_URL: str
 
     # EXPO

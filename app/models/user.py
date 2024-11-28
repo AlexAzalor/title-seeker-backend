@@ -1,6 +1,6 @@
 from uuid import uuid4
 from datetime import datetime, UTC
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -10,7 +10,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app.database import db
 from app.logger import log
 
-from app import schema as s
 from config import config
 
 # from .rate import Rate

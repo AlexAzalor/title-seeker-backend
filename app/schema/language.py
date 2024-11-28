@@ -5,5 +5,5 @@ CFG = config()
 
 
 class Language(Enum):
-    UA = CFG.UA
+    UK = CFG.UK
     EN = CFG.EN

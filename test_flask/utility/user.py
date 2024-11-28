@@ -2,10 +2,8 @@ from typing import cast
 
 from alchemical.flask import Alchemical
 from faker import Faker
-import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from app import models as m
 from app.logger import log
 
 faker: Faker = Faker()

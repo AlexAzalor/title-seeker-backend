@@ -2,10 +2,8 @@ from datetime import datetime
 import filetype
 from fastapi import UploadFile, HTTPException, status
 from fastapi.routing import APIRoute
-import app.models as m
 
 from app.logger import log
-from app.schema.language import Language
 
 
 def custom_generate_unique_id(route: APIRoute):

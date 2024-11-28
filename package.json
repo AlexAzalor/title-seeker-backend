@@ -1,7 +1,7 @@
 {
-  "name": "kraftjar",
+  "name": "title-hunt",
   "version": "0.1.212",
-  "description": "Kraftjar Portal",
+  "description": "Title Hunt - searching for titles using a special algorithm.",
   "main": "index.js",
   "scripts": {
     "js-watch": "webpack --config webpack.dev.js --watch",

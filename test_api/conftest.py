@@ -33,6 +33,10 @@ def db() -> Generator[orm.Session, None, None]:
     with db.Session() as session:
         db.Model.metadata.create_all(bind=session.bind)
 
+        from app.commands.movie import export_movies_from_json_file
+
+        export_movies_from_json_file()
+
         def override_get_db() -> Generator:
             yield session
 
