@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy import orm
 
 from app.database import db
+from .movie_actors import movie_actors
 from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
 
@@ -14,6 +15,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .movie_translation import MovieTranslation
+    from .actor import Actor
 
 
 # Questions/Ideas:
@@ -40,6 +42,12 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     # Box office
     domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
+
+    actors: orm.Mapped[list["Actor"]] = orm.relationship(
+        "Actor",
+        secondary=movie_actors,
+        back_populates="movies",
+    )
     # rating - relationship? or just a column? There will be very advanced rating system.
     # genre - relationship
     # director - relationship
@@ -88,4 +96,4 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
             raise ValueError("Unsupported language")
 
     def __repr__(self):
-        return f"<Movie [{self.id}]>"
+        return f"<Movie [{self.id}]: {self.translations[0].title}>"

@@ -53,7 +53,15 @@ def init(app: Flask):
     @app.cli.command()
     def fill_db_with_movies():
         """Fill movies with data from google spreadsheets"""
-        from .movie import export_movies_from_google_spreadsheets
+        from .export_movies import export_movies_from_google_spreadsheets
 
         export_movies_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_actors():
+        """Fill movies with data from google spreadsheets"""
+        from .export_actors import export_actors_from_google_spreadsheets
+
+        export_actors_from_google_spreadsheets()
         print("done")
