@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, status
 from fastapi.responses import FileResponse
 import os
 import app.models as m
@@ -13,7 +13,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
 
-@avatar_router.post("/upload-avatar/{actor_id}")
+@avatar_router.post("/upload-avatar/{actor_id}", status_code=status.HTTP_200_OK)
 async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload avatar for actor"""
 
@@ -33,10 +33,13 @@ async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session
     return {"info": "Avatar uploaded successfully"}
 
 
-@avatar_router.get("/avatars/{filename}")
+@avatar_router.get("/{filename}", status_code=status.HTTP_200_OK)
 async def get_avatar(filename: str):
     """Check if file exists and return it (for testing purposes)"""
+
     file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
+
     return FileResponse(file_path)
