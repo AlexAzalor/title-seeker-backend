@@ -91,6 +91,10 @@ flask fill-db-with-movies
 ```
 
 ```bash
+flask fill-db-with-actors
+```
+
+```bash
 dce -T db psql < dump.sql
 ```
 

@@ -19,6 +19,7 @@ class ActorExportCreate(BaseModel):
     character_name_uk: str
     character_name_en: str
     movies: list[int]
+    avatar: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

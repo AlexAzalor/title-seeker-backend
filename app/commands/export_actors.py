@@ -26,6 +26,7 @@ BORN_IN_EN = "born_in_en"
 CHARACTER_NAME_UK = "character_name_uk"
 CHARACTER_NAME_EN = "character_name_en"
 MOVIES = "movies"
+AVATAR = "avatar"
 
 
 def write_actors_in_db(actors: list[s.ActorExportCreate]):
@@ -39,14 +40,17 @@ def write_actors_in_db(actors: list[s.ActorExportCreate]):
             new_actor = m.Actor(
                 born=actor.born,
                 died=actor.died,
+                avatar=actor.avatar,
                 translations=[
                     m.ActorTranslation(
+                        language=s.Language.UK.value,
                         first_name=actor.first_name_uk,
                         last_name=actor.last_name_uk,
                         born_in=actor.born_in_uk,
                         character_name=actor.character_name_uk,
                     ),
                     m.ActorTranslation(
+                        language=s.Language.EN.value,
                         first_name=actor.first_name_en,
                         last_name=actor.last_name_en,
                         born_in=actor.born_in_en,
@@ -79,7 +83,10 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     """Fill actors table with data from google spreadsheets"""
 
     credentials = authorized_user_in_google_spreadsheets()
-    RANGE_NAME = "Actors!A1:L"
+
+    # Last column need to be filled!
+    LAST_SHEET_COLUMN = "N"
+    RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
@@ -106,6 +113,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     CHARACTER_NAME_UK_INDEX = values[0].index(CHARACTER_NAME_UK)
     CHARACTER_NAME_EN_INDEX = values[0].index(CHARACTER_NAME_EN)
     MOVIES_INDEX = values[0].index(MOVIES)
+    AVATAR_INDEX = values[0].index(AVATAR)
 
     print("values: ", values[:1])
     for row in values[1:]:
@@ -114,7 +122,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         first_name_uk = row[FIRST_NAME_UK_INDEX]
         assert first_name_uk, f"The first_name_uk {first_name_uk} is missing"
-        print("=== first_name_uk ===", first_name_uk)
 
         last_name_uk = row[LAST_NAME_UK_INDEX]
         assert last_name_uk, f"The last_name_uk {last_name_uk} is missing"
@@ -146,7 +153,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
         assert movies, f"The movies {movies} is missing"
         movies_ids = convert_string_to_list_of_integers(movies)
 
-        print("movies: ", movies_ids)
+        avatar = row[AVATAR_INDEX]
 
         actors.append(
             s.ActorExportCreate(
@@ -161,6 +168,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 character_name_uk=character_name_uk,
                 character_name_en=character_name_en,
                 movies=movies_ids,
+                avatar=avatar,
             )
         )
 

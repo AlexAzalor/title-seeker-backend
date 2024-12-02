@@ -31,6 +31,18 @@ class MoviesJSONFile(BaseModel):
     )
 
 
+class MovieActor(BaseModel):
+    uuid: str
+    first_name: str
+    last_name: str
+    character_name: str
+    avatar_url: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     uuid: str
     title: str
@@ -40,6 +52,7 @@ class MovieOut(BaseModel):
     budget: str
     domestic_gross: str | None = None
     worldwide_gross: str | None = None
+    actors: list[MovieActor] = []
 
     model_config = ConfigDict(
         from_attributes=True,

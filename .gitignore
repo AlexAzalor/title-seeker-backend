@@ -18,3 +18,5 @@ database-test-flask.sqlite3-journal
 
 dump.sql
 dump.tgz
+
+uploads/*

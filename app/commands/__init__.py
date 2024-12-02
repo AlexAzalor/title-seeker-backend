@@ -65,3 +65,11 @@ def init(app: Flask):
 
         export_actors_from_google_spreadsheets()
         print("done")
+
+    @app.cli.command()
+    def delete_actors_from_db():
+        """Fill movies with data from google spreadsheets"""
+        from .delete_actors import delete_actors_from_db
+
+        delete_actors_from_db()
+        print("done")

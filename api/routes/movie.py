@@ -54,6 +54,16 @@ def get_movies(
                 domestic_gross=movie.formatted_domestic_gross,
                 worldwide_gross=movie.formatted_worldwide_gross,
                 release_date=movie.release_date,
+                actors=[
+                    s.MovieActor(
+                        uuid=actor.uuid,
+                        first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
+                        last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
+                        character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
+                        avatar_url=actor.avatar,
+                    )
+                    for actor in movie.actors
+                ],
             )
         )
 
@@ -89,4 +99,14 @@ def get_movie(
         domestic_gross=movie.formatted_domestic_gross,
         worldwide_gross=movie.formatted_worldwide_gross,
         release_date=movie.release_date,
+        actors=[
+            s.MovieActor(
+                uuid=actor.uuid,
+                first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
+                last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
+                character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
+                avatar_url=actor.avatar,
+            )
+            for actor in movie.actors
+        ],
     )
