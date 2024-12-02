@@ -42,6 +42,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     # Box office
     domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
+    poster: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
 
     actors: orm.Mapped[list["Actor"]] = orm.relationship(
         "Actor",

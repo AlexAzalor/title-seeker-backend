@@ -17,6 +17,7 @@ class MovieExportCreate(BaseModel):
     budget: int
     domestic_gross: int | None = None
     worldwide_gross: int | None = None
+    poster: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -53,6 +54,7 @@ class MovieOut(BaseModel):
     domestic_gross: str | None = None
     worldwide_gross: str | None = None
     actors: list[MovieActor] = []
+    poster: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

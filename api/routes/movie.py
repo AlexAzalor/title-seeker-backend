@@ -1,5 +1,9 @@
+import os
+
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi.responses import FileResponse
+
 from sqlalchemy.orm import Session, joinedload
 
 import app.models as m
@@ -11,6 +15,11 @@ from config import config
 CFG = config()
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
+
+UPLOAD_DIRECTORY = "./uploads/movie-posters/"
+
+if not os.path.exists(UPLOAD_DIRECTORY):
+    os.makedirs(UPLOAD_DIRECTORY)
 
 
 @movie_router.get(
@@ -49,6 +58,7 @@ def get_movies(
                 uuid=movie.uuid,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 description=next((t.description for t in movie.translations if t.language == lang.value)),
+                poster=movie.poster,
                 budget=movie.formatted_budget,
                 duration=movie.formatted_duration(lang.value),
                 domestic_gross=movie.formatted_domestic_gross,
@@ -94,6 +104,7 @@ def get_movie(
         uuid=movie.uuid,
         title=next((t.title for t in movie.translations if t.language == lang.value)),
         description=next((t.description for t in movie.translations if t.language == lang.value)),
+        poster=movie.poster,
         budget=movie.formatted_budget,
         duration=movie.formatted_duration(lang.value),
         domestic_gross=movie.formatted_domestic_gross,
@@ -110,3 +121,35 @@ def get_movie(
             for actor in movie.actors
         ],
     )
+
+
+@movie_router.post("/upload-poster/{movie_id}", status_code=status.HTTP_200_OK)
+async def upload_poster(movie_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Upload poster for movie"""
+
+    file_name = f"{movie_id}_{file.filename}"
+    file_location = f"{UPLOAD_DIRECTORY}{file_name}"
+
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+
+    movie = db.query(m.Movie).filter(m.Movie.id == movie_id).first()
+    if not movie:
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    movie.poster = file_name
+    db.commit()
+
+    return {"info": "Poster uploaded successfully"}
+
+
+@movie_router.get("/poster/{filename}", status_code=status.HTTP_200_OK)
+async def get_poster(filename: str):
+    """Check if file exists and return it (for testing purposes)"""
+
+    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return FileResponse(file_path)

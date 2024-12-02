@@ -24,12 +24,14 @@ DURATION = "duration"
 BUDGET = "budget"
 DOMESTIC_GROSS = "domestic_gross"
 WORLDWIDE_GROSS = "worldwide_gross"
+POSTER = "poster"
 
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
     with db.begin() as session:
         for movie in movies:
             new_movie: m.Movie = m.Movie(
+                poster=movie.poster,
                 release_date=movie.release_date,
                 duration=movie.duration,
                 budget=movie.budget,
@@ -56,7 +58,9 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     """Fill movies with data from google spreadsheets"""
 
     credentials = authorized_user_in_google_spreadsheets()
-    RANGE_NAME = "Movies!A1:J"
+
+    LAST_SHEET_COLUMN = "L"
+    RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
@@ -81,6 +85,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     BUDGET_INDEX = values[0].index(BUDGET)
     DOMESTIC_GROSS_INDEX = values[0].index(DOMESTIC_GROSS)
     WORLDWIDE_GROSS_INDEX = values[0].index(WORLDWIDE_GROSS)
+    POSTER_INDEX = values[0].index(POSTER)
 
     for row in values[1:]:
         # if len(row) < 12:
@@ -117,6 +122,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         worldwide_gross = row[WORLDWIDE_GROSS_INDEX]
         assert worldwide_gross, f"The worldwide_gross {worldwide_gross} is missing"
 
+        poster = row[POSTER_INDEX]
+
         movies.append(
             s.MovieExportCreate(
                 title_uk=title_uk,
@@ -128,6 +135,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 budget=int(budget),
                 domestic_gross=int(domestic_gross),
                 worldwide_gross=int(worldwide_gross),
+                poster=poster,
             )
         )
 
