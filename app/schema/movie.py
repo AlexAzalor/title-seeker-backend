@@ -44,6 +44,17 @@ class MovieActor(BaseModel):
     )
 
 
+class MovieDirector(BaseModel):
+    uuid: str
+    first_name: str
+    last_name: str
+    avatar_url: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     uuid: str
     title: str
@@ -55,6 +66,7 @@ class MovieOut(BaseModel):
     worldwide_gross: str | None = None
     actors: list[MovieActor] = []
     poster: str | None = None
+    directors: list[MovieDirector] = []
 
     model_config = ConfigDict(
         from_attributes=True,

@@ -74,6 +74,15 @@ def get_movies(
                     )
                     for actor in movie.actors
                 ],
+                directors=[
+                    s.MovieDirector(
+                        uuid=director.uuid,
+                        first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
+                        last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
+                        avatar_url=director.avatar,
+                    )
+                    for director in movie.directors
+                ],
             )
         )
 
@@ -119,6 +128,15 @@ def get_movie(
                 avatar_url=actor.avatar,
             )
             for actor in movie.actors
+        ],
+        directors=[
+            s.MovieDirector(
+                uuid=director.uuid,
+                first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
+                last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
+                avatar_url=director.avatar,
+            )
+            for director in movie.directors
         ],
     )
 

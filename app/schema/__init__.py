@@ -22,5 +22,6 @@ from .auth import (
 )
 
 from .pagination import Pagination
-from .movie import MovieExportCreate, MoviesJSONFile, MovieOut, MovieOutList, MovieActor
+from .movie import MovieExportCreate, MoviesJSONFile, MovieOut, MovieOutList, MovieActor, MovieDirector
 from .actor import ActorExportCreate, ActorsJSONFile
+from .director import DirectorExportCreate, DirectorsJSONFile

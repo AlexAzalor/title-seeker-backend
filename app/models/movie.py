@@ -7,6 +7,7 @@ from sqlalchemy import orm
 
 from app.database import db
 from .movie_actors import movie_actors
+from .movie_directors import movie_directors
 from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
 
@@ -16,6 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .movie_translation import MovieTranslation
     from .actor import Actor
+    from .director import Director
 
 
 # Questions/Ideas:
@@ -49,12 +51,15 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         secondary=movie_actors,
         back_populates="movies",
     )
+
+    directors: orm.Mapped[list["Director"]] = orm.relationship(
+        "Director",
+        secondary=movie_directors,
+        back_populates="movies",
+    )
     # rating - relationship? or just a column? There will be very advanced rating system.
     # genre - relationship
-    # director - relationship
-    # actors - relationship
     # location - relationship
-    # poster_url - column or relationship?
 
     # Not for MVP
     # reviews - relationship

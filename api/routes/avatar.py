@@ -9,16 +9,18 @@ avatar_router = APIRouter(prefix="/avatars", tags=["Avatars"])
 
 UPLOAD_DIRECTORY = "./uploads/avatars/"
 
-if not os.path.exists(UPLOAD_DIRECTORY):
-    os.makedirs(UPLOAD_DIRECTORY)
 
-
-@avatar_router.post("/upload-avatar/{actor_id}", status_code=status.HTTP_200_OK)
+@avatar_router.post("/upload-actor-avatar/{actor_id}", status_code=status.HTTP_200_OK)
 async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload avatar for actor"""
 
+    directory_path = UPLOAD_DIRECTORY + "actors/"
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
     file_name = f"{actor_id}_{file.filename}"
-    file_location = f"{UPLOAD_DIRECTORY}{file_name}"
+    file_location = f"{directory_path}{file_name}"
 
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
@@ -33,11 +35,48 @@ async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session
     return {"info": "Avatar uploaded successfully"}
 
 
-@avatar_router.get("/{filename}", status_code=status.HTTP_200_OK)
-async def get_avatar(filename: str):
+@avatar_router.post("/upload-director-avatar/{director_id}", status_code=status.HTTP_200_OK)
+async def upload_director_avatar(director_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Upload avatar for director"""
+
+    directory_path = UPLOAD_DIRECTORY + "directors/"
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+    file_name = f"{director_id}_{file.filename}"
+    file_location = f"{directory_path}{file_name}"
+
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+
+    director = db.query(m.Director).filter(m.Director.id == director_id).first()
+    if not director:
+        raise HTTPException(status_code=404, detail="Director not found")
+
+    director.avatar = file_name
+    db.commit()
+
+    return {"info": "Avatar uploaded successfully"}
+
+
+@avatar_router.get("/actors/{filename}", status_code=status.HTTP_200_OK)
+async def get_actor_avatar(filename: str):
     """Check if file exists and return it (for testing purposes)"""
 
-    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    file_path = os.path.join(UPLOAD_DIRECTORY + "actors/", filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return FileResponse(file_path)
+
+
+@avatar_router.get("/directors/{filename}", status_code=status.HTTP_200_OK)
+async def get_director_avatar(filename: str):
+    """Check if file exists and return it (for testing purposes)"""
+
+    file_path = os.path.join(UPLOAD_DIRECTORY + "directors/", filename)
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")

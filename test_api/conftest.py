@@ -35,9 +35,11 @@ def db() -> Generator[orm.Session, None, None]:
 
         from app.commands.export_movies import export_movies_from_json_file
         from app.commands.export_actors import export_actors_from_json_file
+        from app.commands.export_directors import export_directors_from_json_file
 
         export_movies_from_json_file()
         export_actors_from_json_file()
+        export_directors_from_json_file()
 
         def override_get_db() -> Generator:
             yield session
