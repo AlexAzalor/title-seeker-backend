@@ -18,6 +18,8 @@ class MovieExportCreate(BaseModel):
     domestic_gross: int | None = None
     worldwide_gross: int | None = None
     poster: str | None = None
+    genres_ids: list[int]
+    subgenres_ids: list[int] | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -55,6 +57,35 @@ class MovieDirector(BaseModel):
     )
 
 
+class MovieGenre(BaseModel):
+    key: str
+    name: str
+    description: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieSubgenre(BaseModel):
+    key: str
+    parent_genre: MovieGenre
+    name: str
+    description: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieGenres(BaseModel):
+    genres: list[MovieGenre]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     uuid: str
     title: str
@@ -67,6 +98,8 @@ class MovieOut(BaseModel):
     actors: list[MovieActor] = []
     poster: str | None = None
     directors: list[MovieDirector] = []
+    genres: list[MovieGenre] = []
+    subgenres: list[MovieSubgenre] = []
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -75,6 +108,27 @@ class MovieOut(BaseModel):
 
 class MovieOutList(BaseModel):
     movies: list[MovieOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieSearchOut(BaseModel):
+    uuid: str
+    title: str
+    poster: str | None = None
+    release_date: datetime | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieByGenresList(BaseModel):
+    movies: list[MovieSearchOut]
+    genre: MovieGenre | None = None
+    subgenre: MovieSubgenre | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

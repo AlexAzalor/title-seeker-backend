@@ -4,12 +4,7 @@ from sqlalchemy import orm
 from app.database import db
 from app.schema.language import Language
 
-
 from .utils import ModelMixin
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .movie import Movie
 
 
 class MovieTranslation(db.Model, ModelMixin):
@@ -21,11 +16,6 @@ class MovieTranslation(db.Model, ModelMixin):
 
     title: orm.Mapped[str] = orm.mapped_column(sa.String(128), nullable=False)
     description: orm.Mapped[str] = orm.mapped_column(sa.Text, nullable=False)
-
-    movie: orm.Mapped["Movie"] = orm.relationship(
-        "Movie",
-        back_populates="translations",
-    )
 
     def __repr__(self):
         return f"<MovieTranslation [{self.id}] - {self.title}>"

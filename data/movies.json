@@ -10,7 +10,12 @@
             "budget": 25000000,
             "domestic_gross": 28767189,
             "worldwide_gross": 29332133,
-            "poster": "1_The Shawshank Redemption.png"
+            "poster": "1_The Shawshank Redemption.png",
+            "genres_ids": [
+                9,
+                6
+            ],
+            "subgenres_ids": null
         },
         {
             "title_uk": "\u0422\u0435\u043c\u043d\u0438\u0439 \u041b\u0438\u0446\u0430\u0440",
@@ -22,7 +27,16 @@
             "budget": 185000000,
             "domestic_gross": 534987076,
             "worldwide_gross": 1009053678,
-            "poster": "2_The Dark Knight.png"
+            "poster": "2_The Dark Knight.png",
+            "genres_ids": [
+                1,
+                2,
+                6,
+                9
+            ],
+            "subgenres_ids": [
+                3
+            ]
         },
         {
             "title_uk": "\u041a\u0440\u0438\u043c\u0456\u043d\u0430\u043b\u044c\u043d\u0435 \u0447\u0442\u0438\u0432\u043e",
@@ -34,7 +48,12 @@
             "budget": 8000000,
             "domestic_gross": 107928762,
             "worldwide_gross": 213928762,
-            "poster": "3_Pulp Fiction.png"
+            "poster": "3_Pulp Fiction.png",
+            "genres_ids": [
+                6,
+                9
+            ],
+            "subgenres_ids": null
         }
     ]
 }

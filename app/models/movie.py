@@ -8,6 +8,9 @@ from sqlalchemy import orm
 from app.database import db
 from .movie_actors import movie_actors
 from .movie_directors import movie_directors
+from .genres.movie_genres import movie_genres
+from .genres.movie_subgenres import movie_subgenres
+
 from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
 
@@ -18,6 +21,8 @@ if TYPE_CHECKING:
     from .movie_translation import MovieTranslation
     from .actor import Actor
     from .director import Director
+    from .genres.genre import Genre
+    from .genres.subgenre import Subgenre
 
 
 # Questions/Ideas:
@@ -33,10 +38,8 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()))
 
     # title, description
-    translations: orm.Mapped[list["MovieTranslation"]] = orm.relationship(
-        "MovieTranslation",
-        back_populates="movie",
-    )
+    translations: orm.Mapped[list["MovieTranslation"]] = orm.relationship()
+
     release_date: orm.Mapped[datetime | None] = orm.mapped_column(sa.DateTime)  # None?
     duration: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False)  # in minutes
     # my_rating: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
@@ -45,6 +48,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     poster: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
+    # location: orm.Mapped[str | None] = orm.mapped_column(sa.String(255), nullable=False)
 
     actors: orm.Mapped[list["Actor"]] = orm.relationship(
         "Actor",
@@ -55,6 +59,17 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     directors: orm.Mapped[list["Director"]] = orm.relationship(
         "Director",
         secondary=movie_directors,
+        back_populates="movies",
+    )
+
+    genres: orm.Mapped[list["Genre"]] = orm.relationship(
+        "Genre",
+        secondary=movie_genres,
+        back_populates="movies",
+    )
+    subgenres: orm.Mapped[list["Subgenre"]] = orm.relationship(
+        "Subgenre",
+        secondary=movie_subgenres,
         back_populates="movies",
     )
     # rating - relationship? or just a column? There will be very advanced rating system.

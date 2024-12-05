@@ -1,0 +1,100 @@
+{
+    "subgenres": [
+        {
+            "key": "cyberpunk",
+            "name_uk": "\u041a\u0456\u0431\u0435\u0440\u043f\u0430\u043d\u043a",
+            "name_en": "Cyberpunk",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 18
+        },
+        {
+            "key": "space-opera",
+            "name_uk": "\u041a\u043e\u0441\u043c\u0456\u0447\u043d\u0430 \u043e\u043f\u0435\u0440\u0430",
+            "name_en": "Space Opera",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 18
+        },
+        {
+            "key": "superhero",
+            "name_uk": "\u0421\u0443\u043f\u0435\u0440\u0433\u0435\u0440\u043e\u0439",
+            "name_en": "Superhero",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 1
+        },
+        {
+            "key": "pirate",
+            "name_uk": "\u041f\u0456\u0440\u0430\u0442\u0438",
+            "name_en": "Pirate",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 2
+        },
+        {
+            "key": "cgi-animation",
+            "name_uk": "CGI \u0430\u043d\u0456\u043c\u0430\u0446\u0456\u044f",
+            "name_en": "CGI animation",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 3
+        },
+        {
+            "key": "dark-black",
+            "name_uk": "\u0427\u043e\u0440\u043d\u0430 \u043a\u043e\u043c\u0435\u0434\u0456\u044f",
+            "name_en": "Dark/black",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 5
+        },
+        {
+            "key": "political",
+            "name_uk": "\u041f\u043e\u043b\u0456\u0442\u0438\u0447\u043d\u0438\u0439",
+            "name_en": "Political",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 9
+        },
+        {
+            "key": "high-epic",
+            "name_uk": "\u0412\u0438\u0441\u043e\u043a\u0430/\u0415\u043f\u0456\u0447\u043d\u0430",
+            "name_en": "High/epic",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 11
+        },
+        {
+            "key": "alternate-history",
+            "name_uk": "\u0410\u043b\u044c\u0442\u0435\u0440\u043d\u0430\u0442\u0438\u0432\u043d\u0430 \u0456\u0441\u0442\u043e\u0440\u0456\u044f",
+            "name_en": "Alternate history",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 12
+        },
+        {
+            "key": "slasher",
+            "name_uk": "\u0421\u043b\u0435\u0448\u0435\u0440",
+            "name_en": "Slasher",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 13
+        },
+        {
+            "key": "psychological",
+            "name_uk": "\u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0439",
+            "name_en": "Psychological",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 20
+        },
+        {
+            "key": "spaghetti",
+            "name_uk": "\u0421\u043f\u0430\u0433\u0435\u0442\u0442\u0456",
+            "name_en": "Spaghetti",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 22
+        }
+    ]
+}

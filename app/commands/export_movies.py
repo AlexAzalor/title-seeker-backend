@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import sqlalchemy as sa
 
 from googleapiclient.discovery import build
 
@@ -25,10 +26,17 @@ BUDGET = "budget"
 DOMESTIC_GROSS = "domestic_gross"
 WORLDWIDE_GROSS = "worldwide_gross"
 POSTER = "poster"
+GENRES_IDS = "genres_ids"
+SUBGENRES_IDS = "subgenres_ids"
 
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
     with db.begin() as session:
+        if not session.scalar(sa.select(m.Genre)):
+            log(log.ERROR, "Genre table is empty")
+            log(log.ERROR, "Please run `flask fill-db-with-genres` first")
+            raise Exception("Genre table is empty. Please run `flask fill-db-with-genres` first")
+
         for movie in movies:
             new_movie: m.Movie = m.Movie(
                 poster=movie.poster,
@@ -45,6 +53,15 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                         language=s.Language.EN.value, title=movie.title_en, description=movie.description_en
                     ),
                 ],
+                genres=[
+                    session.scalar(sa.select(m.Genre).where(m.Genre.id == genre_id)) for genre_id in movie.genres_ids
+                ],
+                subgenres=[
+                    session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))
+                    for subgenre_id in movie.subgenres_ids
+                ]
+                if movie.subgenres_ids
+                else [],
             )
 
             session.add(new_movie)
@@ -54,12 +71,17 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
         session.commit()
 
 
+def convert_string_to_list_of_integers(input_string):
+    string_numbers = input_string.split(", ")
+    return [int(num) for num in string_numbers]
+
+
 def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: bool = False):
     """Fill movies with data from google spreadsheets"""
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "L"
+    LAST_SHEET_COLUMN = "N"
     RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -86,6 +108,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     DOMESTIC_GROSS_INDEX = values[0].index(DOMESTIC_GROSS)
     WORLDWIDE_GROSS_INDEX = values[0].index(WORLDWIDE_GROSS)
     POSTER_INDEX = values[0].index(POSTER)
+    GENRES_IDS_INDEX = values[0].index(GENRES_IDS)
+    SUBGENRES_IDS_INDEX = values[0].index(SUBGENRES_IDS)
 
     for row in values[1:]:
         # if len(row) < 12:
@@ -124,6 +148,17 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         poster = row[POSTER_INDEX]
 
+        genres_ids = row[GENRES_IDS_INDEX]
+        assert genres_ids, f"The genres_ids {genres_ids} is missing"
+        genres_ids = convert_string_to_list_of_integers(genres_ids)
+
+        print("=== genres_ids ===", genres_ids)
+
+        subgenres_ids = row[SUBGENRES_IDS_INDEX]
+        if subgenres_ids:
+            subgenres_ids = convert_string_to_list_of_integers(subgenres_ids)
+
+        print("=== subgenres_ids ===", subgenres_ids)
         movies.append(
             s.MovieExportCreate(
                 title_uk=title_uk,
@@ -136,12 +171,13 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 domestic_gross=int(domestic_gross),
                 worldwide_gross=int(worldwide_gross),
                 poster=poster,
+                genres_ids=genres_ids,
+                subgenres_ids=subgenres_ids if subgenres_ids else None,
             )
         )
 
     print("Movies COUNT: ", len(movies))
 
-    # if in_json:
     with open("data/movies.json", "w") as file:
         json.dump(s.MoviesJSONFile(movies=movies).model_dump(mode="json"), file, indent=4)
         print("Movies data saved to [data/movies.json] file")

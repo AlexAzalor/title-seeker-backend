@@ -3,12 +3,14 @@ from fastapi import APIRouter, Request
 # from .auth import router as auth_router
 from .movie import movie_router
 from .avatar import avatar_router
+from .genre import genre_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
 router.include_router(movie_router)
 # router.include_router(auth_router)
 router.include_router(avatar_router)
+router.include_router(genre_router)
 
 
 @router.get("/list-endpoints/")

@@ -1,7 +1,8 @@
 import os
+from typing import Annotated
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile
 from fastapi.responses import FileResponse
 
 from sqlalchemy.orm import Session, joinedload
@@ -35,6 +36,7 @@ def get_movies(
     # order_by: s.JobsOrderBy = s.JobsOrderBy.CREATED_AT,
     # order_type: s.OrderType = s.OrderType.ASC,
     # current_user: m.User = Depends(get_current_user),
+    genre_uuid: str | None = None,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -50,6 +52,18 @@ def get_movies(
         .unique()
         .all()
     )
+
+    if genre_uuid:
+        db_movies = (
+            db.scalars(
+                sa.select(m.Movie)
+                .where(m.Movie.is_deleted.is_(False), m.Movie.genres.any(m.Genre.uuid == genre_uuid))
+                .options(joinedload(m.Movie.translations))
+                .order_by(m.Movie.release_date.desc())
+            )
+            .unique()
+            .all()
+        )
 
     movies_out = []
     for movie in db_movies:
@@ -82,6 +96,29 @@ def get_movies(
                         avatar_url=director.avatar,
                     )
                     for director in movie.directors
+                ],
+                genres=[
+                    s.MovieGenre(
+                        key=genre.key,
+                        name=next((t.name for t in genre.translations if t.language == lang.value)),
+                        description=next((t.description for t in genre.translations if t.language == lang.value)),
+                    )
+                    for genre in movie.genres
+                ],
+                subgenres=[
+                    s.MovieSubgenre(
+                        key=subgenre.key,
+                        parent_genre=s.MovieGenre(
+                            key=subgenre.genre.key,
+                            name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
+                            description=next(
+                                (t.description for t in subgenre.genre.translations if t.language == lang.value)
+                            ),
+                        ),
+                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                    )
+                    for subgenre in movie.subgenres
                 ],
             )
         )
@@ -138,6 +175,27 @@ def get_movie(
             )
             for director in movie.directors
         ],
+        genres=[
+            s.MovieGenre(
+                key=genre.key,
+                name=next((t.name for t in genre.translations if t.language == lang.value)),
+                description=next((t.description for t in genre.translations if t.language == lang.value)),
+            )
+            for genre in movie.genres
+        ],
+        subgenres=[
+            s.MovieSubgenre(
+                key=subgenre.key,
+                parent_genre=s.MovieGenre(
+                    key=subgenre.genre.key,
+                    name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
+                    description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
+                ),
+                name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+                description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+            )
+            for subgenre in movie.subgenres
+        ],
     )
 
 
@@ -171,3 +229,85 @@ async def get_poster(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path)
+
+
+@movie_router.get(
+    "/by-genre/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieByGenresList,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def get_movies_by_genre(
+    # query: str = Query(default="", max_length=128),
+    # lang: Language = Language.UK,
+    # selected_locations: Annotated[Union[List[str], None], Query()] = None,
+    # order_by: s.JobsOrderBy = s.JobsOrderBy.CREATED_AT,
+    # order_type: s.OrderType = s.OrderType.ASC,
+    # current_user: m.User = Depends(get_current_user),
+    # genre_uuid: str,
+    genre_name: Annotated[list[str], Query()] = [],
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get movies by query params"""
+
+    subgenre: m.Subgenre | None = db.scalar(
+        sa.select(m.Subgenre)
+        .where(m.Subgenre.key.in_(genre_name))
+        .options(joinedload(m.Subgenre.movies), joinedload(m.Subgenre.genre))
+    )
+    genre: m.Genre | None = db.scalar(
+        sa.select(m.Genre).where(m.Genre.key.in_(genre_name)).options(joinedload(m.Genre.movies))
+    )
+
+    if not subgenre and not genre:
+        log(log.ERROR, "Genre or Subgenre not found")
+        # raise HTTPException(status_code=404, detail="Genre or Subgenre not found")
+        return s.MovieByGenresList(movies=[], genre=None, subgenre=None)
+
+    if subgenre and not genre:
+        genre = subgenre.genre
+
+    movies = []
+    if genre and subgenre:
+        movies = list({movie.id: movie for movie in genre.movies + subgenre.movies}.values())
+    elif subgenre:
+        movies = subgenre.movies
+    elif genre:
+        movies = genre.movies
+    else:
+        movies = []
+
+    movies_out = []
+    for movie in movies:
+        movies_out.append(
+            s.MovieSearchOut(
+                uuid=movie.uuid,
+                title=next((t.title for t in movie.translations if t.language == lang.value)),
+                poster=movie.poster,
+                release_date=movie.release_date,
+            )
+        )
+
+    return s.MovieByGenresList(
+        movies=movies_out,
+        genre=s.MovieGenre(
+            key=genre.key,
+            name=next((t.name for t in genre.translations if t.language == lang.value)),
+            description=next((t.description for t in genre.translations if t.language == lang.value)),
+        )
+        if genre
+        else None,
+        subgenre=s.MovieSubgenre(
+            key=subgenre.key,
+            parent_genre=s.MovieGenre(
+                key=subgenre.genre.key,
+                name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
+                description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
+            ),
+            name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+            description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+        )
+        if subgenre
+        else None,
+    )

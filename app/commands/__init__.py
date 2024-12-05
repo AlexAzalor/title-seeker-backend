@@ -51,6 +51,14 @@ def init(app: Flask):
             print("users created")
 
     @app.cli.command()
+    def delete_actors_from_db():
+        """Fill movies with data from google spreadsheets"""
+        from .delete_actors import delete_actors_from_db
+
+        delete_actors_from_db()
+        print("done")
+
+    @app.cli.command()
     def fill_db_with_movies():
         """Fill movies with movies data from google spreadsheets"""
         from .export_movies import export_movies_from_google_spreadsheets
@@ -75,9 +83,17 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
-    def delete_actors_from_db():
-        """Fill movies with data from google spreadsheets"""
-        from .delete_actors import delete_actors_from_db
+    def fill_db_with_genres():
+        """Fill movies with genres data from google spreadsheets"""
+        from .export_genres import export_genres_from_google_spreadsheets
 
-        delete_actors_from_db()
+        export_genres_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_subgenres():
+        """Fill movies with subgenres data from google spreadsheets"""
+        from .export_subgenres import export_subgenres_from_google_spreadsheets
+
+        export_subgenres_from_google_spreadsheets()
         print("done")
