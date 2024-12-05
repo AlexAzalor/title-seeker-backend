@@ -1,12 +1,11 @@
 from datetime import datetime
-from uuid import uuid4
-
 
 import sqlalchemy as sa
 from sqlalchemy import orm
 
 from app.database import db
 from app.models.mixins import CreatableMixin, UpdatableMixin
+from app.schema.language import Language
 from .movie_actors import movie_actors
 
 from .utils import ModelMixin
@@ -21,7 +20,7 @@ class Actor(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "actors"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()))
+    key: orm.Mapped[str] = orm.mapped_column(sa.String(64), nullable=False, unique=True)
 
     born: orm.Mapped[datetime] = orm.mapped_column(sa.DateTime, nullable=False)
     died: orm.Mapped[datetime | None] = orm.mapped_column(sa.DateTime, nullable=True)
@@ -38,6 +37,9 @@ class Actor(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         secondary=movie_actors,
         back_populates="actors",
     )
+
+    def full_name(self, lang: Language = Language.UK) -> str:
+        return next((t.full_name for t in self.translations if t.language == lang.value))
 
     def __repr__(self):
         return f"<Actor [{self.id}]: {self.translations[0].full_name}>"

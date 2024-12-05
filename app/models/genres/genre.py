@@ -19,7 +19,7 @@ class Genre(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "genres"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    key: orm.Mapped[str] = orm.mapped_column(sa.String(36), nullable=False)
+    key: orm.Mapped[str] = orm.mapped_column(sa.String(36), nullable=False, unique=True)
 
     translations: orm.Mapped[list["GenreTranslation"]] = orm.relationship()
 

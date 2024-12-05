@@ -15,6 +15,7 @@ from .utility import authorized_user_in_google_spreadsheets
 CFG = config()
 
 ID = "ID"
+KEY = "key"
 FIRST_NAME_UK = "first_name_uk"
 LAST_NAME_UK = "last_name_uk"
 FIRST_NAME_EN = "first_name_en"
@@ -36,6 +37,7 @@ def write_directors_in_db(directors: list[s.DirectorExportCreate]):
 
         for director in directors:
             new_director = m.Director(
+                key=director.key,
                 born=director.born,
                 died=director.died,
                 avatar=director.avatar,
@@ -81,7 +83,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     credentials = authorized_user_in_google_spreadsheets()
 
     # Last column need to be filled!
-    LAST_SHEET_COLUMN = "L"
+    LAST_SHEET_COLUMN = "M"
     RANGE_NAME = f"Directors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -98,6 +100,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
+    KEY_INDEX = values[0].index(KEY)
     FIRST_NAME_UK_INDEX = values[0].index(FIRST_NAME_UK)
     LAST_NAME_UK_INDEX = values[0].index(LAST_NAME_UK)
     FIRST_NAME_EN_INDEX = values[0].index(FIRST_NAME_EN)
@@ -113,6 +116,9 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue
+
+        key = row[KEY_INDEX]
+        assert key, f"The key {key} is missing"
 
         first_name_uk = row[FIRST_NAME_UK_INDEX]
         assert first_name_uk, f"The first_name_uk {first_name_uk} is missing"
@@ -145,6 +151,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
 
         directors.append(
             s.DirectorExportCreate(
+                key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,
                 first_name_en=first_name_en,

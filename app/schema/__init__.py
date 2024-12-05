@@ -34,6 +34,8 @@ from .movie import (
     MovieSubgenre,
     MovieByGenresList,
     MovieSearchOut,
+    MovieByActorsList,
+    ActorShort,
 )
 from .actor import ActorExportCreate, ActorsJSONFile
 from .director import DirectorExportCreate, DirectorsJSONFile

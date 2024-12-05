@@ -15,6 +15,7 @@ from .utility import authorized_user_in_google_spreadsheets
 CFG = config()
 
 ID = "ID"
+KEY = "key"
 FIRST_NAME_UK = "first_name_uk"
 LAST_NAME_UK = "last_name_uk"
 FIRST_NAME_EN = "first_name_en"
@@ -38,6 +39,7 @@ def write_actors_in_db(actors: list[s.ActorExportCreate]):
 
         for actor in actors:
             new_actor = m.Actor(
+                key=actor.key,
                 born=actor.born,
                 died=actor.died,
                 avatar=actor.avatar,
@@ -85,7 +87,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     credentials = authorized_user_in_google_spreadsheets()
 
     # Last column need to be filled!
-    LAST_SHEET_COLUMN = "N"
+    LAST_SHEET_COLUMN = "O"
     RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -102,6 +104,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
+    KEY_INDEX = values[0].index(KEY)
     FIRST_NAME_UK_INDEX = values[0].index(FIRST_NAME_UK)
     LAST_NAME_UK_INDEX = values[0].index(LAST_NAME_UK)
     FIRST_NAME_EN_INDEX = values[0].index(FIRST_NAME_EN)
@@ -119,6 +122,9 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue
+
+        key = row[KEY_INDEX]
+        assert key, f"The key {key} is missing"
 
         first_name_uk = row[FIRST_NAME_UK_INDEX]
         assert first_name_uk, f"The first_name_uk {first_name_uk} is missing"
@@ -157,6 +163,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         actors.append(
             s.ActorExportCreate(
+                key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,
                 first_name_en=first_name_en,

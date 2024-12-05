@@ -1,6 +1,4 @@
 from datetime import datetime
-from uuid import uuid4
-
 
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -35,7 +33,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "movies"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()))
+    key: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=False, unique=True)
 
     # title, description
     translations: orm.Mapped[list["MovieTranslation"]] = orm.relationship()
@@ -48,7 +46,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
     poster: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
-    # location: orm.Mapped[str | None] = orm.mapped_column(sa.String(255), nullable=False)
 
     actors: orm.Mapped[list["Actor"]] = orm.relationship(
         "Actor",
@@ -73,8 +70,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         back_populates="movies",
     )
     # rating - relationship? or just a column? There will be very advanced rating system.
-    # genre - relationship
-    # location - relationship
 
     # Not for MVP
     # reviews - relationship

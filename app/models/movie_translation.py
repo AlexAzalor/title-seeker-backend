@@ -16,6 +16,7 @@ class MovieTranslation(db.Model, ModelMixin):
 
     title: orm.Mapped[str] = orm.mapped_column(sa.String(128), nullable=False)
     description: orm.Mapped[str] = orm.mapped_column(sa.Text, nullable=False)
+    location: orm.Mapped[str] = orm.mapped_column(sa.String(128), nullable=False)
 
     def __repr__(self):
         return f"<MovieTranslation [{self.id}] - {self.title}>"

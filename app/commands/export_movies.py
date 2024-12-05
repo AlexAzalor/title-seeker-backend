@@ -16,6 +16,7 @@ CFG = config()
 
 # ['ID', 'owner_id', 'worker_id', 'title', 'description', 'service', 'location', 'address', 'created_at', 'started_at', 'finished_at', 'rate_owner', 'rate_worker']
 ID = "ID"
+KEY = "key"
 TITLE_UK = "title_uk"
 TITLE_EN = "title_en"
 DESCRIPTION_UK = "description_uk"
@@ -28,6 +29,8 @@ WORLDWIDE_GROSS = "worldwide_gross"
 POSTER = "poster"
 GENRES_IDS = "genres_ids"
 SUBGENRES_IDS = "subgenres_ids"
+LOCATION_UK = "location_uk"
+LOCATION_EN = "location_en"
 
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
@@ -39,6 +42,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
 
         for movie in movies:
             new_movie: m.Movie = m.Movie(
+                key=movie.key,
                 poster=movie.poster,
                 release_date=movie.release_date,
                 duration=movie.duration,
@@ -47,10 +51,16 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                 worldwide_gross=movie.worldwide_gross,
                 translations=[
                     m.MovieTranslation(
-                        language=s.Language.UK.value, title=movie.title_uk, description=movie.description_uk
+                        language=s.Language.UK.value,
+                        title=movie.title_uk,
+                        description=movie.description_uk,
+                        location=movie.location_uk,
                     ),
                     m.MovieTranslation(
-                        language=s.Language.EN.value, title=movie.title_en, description=movie.description_en
+                        language=s.Language.EN.value,
+                        title=movie.title_en,
+                        description=movie.description_en,
+                        location=movie.location_en,
                     ),
                 ],
                 genres=[
@@ -81,7 +91,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "N"
+    LAST_SHEET_COLUMN = "Q"
     RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -98,6 +108,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
+    KEY_INDEX = values[0].index(KEY)
     TITLE_UK_INDEX = values[0].index(TITLE_UK)
     TITLE_EN_INDEX = values[0].index(TITLE_EN)
     DESCRIPTION_UK_INDEX = values[0].index(DESCRIPTION_UK)
@@ -110,6 +121,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     POSTER_INDEX = values[0].index(POSTER)
     GENRES_IDS_INDEX = values[0].index(GENRES_IDS)
     SUBGENRES_IDS_INDEX = values[0].index(SUBGENRES_IDS)
+    LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
+    LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
 
     for row in values[1:]:
         # if len(row) < 12:
@@ -118,9 +131,11 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         if not row[INDEX_ID]:
             continue
 
+        key = row[KEY_INDEX]
+        assert key, f"The key {key} is missing"
+
         title_uk = row[TITLE_UK_INDEX]
         assert title_uk, f"The title_uk {title_uk} is missing"
-        print("=== TITLE ===", title_uk)
 
         title_en = row[TITLE_EN_INDEX]
         assert title_en, f"The title_en {title_en} is missing"
@@ -152,15 +167,19 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         assert genres_ids, f"The genres_ids {genres_ids} is missing"
         genres_ids = convert_string_to_list_of_integers(genres_ids)
 
-        print("=== genres_ids ===", genres_ids)
-
         subgenres_ids = row[SUBGENRES_IDS_INDEX]
         if subgenres_ids:
             subgenres_ids = convert_string_to_list_of_integers(subgenres_ids)
 
-        print("=== subgenres_ids ===", subgenres_ids)
+        location_uk = row[LOCATION_UK_INDEX]
+        assert location_uk, f"The location_uk {location_uk} is missing"
+
+        location_en = row[LOCATION_EN_INDEX]
+        assert location_en, f"The location_en {location_en} is missing"
+
         movies.append(
             s.MovieExportCreate(
+                key=key,
                 title_uk=title_uk,
                 title_en=title_en,
                 description_uk=description_uk,
@@ -173,6 +192,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 poster=poster,
                 genres_ids=genres_ids,
                 subgenres_ids=subgenres_ids if subgenres_ids else None,
+                location_uk=location_uk,
+                location_en=location_en,
             )
         )
 

@@ -21,10 +21,10 @@ def test_get_movies(client: TestClient, db: Session):
     data = s.MovieOutList.model_validate(response.json())
     assert data
 
-    # Test get by uuid
+    # Test get by key
     movie = movies[0]
     assert movie
-    response = client.get(f"/api/movies/{movie.uuid}")
+    response = client.get(f"/api/movies/{movie.key}")
     assert response.status_code == status.HTTP_200_OK
 
     response = client.get("/api/movies", params={"lang": s.Language.UK.value})

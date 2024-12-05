@@ -36,7 +36,7 @@ def get_movies(
     # order_by: s.JobsOrderBy = s.JobsOrderBy.CREATED_AT,
     # order_type: s.OrderType = s.OrderType.ASC,
     # current_user: m.User = Depends(get_current_user),
-    genre_uuid: str | None = None,
+    # genre_uuid: str | None = None,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -53,23 +53,11 @@ def get_movies(
         .all()
     )
 
-    if genre_uuid:
-        db_movies = (
-            db.scalars(
-                sa.select(m.Movie)
-                .where(m.Movie.is_deleted.is_(False), m.Movie.genres.any(m.Genre.uuid == genre_uuid))
-                .options(joinedload(m.Movie.translations))
-                .order_by(m.Movie.release_date.desc())
-            )
-            .unique()
-            .all()
-        )
-
     movies_out = []
     for movie in db_movies:
         movies_out.append(
             s.MovieOut(
-                uuid=movie.uuid,
+                key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 description=next((t.description for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
@@ -80,7 +68,7 @@ def get_movies(
                 release_date=movie.release_date,
                 actors=[
                     s.MovieActor(
-                        uuid=actor.uuid,
+                        key=actor.key,
                         first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
                         last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
                         character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
@@ -90,7 +78,7 @@ def get_movies(
                 ],
                 directors=[
                     s.MovieDirector(
-                        uuid=director.uuid,
+                        key=director.key,
                         first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
                         last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
                         avatar_url=director.avatar,
@@ -127,7 +115,7 @@ def get_movies(
 
 
 @movie_router.get(
-    "/{movie_uuid}",
+    "/{movie_key}",
     status_code=status.HTTP_200_OK,
     response_model=s.MovieOut,
     responses={
@@ -135,19 +123,19 @@ def get_movies(
     },
 )
 def get_movie(
-    movie_uuid: str,
+    movie_key: str,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     movie: m.Movie | None = db.scalar(
-        sa.select(m.Movie).where(m.Movie.uuid == movie_uuid).options(joinedload(m.Movie.translations))
+        sa.select(m.Movie).where(m.Movie.key == movie_key).options(joinedload(m.Movie.translations))
     )
     if not movie:
-        log(log.ERROR, "Movie [%s] not found", movie_uuid)
+        log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
     return s.MovieOut(
-        uuid=movie.uuid,
+        key=movie.key,
         title=next((t.title for t in movie.translations if t.language == lang.value)),
         description=next((t.description for t in movie.translations if t.language == lang.value)),
         poster=movie.poster,
@@ -158,7 +146,7 @@ def get_movie(
         release_date=movie.release_date,
         actors=[
             s.MovieActor(
-                uuid=actor.uuid,
+                key=actor.key,
                 first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
                 last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
                 character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
@@ -168,7 +156,7 @@ def get_movie(
         ],
         directors=[
             s.MovieDirector(
-                uuid=director.uuid,
+                key=director.key,
                 first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
                 last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
                 avatar_url=director.avatar,
@@ -282,7 +270,7 @@ def get_movies_by_genre(
     for movie in movies:
         movies_out.append(
             s.MovieSearchOut(
-                uuid=movie.uuid,
+                key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
                 release_date=movie.release_date,
@@ -310,4 +298,56 @@ def get_movies_by_genre(
         )
         if subgenre
         else None,
+    )
+
+
+@movie_router.get(
+    "/by-actor/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieByActorsList,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def get_movies_by_actor(
+    actor_name: Annotated[list[str], Query()] = [],
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get actors by query params"""
+
+    actors = (
+        db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(actor_name)).options(joinedload(m.Actor.movies)))
+        .unique()
+        .all()
+    )
+
+    if not actors:
+        log(log.ERROR, "Actor not found")
+        return s.MovieByActorsList(movies=[], actor=None)
+
+    movies = []
+    for actor in actors:
+        movies += actor.movies
+
+    movies = list({movie.id: movie for movie in movies}.values())
+
+    movies_out = []
+    for movie in movies:
+        movies_out.append(
+            s.MovieSearchOut(
+                key=movie.key,
+                title=next((t.title for t in movie.translations if t.language == lang.value)),
+                poster=movie.poster,
+                release_date=movie.release_date,
+            )
+        )
+
+    return s.MovieByActorsList(
+        movies=movies_out,
+        actor=[
+            s.ActorShort(
+                key=actor.key,
+                name=actor.full_name(lang),
+            )
+            for actor in actors
+        ],
     )

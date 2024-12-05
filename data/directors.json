@@ -1,6 +1,7 @@
 {
     "directors": [
         {
+            "key": "frank-darabont",
             "first_name_uk": "\u0424\u0440\u0435\u043d\u043a",
             "last_name_uk": "\u0414\u0430\u0440\u0430\u0431\u043e\u043d\u0442",
             "first_name_en": "Frank",
@@ -15,6 +16,7 @@
             "avatar": "1_Frank Darabont.png"
         },
         {
+            "key": "christopher-nolan",
             "first_name_uk": "\u041a\u0440\u0456\u0441\u0442\u043e\u0444\u0435\u0440",
             "last_name_uk": "\u041d\u043e\u043b\u0430\u043d",
             "first_name_en": "Christopher",
@@ -29,6 +31,7 @@
             "avatar": "2_Christopher Nolan.png"
         },
         {
+            "key": "quentin-tarantino",
             "first_name_uk": "\u041a\u0432\u0435\u043d\u0442\u0456\u043d",
             "last_name_uk": "\u0422\u0430\u0440\u0430\u043d\u0442\u0456\u043d\u043e",
             "first_name_en": "Quentin",

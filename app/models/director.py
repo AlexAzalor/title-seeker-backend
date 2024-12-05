@@ -1,6 +1,4 @@
 from datetime import datetime
-from uuid import uuid4
-
 
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -21,7 +19,7 @@ class Director(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "directors"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()))
+    key: orm.Mapped[str] = orm.mapped_column(sa.String(64), nullable=False, unique=True)
 
     born: orm.Mapped[datetime] = orm.mapped_column(sa.DateTime, nullable=False)
     died: orm.Mapped[datetime | None] = orm.mapped_column(sa.DateTime, nullable=True)
