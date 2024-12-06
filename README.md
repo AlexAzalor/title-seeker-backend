@@ -87,6 +87,14 @@ flask create-admin
 ```
 
 ```bash
+flask fill-db-with-actors
+```
+
+```bash
+flask fill-db-with-directors
+```
+
+```bash
 flask fill-db-with-genres
 ```
 
@@ -96,14 +104,6 @@ flask fill-db-with-subgenres
 
 ```bash
 flask fill-db-with-movies
-```
-
-```bash
-flask fill-db-with-actors
-```
-
-```bash
-flask fill-db-with-directors
 ```
 
 ```bash

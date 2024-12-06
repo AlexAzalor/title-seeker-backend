@@ -17,7 +17,6 @@ class DirectorExportCreate(BaseModel):
     died: datetime | None = None
     born_in_uk: str
     born_in_en: str
-    movies: list[int]
     avatar: str | None = None
 
     model_config = ConfigDict(

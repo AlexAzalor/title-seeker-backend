@@ -1,7 +1,5 @@
 import json
 from datetime import datetime
-import sqlalchemy as sa
-
 from googleapiclient.discovery import build
 
 from app import models as m
@@ -24,17 +22,11 @@ BORN = "born"
 DIED = "died"
 BORN_IN_UK = "born_in_uk"
 BORN_IN_EN = "born_in_en"
-MOVIES = "movies"
 AVATAR = "avatar"
 
 
 def write_directors_in_db(directors: list[s.DirectorExportCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.Movie)):
-            log(log.ERROR, "Movie table is empty")
-            log(log.ERROR, "Please run `flask fill-db-with-movies` first")
-            raise Exception("Movie table is empty. Please run `flask fill-db-with-movies` first")
-
         for director in directors:
             new_director = m.Director(
                 key=director.key,
@@ -60,13 +52,6 @@ def write_directors_in_db(directors: list[s.DirectorExportCreate]):
             session.add(new_director)
             session.flush()
 
-            for movie_id in director.movies:
-                movie = session.scalar(sa.select(m.Movie).filter(m.Movie.id == movie_id))
-                if not movie:
-                    log(log.ERROR, "Movie with ID [%s] not found", movie_id)
-                    raise Exception(f"Movie with ID [{movie_id}] not found")
-                movie.directors.append(new_director)
-
             log(log.DEBUG, "Job with title [%s] created", director.first_name_uk)
 
         session.commit()
@@ -83,7 +68,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     credentials = authorized_user_in_google_spreadsheets()
 
     # Last column need to be filled!
-    LAST_SHEET_COLUMN = "M"
+    LAST_SHEET_COLUMN = "L"
     RANGE_NAME = f"Directors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -109,7 +94,6 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     DIED_INDEX = values[0].index(DIED)
     BORN_IN_UK_INDEX = values[0].index(BORN_IN_UK)
     BORN_IN_EN_INDEX = values[0].index(BORN_IN_EN)
-    MOVIES_INDEX = values[0].index(MOVIES)
     AVATAR_INDEX = values[0].index(AVATAR)
 
     print("values: ", values[:1])
@@ -143,10 +127,6 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
         born_in_en = row[BORN_IN_EN_INDEX]
         assert born_in_en, f"The born_in_en {born_in_en} is missing"
 
-        movies = row[MOVIES_INDEX]
-        assert movies, f"The movies {movies} is missing"
-        movies_ids = convert_string_to_list_of_integers(movies)
-
         avatar = row[AVATAR_INDEX]
 
         directors.append(
@@ -160,7 +140,6 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
                 died=datetime.strptime(died, "%d.%m.%Y") if died else None,
                 born_in_uk=born_in_uk,
                 born_in_en=born_in_en,
-                movies=movies_ids,
                 avatar=avatar,
             )
         )

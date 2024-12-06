@@ -12,6 +12,13 @@
             "domestic_gross": 28767189,
             "worldwide_gross": 29332133,
             "poster": "1_The Shawshank Redemption.png",
+            "actors_ids": [
+                2,
+                1
+            ],
+            "directors_ids": [
+                1
+            ],
             "genres_ids": [
                 9,
                 6
@@ -32,6 +39,15 @@
             "domestic_gross": 534987076,
             "worldwide_gross": 1009053678,
             "poster": "2_The Dark Knight.png",
+            "actors_ids": [
+                3,
+                4,
+                5,
+                1
+            ],
+            "directors_ids": [
+                2
+            ],
             "genres_ids": [
                 1,
                 2,
@@ -56,11 +72,265 @@
             "domestic_gross": 107928762,
             "worldwide_gross": 213928762,
             "poster": "3_Pulp Fiction.png",
+            "actors_ids": [
+                6,
+                7,
+                8,
+                9,
+                10
+            ],
+            "directors_ids": [
+                3
+            ],
             "genres_ids": [
                 6,
                 9
             ],
             "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "inception",
+            "title_uk": "\u041f\u043e\u0447\u0430\u0442\u043e\u043a",
+            "title_en": "Inception",
+            "description_uk": "\u0417\u043b\u043e\u0434\u0456\u0439, \u044f\u043a\u0438\u0439 \u0432\u0438\u043a\u0440\u0430\u0434\u0430\u0454 \u043a\u043e\u0440\u043f\u043e\u0440\u0430\u0442\u0438\u0432\u043d\u0456 \u0441\u0435\u043a\u0440\u0435\u0442\u0438 \u0437\u0430 \u0434\u043e\u043f\u043e\u043c\u043e\u0433\u043e\u044e \u0442\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0456\u0457 \u043e\u0431\u043c\u0456\u043d\u0443 \u0441\u043d\u0430\u043c\u0438, \u043e\u0442\u0440\u0438\u043c\u0443\u0454 \u0437\u0432\u043e\u0440\u043e\u0442\u043d\u0435 \u0437\u0430\u0432\u0434\u0430\u043d\u043d\u044f \u2014 \u0432\u043f\u0440\u043e\u0432\u0430\u0434\u0438\u0442\u0438 \u0456\u0434\u0435\u044e \u0432 \u0433\u043e\u043b\u043e\u0432\u0443 \u0433\u0435\u043d\u0435\u0440\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u0434\u0438\u0440\u0435\u043a\u0442\u043e\u0440\u0430, \u0430\u043b\u0435 \u0439\u043e\u0433\u043e \u0442\u0440\u0430\u0433\u0456\u0447\u043d\u0435 \u043c\u0438\u043d\u0443\u043b\u0435 \u043c\u043e\u0436\u0435 \u043f\u0440\u0438\u0440\u0435\u043a\u0442\u0438 \u043f\u0440\u043e\u0435\u043a\u0442 \u0456 \u0439\u043e\u0433\u043e \u043a\u043e\u043c\u0430\u043d\u0434\u0443 \u043d\u0430 \u043a\u0430\u0442\u0430\u0441\u0442\u0440\u043e\u0444\u0443.",
+            "description_en": "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.",
+            "release_date": "2010-07-16T00:00:00",
+            "duration": 148,
+            "budget": 160000000,
+            "domestic_gross": 292587330,
+            "worldwide_gross": 839030630,
+            "poster": "4_Inception.png",
+            "actors_ids": [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17
+            ],
+            "directors_ids": [
+                2
+            ],
+            "genres_ids": [
+                1,
+                2,
+                18,
+                20
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
+            "location_en": "US, UK"
+        },
+        {
+            "key": "django-unchained",
+            "title_uk": "\u0414\u0436\u0430\u043d\u0491\u043e \u0432\u0456\u043b\u044c\u043d\u0438\u0439",
+            "title_en": "Django Unchained",
+            "description_uk": "\u0417\u0430 \u0434\u043e\u043f\u043e\u043c\u043e\u0433\u043e\u044e \u043d\u0456\u043c\u0435\u0446\u044c\u043a\u043e\u0433\u043e \u043c\u0438\u0441\u043b\u0438\u0432\u0446\u044f \u0437\u0430 \u0433\u043e\u043b\u043e\u0432\u0430\u043c\u0438 \u0437\u0432\u0456\u043b\u044c\u043d\u0435\u043d\u0438\u0439 \u0440\u0430\u0431 \u0432\u0438\u0440\u0443\u0448\u0430\u0454 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0442\u0438 \u0441\u0432\u043e\u044e \u0434\u0440\u0443\u0436\u0438\u043d\u0443 \u0432\u0456\u0434 \u0436\u043e\u0440\u0441\u0442\u043e\u043a\u043e\u0433\u043e \u0432\u043b\u0430\u0441\u043d\u0438\u043a\u0430 \u043f\u043b\u0430\u043d\u0442\u0430\u0446\u0456\u0457 \u0432 \u041c\u0456\u0441\u0441\u0456\u0441\u0456\u043f\u0456.",
+            "description_en": "With the help of a German bounty-hunter, a freed slave sets out to rescue his wife from a brutal plantation owner in Mississippi.",
+            "release_date": "2012-12-25T00:00:00",
+            "duration": 165,
+            "budget": 100000000,
+            "domestic_gross": 162805434,
+            "worldwide_gross": 426076293,
+            "poster": "5_Django Unchained.png",
+            "actors_ids": [
+                11,
+                18,
+                19,
+                20,
+                7
+            ],
+            "directors_ids": [
+                3
+            ],
+            "genres_ids": [
+                5,
+                9,
+                22
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "groundhog-day",
+            "title_uk": "\u0414\u0435\u043d\u044c \u0411\u0430\u0431\u0430\u043a\u0430",
+            "title_en": "Groundhog Day",
+            "description_uk": "\u0421\u0430\u043c\u043e\u0437\u0430\u043a\u043e\u0445\u0430\u043d\u0438\u0439, \u0435\u0433\u043e\u0446\u0435\u043d\u0442\u0440\u0438\u0447\u043d\u0438\u0439 \u0441\u0438\u043d\u043e\u043f\u0442\u0438\u043a \u043e\u043f\u0438\u043d\u044f\u0454\u0442\u044c\u0441\u044f \u0432 \u0447\u0430\u0441\u043e\u0432\u0456\u0439 \u043f\u0435\u0442\u043b\u0456 \u0432 \u0414\u0435\u043d\u044c \u0431\u0430\u0431\u0430\u043a\u0430.",
+            "description_en": "A narcissistic, self-centered weatherman finds himself in a time loop on Groundhog Day.\n",
+            "release_date": "1993-02-12T00:00:00",
+            "duration": 101,
+            "budget": 14600000,
+            "domestic_gross": 71107962,
+            "worldwide_gross": 71108778,
+            "poster": "6_Groundhog Day.png",
+            "actors_ids": [
+                21
+            ],
+            "directors_ids": [
+                4
+            ],
+            "genres_ids": [
+                5,
+                9,
+                11,
+                17
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "the-matrix",
+            "title_uk": "\u041c\u0430\u0442\u0440\u0438\u0446\u044f",
+            "title_en": "The Matrix",
+            "description_uk": "\u041a\u043e\u043b\u0438 \u043f\u0440\u0435\u043a\u0440\u0430\u0441\u043d\u0430 \u043d\u0435\u0437\u043d\u0430\u0439\u043e\u043c\u043a\u0430 \u0432\u0435\u0434\u0435 \u043a\u043e\u043c\u043f\u2019\u044e\u0442\u0435\u0440\u043d\u043e\u0433\u043e \u0445\u0430\u043a\u0435\u0440\u0430 \u041d\u0435\u043e \u0434\u043e \u0441\u0442\u0440\u0430\u0448\u043d\u043e\u0433\u043e \u043f\u0456\u0434\u0437\u0435\u043c\u043d\u043e\u0433\u043e \u0441\u0432\u0456\u0442\u0443, \u0432\u0456\u043d \u0434\u0456\u0437\u043d\u0430\u0454\u0442\u044c\u0441\u044f \u0448\u043e\u043a\u0443\u044e\u0447\u0443 \u043f\u0440\u0430\u0432\u0434\u0443: \u0436\u0438\u0442\u0442\u044f, \u044f\u043a\u0435 \u0432\u0456\u043d \u0437\u043d\u0430\u0454, \u0454 \u0440\u0435\u0442\u0435\u043b\u044c\u043d\u043e \u043e\u0431\u043c\u0430\u043d\u043e\u043c \u0437\u043b\u043e\u0433\u043e \u043a\u0456\u0431\u0435\u0440\u0440\u043e\u0437\u0443\u043c\u0443.",
+            "description_en": "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth--the life he knows is the elaborate deception of an evil cyber-intelligence.",
+            "release_date": "1999-03-31T00:00:00",
+            "duration": 136,
+            "budget": 63000000,
+            "domestic_gross": 172076928,
+            "worldwide_gross": 467840449,
+            "poster": "7_The Matrix.png",
+            "actors_ids": [
+                22,
+                23,
+                24,
+                25
+            ],
+            "directors_ids": [
+                5,
+                6
+            ],
+            "genres_ids": [
+                1,
+                18
+            ],
+            "subgenres_ids": [
+                1,
+                13,
+                14
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u0410\u0432\u0441\u0442\u0440\u0430\u043b\u0456\u044f",
+            "location_en": "US, Australia"
+        },
+        {
+            "key": "the-lord-of-the-rings-the-fellowship-of-the-ring",
+            "title_uk": "\u0412\u043e\u043b\u043e\u0434\u0430\u0440 \u043f\u0435\u0440\u0441\u043d\u0456\u0432: \u0411\u0440\u0430\u0442\u0435\u0440\u0441\u0442\u0432\u043e \u043f\u0435\u0440\u0441\u043d\u044f",
+            "title_en": "The Lord of the Rings: The Fellowship of the Ring",
+            "description_uk": "\u041b\u0430\u0433\u0456\u0434\u043d\u0438\u0439 \u0445\u043e\u0431\u0431\u0456\u0442 \u0456\u0437 \u0428\u0438\u0440\u0443 \u0442\u0430 \u0432\u0456\u0441\u0456\u043c \u0442\u043e\u0432\u0430\u0440\u0438\u0448\u0456\u0432 \u0432\u0438\u0440\u0443\u0448\u0430\u044e\u0442\u044c \u0443 \u043f\u043e\u0434\u043e\u0440\u043e\u0436, \u0449\u043e\u0431 \u0437\u043d\u0438\u0449\u0438\u0442\u0438 \u043c\u043e\u0433\u0443\u0442\u043d\u0456\u0439 \u0404\u0434\u0438\u043d\u0438\u0439 \u041f\u0435\u0440\u0441\u0442\u0435\u043d\u044c \u0456 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0442\u0438 \u0421\u0435\u0440\u0435\u0434\u0437\u0435\u043c\u2019\u044f \u0432\u0456\u0434 \u0442\u0435\u043c\u043d\u043e\u0433\u043e \u043b\u043e\u0440\u0434\u0430 \u0421\u0430\u0443\u0440\u043e\u043d\u0430.",
+            "description_en": "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth from the Dark Lord Sauron.",
+            "release_date": "2001-12-19T00:00:00",
+            "duration": 178,
+            "budget": 93000000,
+            "domestic_gross": 319372078,
+            "worldwide_gross": 888186348,
+            "poster": "8_The Lord of the Rings - The Fellowship of the Ring.png",
+            "actors_ids": [
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32
+            ],
+            "directors_ids": [
+                7
+            ],
+            "genres_ids": [
+                2,
+                9,
+                11
+            ],
+            "subgenres_ids": [
+                8,
+                15,
+                16
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
+            "location_en": "US, UK"
+        },
+        {
+            "key": "avengers-infinity-war",
+            "title_uk": "\u041c\u0435\u0441\u043d\u0438\u043a\u0438: \u0412\u0456\u0439\u043d\u0430 \u043d\u0435\u0441\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u043e\u0441\u0442\u0456",
+            "title_en": "Avengers: Infinity War",
+            "description_uk": "\u041c\u0435\u0441\u043d\u0438\u043a\u0438 \u0442\u0430 \u0457\u0445\u043d\u0456 \u0441\u043e\u044e\u0437\u043d\u0438\u043a\u0438 \u043f\u043e\u0432\u0438\u043d\u043d\u0456 \u0431\u0443\u0442\u0438 \u0433\u043e\u0442\u043e\u0432\u0456 \u043f\u043e\u0436\u0435\u0440\u0442\u0432\u0443\u0432\u0430\u0442\u0438 \u0432\u0441\u0456\u043c, \u0449\u043e\u0431 \u043f\u0435\u0440\u0435\u043c\u043e\u0433\u0442\u0438 \u043c\u043e\u0433\u0443\u0442\u043d\u044c\u043e\u0433\u043e \u0422\u0430\u043d\u043e\u0441\u0430, \u043f\u0435\u0440\u0448 \u043d\u0456\u0436 \u0439\u043e\u0433\u043e \u0431\u043b\u0438\u0441\u043a\u0430\u0432\u0438\u0447\u043d\u0435 \u0441\u043f\u0443\u0441\u0442\u043e\u0448\u0435\u043d\u043d\u044f \u0442\u0430 \u0440\u0443\u0457\u043d\u0438 \u043f\u043e\u043a\u043b\u0430\u0434\u0435 \u043a\u0456\u043d\u0435\u0446\u044c \u0412\u0441\u0435\u0441\u0432\u0456\u0442\u0443.",
+            "description_en": "The Avengers and their allies must be willing to sacrifice all in an attempt to defeat the powerful Thanos before his blitz of devastation and ruin puts an end to the universe.",
+            "release_date": "2018-04-27T00:00:00",
+            "duration": 149,
+            "budget": 321000000,
+            "domestic_gross": 678815482,
+            "worldwide_gross": 2052415039,
+            "poster": "9_Avengers - Infinity War.png",
+            "actors_ids": [
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45
+            ],
+            "directors_ids": [
+                8,
+                9
+            ],
+            "genres_ids": [
+                1,
+                2,
+                18
+            ],
+            "subgenres_ids": [
+                3
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u041d\u043e\u0440\u0432\u0435\u0433\u0456\u044f",
+            "location_en": "US, Norway"
+        },
+        {
+            "key": "star-wars-episode-4-a-new-Hope",
+            "title_uk": "\u0417\u043e\u0440\u044f\u043d\u0456 \u0432\u0456\u0439\u043d\u0438: \u0415\u043f\u0456\u0437\u043e\u0434 IV - \u041d\u043e\u0432\u0430 \u043d\u0430\u0434\u0456\u044f",
+            "title_en": "Star Wars: Episode IV - A New Hope",
+            "description_uk": "\u041b\u044e\u043a \u0421\u043a\u0430\u0439\u0432\u043e\u043a\u0435\u0440 \u043e\u0431\u2019\u0454\u0434\u043d\u0443\u0454 \u0441\u0438\u043b\u0438 \u0437 \u043b\u0438\u0446\u0430\u0440\u0435\u043c-\u0434\u0436\u0435\u0434\u0430\u0454\u043c, \u0437\u0443\u0445\u0432\u0430\u043b\u0438\u043c \u043f\u0456\u043b\u043e\u0442\u043e\u043c, \u0432\u0443\u043a\u0456 \u0442\u0430 \u0434\u0432\u043e\u043c\u0430 \u0434\u0440\u043e\u0457\u0434\u0430\u043c\u0438, \u0449\u043e\u0431 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0442\u0438 \u0433\u0430\u043b\u0430\u043a\u0442\u0438\u043a\u0443 \u0432\u0456\u0434 \u0431\u043e\u0439\u043e\u0432\u043e\u0457 \u0441\u0442\u0430\u043d\u0446\u0456\u0457 \u0406\u043c\u043f\u0435\u0440\u0456\u0457, \u0449\u043e \u0440\u0443\u0439\u043d\u0443\u0454 \u0441\u0432\u0456\u0442, \u0430 \u0442\u0430\u043a\u043e\u0436 \u043d\u0430\u043c\u0430\u0433\u0430\u0454\u0442\u044c\u0441\u044f \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0442\u0438 \u043f\u0440\u0438\u043d\u0446\u0435\u0441\u0443 \u041b\u0435\u044e \u0432\u0456\u0434 \u0442\u0430\u0454\u043c\u043d\u0438\u0447\u043e\u0433\u043e \u0414\u0430\u0440\u0442\u0430 \u0412\u0435\u0439\u0434\u0435\u0440\u0430.",
+            "description_en": "Luke Skywalker joins forces with a Jedi Knight, a cocky pilot, a Wookiee and two droids to save the galaxy from the Empire's world-destroying battle station, while also attempting to rescue Princess Leia from the mysterious Darth Vader.",
+            "release_date": "1977-05-25T00:00:00",
+            "duration": 121,
+            "budget": 11000000,
+            "domestic_gross": 460998507,
+            "worldwide_gross": 775398507,
+            "poster": "10_Star Wars Episode IV - A New Hope.png",
+            "actors_ids": [
+                46,
+                47,
+                48,
+                49,
+                50,
+                51
+            ],
+            "directors_ids": [
+                10
+            ],
+            "genres_ids": [
+                1,
+                2,
+                11,
+                18
+            ],
+            "subgenres_ids": [
+                2,
+                15,
+                8
+            ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US"
         }

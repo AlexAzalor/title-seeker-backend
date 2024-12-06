@@ -19,6 +19,8 @@ class MovieExportCreate(BaseModel):
     domestic_gross: int | None = None
     worldwide_gross: int | None = None
     poster: str | None = None
+    actors_ids: list[int]
+    directors_ids: list[int]
     genres_ids: list[int]
     subgenres_ids: list[int] | None = None
     location_uk: str

@@ -1,7 +1,5 @@
 import json
 from datetime import datetime
-import sqlalchemy as sa
-
 from googleapiclient.discovery import build
 
 from app import models as m
@@ -26,17 +24,11 @@ BORN_IN_UK = "born_in_uk"
 BORN_IN_EN = "born_in_en"
 CHARACTER_NAME_UK = "character_name_uk"
 CHARACTER_NAME_EN = "character_name_en"
-MOVIES = "movies"
 AVATAR = "avatar"
 
 
 def write_actors_in_db(actors: list[s.ActorExportCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.Movie)):
-            log(log.ERROR, "Movie table is empty")
-            log(log.ERROR, "Please run `flask fill-db-with-movies` first")
-            raise Exception("Movie table is empty. Please run `flask fill-db-with-movies` first")
-
         for actor in actors:
             new_actor = m.Actor(
                 key=actor.key,
@@ -64,13 +56,6 @@ def write_actors_in_db(actors: list[s.ActorExportCreate]):
             session.add(new_actor)
             session.flush()
 
-            for movie_id in actor.movies:
-                movie = session.scalar(sa.select(m.Movie).filter(m.Movie.id == movie_id))
-                if not movie:
-                    log(log.ERROR, "Movie with ID [%s] not found", movie_id)
-                    raise Exception(f"Movie with ID [{movie_id}] not found")
-                movie.actors.append(new_actor)
-
             log(log.DEBUG, "Job with title [%s] created", actor.first_name_uk)
 
         session.commit()
@@ -87,7 +72,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     credentials = authorized_user_in_google_spreadsheets()
 
     # Last column need to be filled!
-    LAST_SHEET_COLUMN = "O"
+    LAST_SHEET_COLUMN = "N"
     RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -115,7 +100,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     BORN_IN_EN_INDEX = values[0].index(BORN_IN_EN)
     CHARACTER_NAME_UK_INDEX = values[0].index(CHARACTER_NAME_UK)
     CHARACTER_NAME_EN_INDEX = values[0].index(CHARACTER_NAME_EN)
-    MOVIES_INDEX = values[0].index(MOVIES)
     AVATAR_INDEX = values[0].index(AVATAR)
 
     print("values: ", values[:1])
@@ -155,10 +139,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
         character_name_en = row[CHARACTER_NAME_EN_INDEX]
         assert character_name_en, f"The character_name_en {character_name_en} is missing"
 
-        movies = row[MOVIES_INDEX]
-        assert movies, f"The movies {movies} is missing"
-        movies_ids = convert_string_to_list_of_integers(movies)
-
         avatar = row[AVATAR_INDEX]
 
         actors.append(
@@ -174,7 +154,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 born_in_en=born_in_en,
                 character_name_uk=character_name_uk,
                 character_name_en=character_name_en,
-                movies=movies_ids,
                 avatar=avatar,
             )
         )

@@ -70,6 +70,8 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         back_populates="movies",
     )
     # rating - relationship? or just a column? There will be very advanced rating system.
+    # related_movies - relationship
+    # similar_movies - relationship or property?
 
     # Not for MVP
     # reviews - relationship

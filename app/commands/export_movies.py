@@ -27,6 +27,8 @@ BUDGET = "budget"
 DOMESTIC_GROSS = "domestic_gross"
 WORLDWIDE_GROSS = "worldwide_gross"
 POSTER = "poster"
+ACTORS_IDS = "actors_ids"
+DIRECTORS_IDS = "directors_ids"
 GENRES_IDS = "genres_ids"
 SUBGENRES_IDS = "subgenres_ids"
 LOCATION_UK = "location_uk"
@@ -35,6 +37,14 @@ LOCATION_EN = "location_en"
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
     with db.begin() as session:
+        if not session.scalar(sa.select(m.Actor)):
+            log(log.ERROR, "Actor table is empty")
+            log(log.ERROR, "Please run `flask fill-db-with-actors` first")
+            raise Exception("Actor table is empty. Please run `flask fill-db-with-actors` first")
+        if not session.scalar(sa.select(m.Director)):
+            log(log.ERROR, "Director table is empty")
+            log(log.ERROR, "Please run `flask fill-db-with-directors` first")
+            raise Exception("Director table is empty. Please run `flask fill-db-with-directors` first")
         if not session.scalar(sa.select(m.Genre)):
             log(log.ERROR, "Genre table is empty")
             log(log.ERROR, "Please run `flask fill-db-with-genres` first")
@@ -62,6 +72,13 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                         description=movie.description_en,
                         location=movie.location_en,
                     ),
+                ],
+                actors=[
+                    session.scalar(sa.select(m.Actor).where(m.Actor.id == actor_id)) for actor_id in movie.actors_ids
+                ],
+                directors=[
+                    session.scalar(sa.select(m.Director).where(m.Director.id == director_id))
+                    for director_id in movie.directors_ids
                 ],
                 genres=[
                     session.scalar(sa.select(m.Genre).where(m.Genre.id == genre_id)) for genre_id in movie.genres_ids
@@ -91,7 +108,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "Q"
+    LAST_SHEET_COLUMN = "S"
     RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -119,6 +136,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     DOMESTIC_GROSS_INDEX = values[0].index(DOMESTIC_GROSS)
     WORLDWIDE_GROSS_INDEX = values[0].index(WORLDWIDE_GROSS)
     POSTER_INDEX = values[0].index(POSTER)
+    ACTORS_IDS_INDEX = values[0].index(ACTORS_IDS)
+    DIRECTORS_IDS_INDEX = values[0].index(DIRECTORS_IDS)
     GENRES_IDS_INDEX = values[0].index(GENRES_IDS)
     SUBGENRES_IDS_INDEX = values[0].index(SUBGENRES_IDS)
     LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
@@ -163,6 +182,14 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         poster = row[POSTER_INDEX]
 
+        actors_ids = row[ACTORS_IDS_INDEX]
+        assert actors_ids, f"The actors_ids {actors_ids} is missing"
+        actors_ids = convert_string_to_list_of_integers(actors_ids)
+
+        directors_ids = row[DIRECTORS_IDS_INDEX]
+        assert directors_ids, f"The directors_ids {directors_ids} is missing"
+        directors_ids = convert_string_to_list_of_integers(directors_ids)
+
         genres_ids = row[GENRES_IDS_INDEX]
         assert genres_ids, f"The genres_ids {genres_ids} is missing"
         genres_ids = convert_string_to_list_of_integers(genres_ids)
@@ -190,6 +217,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 domestic_gross=int(domestic_gross),
                 worldwide_gross=int(worldwide_gross),
                 poster=poster,
+                actors_ids=actors_ids,
+                directors_ids=directors_ids,
                 genres_ids=genres_ids,
                 subgenres_ids=subgenres_ids if subgenres_ids else None,
                 location_uk=location_uk,

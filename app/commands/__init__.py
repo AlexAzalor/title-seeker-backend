@@ -101,15 +101,15 @@ def init(app: Flask):
     @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
+        from .export_actors import export_actors_from_google_spreadsheets
+        from .export_directors import export_directors_from_google_spreadsheets
         from .export_genres import export_genres_from_google_spreadsheets
         from .export_subgenres import export_subgenres_from_google_spreadsheets
         from .export_movies import export_movies_from_google_spreadsheets
-        from .export_actors import export_actors_from_google_spreadsheets
-        from .export_directors import export_directors_from_google_spreadsheets
 
+        export_actors_from_google_spreadsheets()
+        export_directors_from_google_spreadsheets()
         export_genres_from_google_spreadsheets()
         export_subgenres_from_google_spreadsheets()
         export_movies_from_google_spreadsheets()
-        export_actors_from_google_spreadsheets()
-        export_directors_from_google_spreadsheets()
         print("done")
