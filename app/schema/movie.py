@@ -2,6 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schema.actor import ActorOut
+from app.schema.director import DirectorOut
+from app.schema.genre import GenreOut
 from config import config
 
 CFG = config()
@@ -130,16 +133,6 @@ class MovieSearchOut(BaseModel):
     )
 
 
-class MovieByGenresList(BaseModel):
-    movies: list[MovieSearchOut]
-    genre: MovieGenre | None = None
-    subgenre: MovieSubgenre | None = None
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-
 class ActorShort(BaseModel):
     key: str
     name: str
@@ -149,9 +142,27 @@ class ActorShort(BaseModel):
     )
 
 
+class MovieSearchResult(BaseModel):
+    movies: list[MovieSearchOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieByActorsList(BaseModel):
     movies: list[MovieSearchOut]
     actor: list[ActorShort] | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieFiltersListOut(BaseModel):
+    genres: list[GenreOut]
+    actors: list[ActorOut]
+    directors: list[DirectorOut]
 
     model_config = ConfigDict(
         from_attributes=True,

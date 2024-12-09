@@ -4,6 +4,8 @@ from fastapi import APIRouter, Request
 from .movie import movie_router
 from .avatar import avatar_router
 from .genre import genre_router
+from .actor import actor_router
+from .director import director_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
@@ -11,6 +13,8 @@ router.include_router(movie_router)
 # router.include_router(auth_router)
 router.include_router(avatar_router)
 router.include_router(genre_router)
+router.include_router(actor_router)
+router.include_router(director_router)
 
 
 @router.get("/list-endpoints/")

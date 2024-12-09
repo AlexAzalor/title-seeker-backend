@@ -32,3 +32,20 @@ class ActorsJSONFile(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class ActorOut(BaseModel):
+    key: str
+    full_name: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class ActorListOut(BaseModel):
+    actors: list[ActorOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

@@ -51,6 +51,21 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             raise Exception("Genre table is empty. Please run `flask fill-db-with-genres` first")
 
         for movie in movies:
+            print("[DB BLOCK] MOVIE KEY: ", movie.key)
+            subgenres = (
+                [
+                    session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))
+                    for subgenre_id in movie.subgenres_ids
+                ]
+                if movie.subgenres_ids
+                else []
+            )
+            if subgenres:
+                for subgenre in subgenres:
+                    if subgenre.genre_id not in movie.genres_ids:
+                        log(log.ERROR, "Subgenre [%s] has not parent genre", subgenre.key)
+                        raise Exception(f"Subgenre [{subgenre.key}] has not parent genre")
+
             new_movie: m.Movie = m.Movie(
                 key=movie.key,
                 poster=movie.poster,
@@ -152,6 +167,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
+
+        print("=== MOVIE KEY: ", key)
 
         title_uk = row[TITLE_UK_INDEX]
         assert title_uk, f"The title_uk {title_uk} is missing"

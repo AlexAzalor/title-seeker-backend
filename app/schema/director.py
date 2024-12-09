@@ -30,3 +30,20 @@ class DirectorsJSONFile(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class DirectorOut(BaseModel):
+    key: str
+    full_name: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class DirectorListOut(BaseModel):
+    directors: list[DirectorOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

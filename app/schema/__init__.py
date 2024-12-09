@@ -32,12 +32,13 @@ from .movie import (
     MovieGenres,
     MovieGenre,
     MovieSubgenre,
-    MovieByGenresList,
+    MovieSearchResult,
     MovieSearchOut,
     MovieByActorsList,
     ActorShort,
+    MovieFiltersListOut,
 )
-from .actor import ActorExportCreate, ActorsJSONFile
-from .director import DirectorExportCreate, DirectorsJSONFile
+from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut
+from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile

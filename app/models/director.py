@@ -5,6 +5,7 @@ from sqlalchemy import orm
 
 from app.database import db
 from app.models.mixins import CreatableMixin, UpdatableMixin
+from app.schema.language import Language
 from .movie_directors import movie_directors
 
 from .utils import ModelMixin
@@ -36,6 +37,9 @@ class Director(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         secondary=movie_directors,
         back_populates="directors",
     )
+
+    def full_name(self, lang: Language = Language.UK) -> str:
+        return next((t.full_name for t in self.translations if t.language == lang.value))
 
     def __repr__(self):
         return f"<Director [{self.id}]: {self.translations[0].full_name}>"

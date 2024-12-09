@@ -14,6 +14,10 @@ UPLOAD_DIRECTORY = "./uploads/avatars/"
 async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload avatar for actor"""
 
+    actor = db.query(m.Actor).filter(m.Actor.id == actor_id).first()
+    if not actor:
+        raise HTTPException(status_code=404, detail="Actor not found")
+
     directory_path = UPLOAD_DIRECTORY + "actors/"
 
     if not os.path.exists(directory_path):
@@ -25,10 +29,6 @@ async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
 
-    actor = db.query(m.Actor).filter(m.Actor.id == actor_id).first()
-    if not actor:
-        raise HTTPException(status_code=404, detail="Actor not found")
-
     actor.avatar = file_name
     db.commit()
 
@@ -38,6 +38,10 @@ async def upload_avatar(actor_id: int, file: UploadFile = File(...), db: Session
 @avatar_router.post("/upload-director-avatar/{director_id}", status_code=status.HTTP_200_OK)
 async def upload_director_avatar(director_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload avatar for director"""
+
+    director = db.query(m.Director).filter(m.Director.id == director_id).first()
+    if not director:
+        raise HTTPException(status_code=404, detail="Director not found")
 
     directory_path = UPLOAD_DIRECTORY + "directors/"
 
@@ -49,10 +53,6 @@ async def upload_director_avatar(director_id: int, file: UploadFile = File(...),
 
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
-
-    director = db.query(m.Director).filter(m.Director.id == director_id).first()
-    if not director:
-        raise HTTPException(status_code=404, detail="Director not found")
 
     director.avatar = file_name
     db.commit()

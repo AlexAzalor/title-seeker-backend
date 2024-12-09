@@ -119,6 +119,126 @@
             "born_in_uk": "\u041c\u043e\u0434\u0435\u0441\u0442\u043e, \u041a\u0430\u043b\u0456\u0444\u043e\u0440\u043d\u0456\u044f, \u0421\u0428\u0410",
             "born_in_en": "Modesto, California, USA",
             "avatar": "10_George Lucas.png"
+        },
+        {
+            "key": "steven-spielberg",
+            "first_name_uk": "\u0421\u0442\u0456\u0432\u0435\u043d",
+            "last_name_uk": "\u0421\u043f\u0456\u043b\u0431\u0435\u0440\u0491",
+            "first_name_en": "Steven",
+            "last_name_en": "Spielberg",
+            "born": "1946-12-18T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0426\u0438\u043d\u0446\u0438\u043d\u043d\u0430\u0442\u0456, \u041e\u0433\u0430\u0439\u043e, \u0421\u0428\u0410",
+            "born_in_en": "Cincinnati, Ohio, USA",
+            "avatar": "11_Steven Spielberg.png"
+        },
+        {
+            "key": "andrew-adamson",
+            "first_name_uk": "\u0415\u043d\u0434\u0440\u044e",
+            "last_name_uk": "\u0410\u0434\u0430\u043c\u0441\u043e\u043d",
+            "first_name_en": "Andrew",
+            "last_name_en": "Adamson",
+            "born": "1966-12-01T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041e\u043a\u043b\u0435\u043d\u0434, \u041d\u043e\u0432\u0430 \u0417\u0435\u043b\u0430\u043d\u0434\u0456\u044f",
+            "born_in_en": "Auckland, New Zealand",
+            "avatar": "12_Andrew Adamson.png"
+        },
+        {
+            "key": "stanley-kubrick",
+            "first_name_uk": "\u0421\u0442\u0435\u043d\u043b\u0456",
+            "last_name_uk": "\u041a\u0443\u0431\u0440\u0438\u043a",
+            "first_name_en": "Stanley",
+            "last_name_en": "Kubrick",
+            "born": "1928-07-26T00:00:00",
+            "died": "1999-03-07T00:00:00",
+            "born_in_uk": "\u041d\u044c\u044e-\u0419\u043e\u0440\u043a, \u041d\u044c\u044e-\u0419\u043e\u0440\u043a, \u0421\u0428\u0410",
+            "born_in_en": "New York City, New York, USA",
+            "avatar": "13_Stanley Kubrick.png"
+        },
+        {
+            "key": "shawn-levy",
+            "first_name_uk": "\u0428\u043e\u043d",
+            "last_name_uk": "\u041b\u0435\u0432\u0456",
+            "first_name_en": "Shawn",
+            "last_name_en": "Levy",
+            "born": "1968-07-23T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041c\u043e\u043d\u0440\u0435\u0430\u043b\u044c, \u041a\u0432\u0435\u0431\u0435\u043a, \u041a\u0430\u043d\u0430\u0434\u0430",
+            "born_in_en": "Montreal, Quebec, Canada",
+            "avatar": "14_Shawn Levy.png"
+        },
+        {
+            "key": "jonathan-demme",
+            "first_name_uk": "\u0414\u0436\u043e\u043d\u0430\u0442\u0430\u043d",
+            "last_name_uk": "\u0414\u0435\u043c\u043c\u0456",
+            "first_name_en": "Jonathan",
+            "last_name_en": "Demme",
+            "born": "1944-02-22T00:00:00",
+            "died": "2017-04-26T00:00:00",
+            "born_in_uk": "\u0411\u043e\u043b\u0434\u0443\u0456\u043d, \u041b\u043e\u043d\u0433-\u0410\u0439\u043b\u0435\u043d\u0434, \u041d\u044c\u044e-\u0419\u043e\u0440\u043a, \u0421\u0428\u0410",
+            "born_in_en": "Baldwin, Long Island, New York, USA",
+            "avatar": "15_Jonathan Demme.png"
+        },
+        {
+            "key": "roger-allers",
+            "first_name_uk": "\u0420\u043e\u0434\u0436\u0435\u0440",
+            "last_name_uk": "\u0410\u043b\u043b\u0435\u0440\u0441",
+            "first_name_en": "Roger",
+            "last_name_en": "Allers",
+            "born": "1949-06-29T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0420\u0430\u0439, \u041d\u044c\u044e-\u0419\u043e\u0440\u043a, \u0421\u0428\u0410",
+            "born_in_en": "Rye, New York, USA",
+            "avatar": "16_Roger Allers.png"
+        },
+        {
+            "key": "rob-minkoff",
+            "first_name_uk": "\u0420\u043e\u0431",
+            "last_name_uk": "\u041c\u0456\u043d\u043a\u043e\u0444\u0444",
+            "first_name_en": "Rob",
+            "last_name_en": "Minkoff",
+            "born": "1962-08-11T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041f\u0430\u043b\u043e-\u0410\u043b\u044c\u0442\u043e, \u041a\u0430\u043b\u0456\u0444\u043e\u0440\u043d\u0456\u044f, \u0421\u0428\u0410",
+            "born_in_en": "Palo Alto, California, USA",
+            "avatar": "17_Rob Minkoff.png"
+        },
+        {
+            "key": "chris-columbus",
+            "first_name_uk": "\u041a\u0440\u0456\u0441",
+            "last_name_uk": "\u041a\u043e\u043b\u0430\u043c\u0431\u0443\u0441",
+            "first_name_en": "Chris",
+            "last_name_en": "Columbus",
+            "born": "1958-09-10T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0421\u043f\u0435\u043d\u0433\u043b\u0435\u0440, \u041f\u0435\u043d\u0441\u0456\u043b\u044c\u0432\u0430\u043d\u0456\u044f, \u0421\u0428\u0410",
+            "born_in_en": "Spangler, Pennsylvania, USA",
+            "avatar": "18_Chris Columbus.png"
+        },
+        {
+            "key": "james-cameron",
+            "first_name_uk": "\u0414\u0436\u0435\u0439\u043c\u0441",
+            "last_name_uk": "\u041a\u0430\u043c\u0435\u0440\u043e\u043d",
+            "first_name_en": "James",
+            "last_name_en": "Cameron",
+            "born": "1954-08-16T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041a\u0430\u043f\u0443\u0441\u043a\u0430\u0441\u0456\u043d\u0433, \u041e\u043d\u0442\u0430\u0440\u0456\u043e, \u041a\u0430\u043d\u0430\u0434\u0430",
+            "born_in_en": "Kapuskasing, Ontario, Canada",
+            "avatar": "19_James Cameron.png"
+        },
+        {
+            "key": "chuck-russell",
+            "first_name_uk": "\u0427\u0430\u043a",
+            "last_name_uk": "\u0420\u0430\u0441\u0441\u0435\u043b",
+            "first_name_en": "Chuck",
+            "last_name_en": "Russell",
+            "born": "1958-05-09T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041f\u0430\u0440\u043a-\u0420\u0456\u0434\u0436, \u0406\u043b\u043b\u0456\u043d\u043e\u0439\u0441, \u0421\u0428\u0410",
+            "born_in_en": "Park Ridge, Illinois, USA",
+            "avatar": "20_Chuck Russell.png"
         }
     ]
 }

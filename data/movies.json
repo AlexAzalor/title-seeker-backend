@@ -117,10 +117,11 @@
             "genres_ids": [
                 1,
                 2,
-                18,
-                20
+                18
             ],
-            "subgenres_ids": null,
+            "subgenres_ids": [
+                23
+            ],
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK"
         },
@@ -330,6 +331,325 @@
                 2,
                 15,
                 8
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "schindlers-list",
+            "title_uk": "\u0421\u043f\u0438\u0441\u043e\u043a \u0428\u0438\u043d\u0434\u043b\u0435\u0440\u0430",
+            "title_en": "Schindler's List",
+            "description_uk": "\u0412 \u043e\u043a\u0443\u043f\u043e\u0432\u0430\u043d\u0456\u0439 \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u043e\u044e \u041f\u043e\u043b\u044c\u0449\u0456 \u043f\u0456\u0434 \u0447\u0430\u0441 \u0414\u0440\u0443\u0433\u043e\u0457 \u0441\u0432\u0456\u0442\u043e\u0432\u043e\u0457 \u0432\u0456\u0439\u043d\u0438 \u043f\u0440\u043e\u043c\u0438\u0441\u043b\u043e\u0432\u0435\u0446\u044c \u041e\u0441\u043a\u0430\u0440 \u0428\u0438\u043d\u0434\u043b\u0435\u0440 \u043f\u043e\u0441\u0442\u0443\u043f\u043e\u0432\u043e \u043f\u043e\u0447\u0438\u043d\u0430\u0454 \u0445\u0432\u0438\u043b\u044e\u0432\u0430\u0442\u0438\u0441\u044f \u0437\u0430 \u0441\u0432\u043e\u044e \u0454\u0432\u0440\u0435\u0439\u0441\u044c\u043a\u0443 \u0440\u043e\u0431\u043e\u0447\u0443 \u0441\u0438\u043b\u0443 \u043f\u0456\u0441\u043b\u044f \u0442\u043e\u0433\u043e, \u044f\u043a \u0441\u0442\u0430\u0432 \u0441\u0432\u0456\u0434\u043a\u043e\u043c \u0457\u0445\u043d\u044c\u043e\u0433\u043e \u043f\u0435\u0440\u0435\u0441\u043b\u0456\u0434\u0443\u0432\u0430\u043d\u043d\u044f \u0437 \u0431\u043e\u043a\u0443 \u043d\u0430\u0446\u0438\u0441\u0442\u0456\u0432.",
+            "description_en": "In German-occupied Poland during World War II, industrialist Oskar Schindler gradually becomes concerned for his Jewish workforce after witnessing their persecution by the Nazis.",
+            "release_date": "1994-02-04T00:00:00",
+            "duration": 195,
+            "budget": 22000000,
+            "domestic_gross": 96898818,
+            "worldwide_gross": 322161245,
+            "poster": "11_Schindler's List.png",
+            "actors_ids": [
+                52,
+                53,
+                54
+            ],
+            "directors_ids": [
+                11
+            ],
+            "genres_ids": [
+                4,
+                9,
+                12,
+                21
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "shrek",
+            "title_uk": "\u0428\u0440\u0435\u043a",
+            "title_en": "Shrek",
+            "description_uk": "\u0417\u043b\u0438\u0439 \u043b\u043e\u0440\u0434 \u0432\u0438\u0441\u0438\u043b\u0430\u0454 \u043a\u0430\u0437\u043a\u043e\u0432\u0438\u0445 \u0456\u0441\u0442\u043e\u0442 \u0443 \u0431\u043e\u043b\u043e\u0442\u043e \u0441\u0432\u0430\u0440\u043b\u0438\u0432\u043e\u0433\u043e \u043b\u044e\u0434\u043e\u0435\u0434\u0430, \u044f\u043a\u0438\u0439 \u043f\u043e\u0432\u0438\u043d\u0435\u043d \u0432\u0456\u0434\u043f\u0440\u0430\u0432\u0438\u0442\u0438\u0441\u044f \u043d\u0430 \u043f\u043e\u0448\u0443\u043a\u0438 \u0442\u0430 \u0432\u0440\u044f\u0442\u0443\u0432\u0430\u0442\u0438 \u043f\u0440\u0438\u043d\u0446\u0435\u0441\u0443 \u0434\u043b\u044f \u043b\u043e\u0440\u0434\u0430, \u0449\u043e\u0431 \u043f\u043e\u0432\u0435\u0440\u043d\u0443\u0442\u0438 \u0441\u0432\u043e\u044e \u0437\u0435\u043c\u043b\u044e.",
+            "description_en": "A mean lord exiles fairytale creatures to the swamp of a grumpy ogre, who must go on a quest and rescue a princess for the lord in order to get his land back.",
+            "release_date": "2001-05-18T00:00:00",
+            "duration": 90,
+            "budget": 60000000,
+            "domestic_gross": 268349831,
+            "worldwide_gross": 488629509,
+            "poster": "12_Shrek.png",
+            "actors_ids": [
+                55,
+                56,
+                57,
+                58,
+                59
+            ],
+            "directors_ids": [
+                12
+            ],
+            "genres_ids": [
+                2,
+                3,
+                5,
+                10,
+                11,
+                17
+            ],
+            "subgenres_ids": [
+                15,
+                17
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "the-shining",
+            "title_uk": "\u0421\u044f\u0439\u0432\u043e",
+            "title_en": "The Shining",
+            "description_uk": "\u0421\u0456\u043c'\u044f \u0432\u0456\u0434\u043f\u0440\u0430\u0432\u043b\u044f\u0454\u0442\u044c\u0441\u044f \u043d\u0430 \u0437\u0438\u043c\u0443 \u0432 \u0456\u0437\u043e\u043b\u044c\u043e\u0432\u0430\u043d\u0438\u0439 \u0433\u043e\u0442\u0435\u043b\u044c, \u0434\u0435 \u0437\u043b\u043e\u0432\u0456\u0441\u043d\u0430 \u043f\u0440\u0438\u0441\u0443\u0442\u043d\u0456\u0441\u0442\u044c \u0441\u043f\u043e\u043d\u0443\u043a\u0430\u0454 \u0431\u0430\u0442\u044c\u043a\u0430 \u0434\u043e \u043d\u0430\u0441\u0438\u043b\u044c\u0441\u0442\u0432\u0430. \u0423 \u0442\u043e\u0439 \u0436\u0435 \u0447\u0430\u0441 \u0439\u043e\u0433\u043e \u0441\u0438\u043d-\u0435\u043a\u0441\u0442\u0440\u0430\u0441\u0435\u043d\u0441 \u0431\u0430\u0447\u0438\u0442\u044c \u0436\u0430\u0445\u043b\u0438\u0432\u0456 \u043f\u0435\u0440\u0435\u0434\u0447\u0443\u0442\u0442\u044f \u044f\u043a \u0437 \u043c\u0438\u043d\u0443\u043b\u043e\u0433\u043e, \u0442\u0430\u043a \u0456 \u0437 \u043c\u0430\u0439\u0431\u0443\u0442\u043d\u044c\u043e\u0433\u043e.",
+            "description_en": "A family heads to an isolated hotel for the winter, where a sinister presence influences the father into violence. At the same time, his psychic son sees horrifying forebodings from both the past and the future.",
+            "release_date": "1980-06-13T00:00:00",
+            "duration": 146,
+            "budget": 19000000,
+            "domestic_gross": 45634352,
+            "worldwide_gross": 47959450,
+            "poster": "13_The Shining.png",
+            "actors_ids": [
+                60
+            ],
+            "directors_ids": [
+                13
+            ],
+            "genres_ids": [
+                9,
+                13
+            ],
+            "subgenres_ids": [
+                24
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
+            "location_en": "US, UK"
+        },
+        {
+            "key": "the-green-mile",
+            "title_uk": "\u0417\u0435\u043b\u0435\u043d\u0430 \u043c\u0438\u043b\u044f",
+            "title_en": "The Green Mile",
+            "description_uk": "\u041f\u043e\u043b \u0415\u0434\u0436\u043a\u043e\u043c\u0431, \u0433\u043e\u043b\u043e\u0432\u043d\u0438\u0439 \u043e\u0445\u043e\u0440\u043e\u043d\u0435\u0446\u044c \u0432'\u044f\u0437\u043d\u0438\u0446\u0456, \u0437\u0443\u0441\u0442\u0440\u0456\u0447\u0430\u0454 \u0443\u0432'\u044f\u0437\u043d\u0435\u043d\u043e\u0433\u043e \u0414\u0436\u043e\u043d\u0430 \u041a\u043e\u0444\u0444\u0456, \u0442\u0435\u043c\u043d\u043e\u0448\u043a\u0456\u0440\u043e\u0433\u043e \u0447\u043e\u043b\u043e\u0432\u0456\u043a\u0430, \u044f\u043a\u043e\u0433\u043e \u0437\u0432\u0438\u043d\u0443\u0432\u0430\u0447\u0443\u044e\u0442\u044c \u0443 \u0432\u0431\u0438\u0432\u0441\u0442\u0432\u0456 \u0434\u0432\u043e\u0445 \u0434\u0456\u0432\u0447\u0430\u0442. \u0419\u043e\u0433\u043e \u0436\u0438\u0442\u0442\u044f \u043a\u0430\u0440\u0434\u0438\u043d\u0430\u043b\u044c\u043d\u043e \u0437\u043c\u0456\u043d\u044e\u0454\u0442\u044c\u0441\u044f, \u043a\u043e\u043b\u0438 \u0432\u0456\u043d \u0432\u0438\u044f\u0432\u043b\u044f\u0454, \u0449\u043e \u0414\u0436\u043e\u043d \u043c\u0430\u0454 \u043e\u0441\u043e\u0431\u043b\u0438\u0432\u0438\u0439 \u0434\u0430\u0440.",
+            "description_en": "Paul Edgecomb, the head guard of a prison, meets an inmate, John Coffey, a black man who is accused of murdering two girls. His life changes drastically when he discovers that John has a special gift.",
+            "release_date": "1999-12-10T00:00:00",
+            "duration": 189,
+            "budget": 60000000,
+            "domestic_gross": 136801374,
+            "worldwide_gross": 286801374,
+            "poster": "14_The Green Mile.png",
+            "actors_ids": [
+                61,
+                62,
+                63
+            ],
+            "directors_ids": [
+                1
+            ],
+            "genres_ids": [
+                6,
+                9,
+                16
+            ],
+            "subgenres_ids": [
+                18
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "real-steel",
+            "title_uk": "\u0416\u0438\u0432\u0430 \u0441\u0442\u0430\u043b\u044c",
+            "title_en": "Real Steel",
+            "description_uk": "\u0423 \u043d\u0430\u0439\u0431\u043b\u0438\u0436\u0447\u043e\u043c\u0443 \u043c\u0430\u0439\u0431\u0443\u0442\u043d\u044c\u043e\u043c\u0443, \u043a\u043e\u043b\u0438 \u0440\u043e\u0431\u043e\u0442-\u0431\u043e\u043a\u0441 \u0441\u0442\u0430\u043d\u0435 \u043e\u0434\u043d\u0438\u043c \u0437 \u043d\u0430\u0439\u043f\u043e\u043f\u0443\u043b\u044f\u0440\u043d\u0456\u0448\u0438\u0445 \u0432\u0438\u0434\u0456\u0432 \u0441\u043f\u043e\u0440\u0442\u0443, \u043a\u043e\u043b\u0438\u0448\u043d\u0456\u0439 \u0431\u043e\u043a\u0441\u0435\u0440, \u044f\u043a\u0438\u0439 \u0431\u043e\u0440\u0435\u0442\u044c\u0441\u044f, \u0432\u0456\u0434\u0447\u0443\u0432\u0430\u0454, \u0449\u043e \u0437\u043d\u0430\u0439\u0448\u043e\u0432 \u0447\u0435\u043c\u043f\u0456\u043e\u043d\u0430 \u0443 \u0432\u0438\u043a\u0438\u043d\u0443\u0442\u043e\u043c\u0443 \u0440\u043e\u0431\u043e\u0442\u0456.",
+            "description_en": "In a near future where robot boxing is a top sport, a struggling ex-boxer feels he's found a champion in a discarded robot.",
+            "release_date": "2011-10-07T00:00:00",
+            "duration": 127,
+            "budget": 110000000,
+            "domestic_gross": 85468508,
+            "worldwide_gross": 299268508,
+            "poster": "15_Real Steel.png",
+            "actors_ids": [
+                64,
+                65
+            ],
+            "directors_ids": [
+                14
+            ],
+            "genres_ids": [
+                1,
+                9,
+                18,
+                19
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0421\u0428\u0410, \u0406\u043d\u0434\u0456\u044f",
+            "location_en": "US, India"
+        },
+        {
+            "key": "the-silence-of-the-lambs",
+            "title_uk": "\u041c\u043e\u0432\u0447\u0430\u043d\u043d\u044f \u044f\u0433\u043d\u044f\u0442",
+            "title_en": "The Silence of the Lambs",
+            "description_uk": "\u041c\u043e\u043b\u043e\u0434\u0438\u0439 F.B.I. \u041a\u0430\u0434\u0435\u0442 \u043f\u043e\u0432\u0438\u043d\u0435\u043d \u043e\u0442\u0440\u0438\u043c\u0430\u0442\u0438 \u0434\u043e\u043f\u043e\u043c\u043e\u0433\u0443 \u0443\u0432\u2019\u044f\u0437\u043d\u0435\u043d\u043e\u0433\u043e \u0442\u0430 \u043c\u0430\u043d\u0456\u043f\u0443\u043b\u044f\u0442\u0438\u0432\u043d\u043e\u0433\u043e \u0432\u0431\u0438\u0432\u0446\u0456-\u043a\u0430\u043d\u0456\u0431\u0430\u043b\u0430, \u0449\u043e\u0431 \u0434\u043e\u043f\u043e\u043c\u043e\u0433\u0442\u0438 \u0437\u043b\u043e\u0432\u0438\u0442\u0438 \u0456\u043d\u0448\u043e\u0433\u043e \u0441\u0435\u0440\u0456\u0439\u043d\u043e\u0433\u043e \u0432\u0431\u0438\u0432\u0446\u044e, \u0431\u043e\u0436\u0435\u0432\u0456\u043b\u044c\u043d\u043e\u0433\u043e, \u044f\u043a\u0438\u0439 \u0437\u043d\u0456\u043c\u0430\u0454 \u0448\u043a\u0456\u0440\u0443 \u0437\u0456 \u0441\u0432\u043e\u0457\u0445 \u0436\u0435\u0440\u0442\u0432.",
+            "description_en": "A young F.B.I. cadet must receive the help of an incarcerated and manipulative cannibal killer to help catch another serial killer, a madman who skins his victims.",
+            "release_date": "1991-02-14T00:00:00",
+            "duration": 118,
+            "budget": 19000000,
+            "domestic_gross": 130742922,
+            "worldwide_gross": 272742922,
+            "poster": "16_The Silence of the Lambs.png",
+            "actors_ids": [
+                66,
+                67
+            ],
+            "directors_ids": [
+                15
+            ],
+            "genres_ids": [
+                6,
+                9,
+                20
+            ],
+            "subgenres_ids": [
+                11,
+                19
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "the-lion-king",
+            "title_uk": "\u041a\u043e\u0440\u043e\u043b\u044c \u041b\u0435\u0432",
+            "title_en": "The Lion King",
+            "description_uk": "\u041f\u0440\u0438\u043d\u0446-\u041b\u0435\u0432 \u0421\u0456\u043c\u0431\u0430 \u0442\u0430 \u0439\u043e\u0433\u043e \u0431\u0430\u0442\u044c\u043a\u043e \u0441\u0442\u0430\u044e\u0442\u044c \u043c\u0456\u0448\u0435\u043d\u043d\u044e \u0439\u043e\u0433\u043e \u0437\u0430\u043f\u0435\u043a\u043b\u043e\u0433\u043e \u0434\u044f\u0434\u044c\u043a\u0430, \u044f\u043a\u0438\u0439 \u0445\u043e\u0447\u0435 \u0441\u0430\u043c \u0437\u0456\u0439\u0442\u0438 \u043d\u0430 \u0442\u0440\u043e\u043d.",
+            "description_en": "Lion prince Simba and his father are targeted by his bitter uncle, who wants to ascend the throne himself.",
+            "release_date": "1994-06-24T00:00:00",
+            "duration": 118,
+            "budget": 45000000,
+            "domestic_gross": 424979720,
+            "worldwide_gross": 981708285,
+            "poster": "17_The Lion King.png",
+            "actors_ids": [
+                51,
+                68,
+                69,
+                70,
+                71
+            ],
+            "directors_ids": [
+                16,
+                17
+            ],
+            "genres_ids": [
+                2,
+                3,
+                9,
+                10,
+                11,
+                15
+            ],
+            "subgenres_ids": [
+                20
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US"
+        },
+        {
+            "key": "harry-potter-and-the-sorcerers-stone",
+            "title_uk": "\u0413\u0430\u0440\u0440\u0456 \u041f\u043e\u0442\u0442\u0435\u0440 \u0456 \u0444\u0456\u043b\u043e\u0441\u043e\u0444\u0441\u044c\u043a\u0438\u0439 \u043a\u0430\u043c\u0456\u043d\u044c",
+            "title_en": "Harry Potter and the Sorcerer's Stone",
+            "description_uk": "\u0425\u043b\u043e\u043f\u0447\u0438\u043a-\u0441\u0438\u0440\u043e\u0442\u0430 \u0432\u0441\u0442\u0443\u043f\u0430\u0454 \u0434\u043e \u0448\u043a\u043e\u043b\u0438 \u0447\u0430\u0440\u0456\u0432\u043d\u0438\u0446\u0442\u0432\u0430, \u0434\u0435 \u0434\u0456\u0437\u043d\u0430\u0454\u0442\u044c\u0441\u044f \u043f\u0440\u0430\u0432\u0434\u0443 \u043f\u0440\u043e \u0441\u0435\u0431\u0435, \u0441\u0432\u043e\u044e \u0440\u043e\u0434\u0438\u043d\u0443 \u0442\u0430 \u0436\u0430\u0445\u043b\u0438\u0432\u0435 \u0437\u043b\u043e, \u044f\u043a\u0435 \u043f\u0435\u0440\u0435\u0441\u043b\u0456\u0434\u0443\u0454 \u0447\u0430\u0440\u0456\u0432\u043d\u0438\u0439 \u0441\u0432\u0456\u0442.",
+            "description_en": "An orphaned boy enrolls in a school of wizardry, where he learns the truth about himself, his family and the terrible evil that haunts the magical world.",
+            "release_date": "2001-11-16T00:00:00",
+            "duration": 152,
+            "budget": 125000000,
+            "domestic_gross": 318886962,
+            "worldwide_gross": 1026409257,
+            "poster": "18_Harry Potter and the Sorcerer's Stone movie.png",
+            "actors_ids": [
+                72,
+                73,
+                74,
+                75
+            ],
+            "directors_ids": [
+                18
+            ],
+            "genres_ids": [
+                2,
+                10,
+                11
+            ],
+            "subgenres_ids": null,
+            "location_uk": "\u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0421\u0428\u0410",
+            "location_en": "UK, US"
+        },
+        {
+            "key": "terminator-2-judgment-day",
+            "title_uk": "\u0422\u0435\u0440\u043c\u0456\u043d\u0430\u0442\u043e\u0440 2: \u0421\u0443\u0434\u043d\u0438\u0439 \u0434\u0435\u043d\u044c",
+            "title_en": "Terminator 2: Judgment Day",
+            "description_uk": "\u041a\u0456\u0431\u043e\u0440\u0433, \u0456\u0434\u0435\u043d\u0442\u0438\u0447\u043d\u0438\u0439 \u0442\u043e\u043c\u0443, \u044f\u043a\u0438\u0439 \u043d\u0435 \u0437\u0443\u043c\u0456\u0432 \u0443\u0431\u0438\u0442\u0438 \u0421\u0430\u0440\u0443 \u041a\u043e\u043d\u043d\u043e\u0440, \u0442\u0435\u043f\u0435\u0440 \u043f\u043e\u0432\u0438\u043d\u0435\u043d \u0437\u0430\u0445\u0438\u0441\u0442\u0438\u0442\u0438 \u0457\u0457 \u0434\u0435\u0441\u044f\u0442\u0438\u0440\u0456\u0447\u043d\u043e\u0433\u043e \u0441\u0438\u043d\u0430 \u0414\u0436\u043e\u043d\u0430 \u0432\u0456\u0434 \u0449\u0435 \u0431\u0456\u043b\u044c\u0448 \u043f\u0440\u043e\u0441\u0443\u043d\u0443\u0442\u043e\u0433\u043e \u0442\u0430 \u043c\u043e\u0433\u0443\u0442\u043d\u044c\u043e\u0433\u043e \u043a\u0456\u0431\u043e\u0440\u0433\u0430.",
+            "description_en": "A cyborg, identical to the one who failed to kill Sarah Connor, must now protect her ten year old son John from an even more advanced and powerful cyborg.",
+            "release_date": "1991-07-03T00:00:00",
+            "duration": 137,
+            "budget": 102000000,
+            "domestic_gross": 205881154,
+            "worldwide_gross": 517778573,
+            "poster": "19_Terminator 2 - Judgment Day.png",
+            "actors_ids": [
+                76,
+                77,
+                78,
+                79
+            ],
+            "directors_ids": [
+                19
+            ],
+            "genres_ids": [
+                1,
+                2,
+                18
+            ],
+            "subgenres_ids": [
+                13,
+                21,
+                22
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
+            "location_en": "US, France"
+        },
+        {
+            "key": "the-mask",
+            "title_uk": "\u041c\u0430\u0441\u043a\u0430",
+            "title_en": "The Mask",
+            "description_uk": "\u0411\u0430\u043d\u043a\u0456\u0432\u0441\u044c\u043a\u0438\u0439 \u0441\u043b\u0443\u0436\u0431\u043e\u0432\u0435\u0446\u044c \u0421\u0442\u0435\u043d\u043b\u0456 \u0406\u043f\u043a\u0456\u0441\u0441 \u043f\u0435\u0440\u0435\u0442\u0432\u043e\u0440\u044e\u0454\u0442\u044c\u0441\u044f \u043d\u0430 \u043c\u0430\u043d\u0456\u0430\u043a\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u0441\u0443\u043f\u0435\u0440\u0433\u0435\u0440\u043e\u044f, \u043a\u043e\u043b\u0438 \u043e\u0434\u044f\u0433\u0430\u0454 \u0442\u0430\u0454\u043c\u043d\u0438\u0447\u0443 \u043c\u0430\u0441\u043a\u0443.",
+            "description_en": "Bank clerk Stanley Ipkiss is transformed into a manic superhero when he wears a mysterious mask.",
+            "release_date": "1994-07-29T00:00:00",
+            "duration": 101,
+            "budget": 23000000,
+            "domestic_gross": 119938730,
+            "worldwide_gross": 351583407,
+            "poster": "20_The Mask.png",
+            "actors_ids": [
+                80,
+                81,
+                57
+            ],
+            "directors_ids": [
+                20
+            ],
+            "genres_ids": [
+                1,
+                5,
+                6,
+                11
+            ],
+            "subgenres_ids": [
+                3
             ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US"
