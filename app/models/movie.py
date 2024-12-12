@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from .director import Director
     from .genres.genre import Genre
     from .genres.subgenre import Subgenre
+    from .rating import Rating
 
 
 # Questions/Ideas:
@@ -69,6 +70,12 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         secondary=movie_subgenres,
         back_populates="movies",
     )
+
+    ratings: orm.Mapped[list["Rating"]] = orm.relationship("Rating", back_populates="movie")
+    average_rating: orm.Mapped[float] = orm.mapped_column(sa.Float, default=0.00)
+    ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
+    rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
+
     # rating - relationship? or just a column? There will be very advanced rating system.
     # related_movies - relationship
     # similar_movies - relationship or property?

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
 from app.schema.genre import GenreOut
+from app.schema.rating import RatingCriterion
 from config import config
 
 CFG = config()
@@ -28,6 +29,8 @@ class MovieExportCreate(BaseModel):
     subgenres_ids: list[int] | None = None
     location_uk: str
     location_en: str
+    users_ratings: list[dict[int, float]]
+    rating_criterion: RatingCriterion
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -94,6 +97,34 @@ class MovieGenres(BaseModel):
     )
 
 
+class MovieRating(BaseModel):
+    uuid: str
+    rating: float
+    comment: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class UserRatingCriteria(BaseModel):
+    acting: float
+    plot_storyline: float
+    music: float
+    re_watchability: float
+    emotional_impact: float
+    dialogue: float
+    production_design: float
+    duration: float
+
+    visual_effects: float | None = None
+    scare_factor: float | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -108,6 +139,11 @@ class MovieOut(BaseModel):
     directors: list[MovieDirector] = []
     genres: list[MovieGenre] = []
     subgenres: list[MovieSubgenre] = []
+    ratings: list[MovieRating]
+    average_rating: float
+    ratings_count: int
+    user_rating: UserRatingCriteria | None = None
+    rating_criterion: RatingCriterion
 
     model_config = ConfigDict(
         from_attributes=True,

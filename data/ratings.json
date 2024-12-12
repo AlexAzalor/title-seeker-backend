@@ -1,0 +1,21 @@
+{
+    "ratings": [
+        {
+            "id": 1,
+            "movie_id": 1,
+            "user_id": 1,
+            "rating": 9.15,
+            "acting": 1.95,
+            "plot_storyline": 1.97,
+            "music": 1.28,
+            "re_watchability": 1.14,
+            "emotional_impact": 0.94,
+            "dialogue": 1.0,
+            "production_design": 0.42,
+            "duration": 0.45,
+            "visual_effects": null,
+            "scare_factor": null,
+            "comment": null
+        }
+    ]
+}

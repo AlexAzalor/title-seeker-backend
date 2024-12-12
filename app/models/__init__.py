@@ -1,5 +1,5 @@
 # ruff: noqa
-# from .user import User
+from .user import User
 from .admin import Admin, AnonymousUser
 from .movie import Movie
 from .movie_translation import MovieTranslation
@@ -17,3 +17,4 @@ from .genres.subgenre_translation import SubgenreTranslation
 from .genres.movie_genres import movie_genres
 from .genres.genre_subgenres import genre_subgenres
 from .genres.movie_subgenres import movie_subgenres
+from .rating import Rating

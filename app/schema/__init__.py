@@ -37,8 +37,12 @@ from .movie import (
     MovieByActorsList,
     ActorShort,
     MovieFiltersListOut,
+    MovieRating,
+    UserRatingCriteria,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
+from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn
+from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile

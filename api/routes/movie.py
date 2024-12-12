@@ -44,10 +44,8 @@ def get_movies(
 
     db_movies = (
         db.scalars(
-            sa.select(m.Movie)
-            .where(m.Movie.is_deleted.is_(False))
-            .options(joinedload(m.Movie.translations))
-            .order_by(m.Movie.release_date.desc())
+            sa.select(m.Movie).where(m.Movie.is_deleted.is_(False)).options(joinedload(m.Movie.translations))
+            # .order_by(m.Movie.release_date.desc())
         )
         .unique()
         .all()
@@ -108,6 +106,17 @@ def get_movies(
                     )
                     for subgenre in movie.subgenres
                 ],
+                ratings=[
+                    s.MovieRating(
+                        uuid=rating.uuid,
+                        rating=rating.rating,
+                        comment=rating.comment,
+                    )
+                    for rating in movie.ratings
+                ],
+                average_rating=movie.average_rating,
+                ratings_count=movie.ratings_count,
+                rating_criterion=s.RatingCriterion(movie.rating_criterion),
             )
         )
 
@@ -127,12 +136,19 @@ def get_movie(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
+    current_user = 1
     movie: m.Movie | None = db.scalar(
         sa.select(m.Movie).where(m.Movie.key == movie_key).options(joinedload(m.Movie.translations))
     )
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    user_rating = None
+    if current_user:
+        user_rating = db.scalar(
+            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
+        )
 
     return s.MovieOut(
         key=movie.key,
@@ -184,6 +200,35 @@ def get_movie(
             )
             for subgenre in movie.subgenres
         ],
+        ratings=[
+            s.MovieRating(
+                uuid=rating.uuid,
+                rating=rating.rating,
+                comment=rating.comment,
+            )
+            for rating in movie.ratings
+        ],
+        average_rating=movie.average_rating,
+        ratings_count=movie.ratings_count,
+        user_rating=s.UserRatingCriteria(
+            acting=user_rating.acting,
+            plot_storyline=user_rating.plot_storyline,
+            music=user_rating.music,
+            re_watchability=user_rating.re_watchability,
+            emotional_impact=user_rating.emotional_impact,
+            dialogue=user_rating.dialogue,
+            production_design=user_rating.production_design,
+            duration=user_rating.duration,
+            visual_effects=user_rating.visual_effects
+            if movie.rating_criterion in [s.RatingCriterion.VISUAL_EFFECTS.value, s.RatingCriterion.FULL.value]
+            else None,
+            scare_factor=user_rating.scare_factor
+            if movie.rating_criterion in [s.RatingCriterion.SCARE_FACTOR.value, s.RatingCriterion.FULL.value]
+            else None,
+        )
+        if user_rating
+        else None,
+        rating_criterion=s.RatingCriterion(movie.rating_criterion),
     )
 
 

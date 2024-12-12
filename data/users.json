@@ -1,0 +1,22 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "first_name": "Local",
+            "last_name": "Host",
+            "description": "Some text..."
+        },
+        {
+            "id": 2,
+            "first_name": "John",
+            "last_name": "Smith",
+            "description": ""
+        },
+        {
+            "id": 3,
+            "first_name": "Alica",
+            "last_name": "Doe",
+            "description": ""
+        }
+    ]
+}

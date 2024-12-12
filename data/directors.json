@@ -239,6 +239,18 @@
             "born_in_uk": "\u041f\u0430\u0440\u043a-\u0420\u0456\u0434\u0436, \u0406\u043b\u043b\u0456\u043d\u043e\u0439\u0441, \u0421\u0428\u0410",
             "born_in_en": "Park Ridge, Illinois, USA",
             "avatar": "20_Chuck Russell.png"
+        },
+        {
+            "key": "ridley-scott",
+            "first_name_uk": "\u0420\u0456\u0434\u043b\u0456",
+            "last_name_uk": "\u0421\u043a\u043e\u0442\u0442",
+            "first_name_en": "Ridley",
+            "last_name_en": "Scott",
+            "born": "1937-11-30T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0421\u0430\u0443\u0442-\u0428\u0438\u043b\u0434\u0441, \u0433\u0440\u0430\u0444\u0441\u0442\u0432\u043e \u0414\u0430\u0440\u0435\u043c, \u0410\u043d\u0433\u043b\u0456\u044f, \u0412\u0435\u043b\u0438\u043a\u043e\u0431\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
+            "born_in_en": "South Shields, County Durham, England, UK",
+            "avatar": "21_Ridley Scott.png"
         }
     ]
 }

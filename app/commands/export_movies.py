@@ -1,4 +1,5 @@
 import json
+import ast
 from datetime import datetime
 import sqlalchemy as sa
 
@@ -33,6 +34,22 @@ GENRES_IDS = "genres_ids"
 SUBGENRES_IDS = "subgenres_ids"
 LOCATION_UK = "location_uk"
 LOCATION_EN = "location_en"
+USERS_RATINGS = "users_ratings"
+RATING_CRITERION = "rating_criterion"
+
+
+def calculate_average_rating():
+    with db.begin() as session:
+        movies = session.scalars(sa.select(m.Movie)).all()
+
+        for movie in movies:
+            movie_ratings = movie.ratings
+            average_rating = round(sum([rating.rating for rating in movie_ratings]) / len(movie_ratings), 2)
+
+            movie.average_rating = average_rating
+            movie.ratings_count = len(movie_ratings)
+
+        session.commit()
 
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
@@ -74,6 +91,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                 budget=movie.budget,
                 domestic_gross=movie.domestic_gross,
                 worldwide_gross=movie.worldwide_gross,
+                rating_criterion=movie.rating_criterion.value,
                 translations=[
                     m.MovieTranslation(
                         language=s.Language.UK.value,
@@ -110,7 +128,40 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             session.flush()
             log(log.DEBUG, "Job with title [%s] created", movie.title_uk)
 
+            for rating in movie.users_ratings:
+                # print('--------------------rating----------------------', rating)
+
+                for user_id, rating_value in rating.items():
+                    # print(f"================ Key: {user_id}, Value: {rating_value}")
+
+                    user = session.scalar(sa.select(m.User).where(m.User.id == user_id))
+                    if not user:
+                        log(log.ERROR, "User [%s] not found", user_id)
+                        raise Exception(f"User [{user_id}] not found")
+
+                    min_rate = 0.01
+
+                    new_rating = m.Rating(
+                        user_id=user_id,
+                        movie_id=new_movie.id,
+                        rating=rating_value,
+                        acting=min_rate,
+                        plot_storyline=min_rate,
+                        music=min_rate,
+                        re_watchability=min_rate,
+                        emotional_impact=min_rate,
+                        dialogue=min_rate,
+                        production_design=min_rate,
+                        duration=min_rate,
+                        visual_effects=min_rate if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS else None,
+                        scare_factor=min_rate if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR else None,
+                    )
+
+                    session.add(new_rating)
+
         session.commit()
+
+    calculate_average_rating()
 
 
 def convert_string_to_list_of_integers(input_string):
@@ -123,7 +174,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "S"
+    LAST_SHEET_COLUMN = "U"
     RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -157,6 +208,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     SUBGENRES_IDS_INDEX = values[0].index(SUBGENRES_IDS)
     LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
     LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
+    USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
+    RATING_CRITERION_INDEX = values[0].index(RATING_CRITERION)
 
     for row in values[1:]:
         # if len(row) < 12:
@@ -167,8 +220,6 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
-
-        print("=== MOVIE KEY: ", key)
 
         title_uk = row[TITLE_UK_INDEX]
         assert title_uk, f"The title_uk {title_uk} is missing"
@@ -221,6 +272,14 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         location_en = row[LOCATION_EN_INDEX]
         assert location_en, f"The location_en {location_en} is missing"
 
+        users_ratings = row[USERS_RATINGS_INDEX]
+        assert users_ratings, f"The users_ratings {users_ratings} is missing"
+
+        users_rating: list[dict] = ast.literal_eval(users_ratings)
+
+        rating_criterion = row[RATING_CRITERION_INDEX]
+        assert rating_criterion, f"The rating_criterion {rating_criterion} is missing"
+
         movies.append(
             s.MovieExportCreate(
                 key=key,
@@ -240,6 +299,9 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 subgenres_ids=subgenres_ids if subgenres_ids else None,
                 location_uk=location_uk,
                 location_en=location_en,
+                users_ratings=users_rating,
+                rating_criterion=rating_criterion,
+                # rating_criterion=s.RatingCriterion(rating_criterion),
             )
         )
 
