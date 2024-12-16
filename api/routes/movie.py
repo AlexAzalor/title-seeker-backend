@@ -26,7 +26,7 @@ if not os.path.exists(UPLOAD_DIRECTORY):
 @movie_router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieOutList,
+    response_model=s.MoviePreviewOutList,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def get_movies(
@@ -54,73 +54,15 @@ def get_movies(
     movies_out = []
     for movie in db_movies:
         movies_out.append(
-            s.MovieOut(
+            s.MoviePreviewOut(
                 key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
-                description=next((t.description for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
-                budget=movie.formatted_budget,
-                duration=movie.formatted_duration(lang.value),
-                domestic_gross=movie.formatted_domestic_gross,
-                worldwide_gross=movie.formatted_worldwide_gross,
                 release_date=movie.release_date,
-                actors=[
-                    s.MovieActor(
-                        key=actor.key,
-                        first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
-                        last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
-                        character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
-                        avatar_url=actor.avatar,
-                    )
-                    for actor in movie.actors
-                ],
-                directors=[
-                    s.MovieDirector(
-                        key=director.key,
-                        first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
-                        last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
-                        avatar_url=director.avatar,
-                    )
-                    for director in movie.directors
-                ],
-                genres=[
-                    s.MovieGenre(
-                        key=genre.key,
-                        name=next((t.name for t in genre.translations if t.language == lang.value)),
-                        description=next((t.description for t in genre.translations if t.language == lang.value)),
-                    )
-                    for genre in movie.genres
-                ],
-                subgenres=[
-                    s.MovieSubgenre(
-                        key=subgenre.key,
-                        parent_genre=s.MovieGenre(
-                            key=subgenre.genre.key,
-                            name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
-                            description=next(
-                                (t.description for t in subgenre.genre.translations if t.language == lang.value)
-                            ),
-                        ),
-                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
-                    )
-                    for subgenre in movie.subgenres
-                ],
-                ratings=[
-                    s.MovieRating(
-                        uuid=rating.uuid,
-                        rating=rating.rating,
-                        comment=rating.comment,
-                    )
-                    for rating in movie.ratings
-                ],
-                average_rating=movie.average_rating,
-                ratings_count=movie.ratings_count,
-                rating_criterion=s.RatingCriterion(movie.rating_criterion),
             )
         )
 
-    return s.MovieOutList(movies=movies_out)
+    return s.MoviePreviewOutList(movies=movies_out)
 
 
 @movie_router.get(
@@ -138,7 +80,17 @@ def get_movie(
 ):
     current_user = 1
     movie: m.Movie | None = db.scalar(
-        sa.select(m.Movie).where(m.Movie.key == movie_key).options(joinedload(m.Movie.translations))
+        sa.select(m.Movie)
+        .where(m.Movie.key == movie_key)
+        .options(
+            joinedload(m.Movie.translations),
+            joinedload(m.Movie.actors),
+            joinedload(m.Movie.directors),
+            joinedload(m.Movie.genres),
+            joinedload(m.Movie.subgenres),
+            joinedload(m.Movie.ratings),
+            joinedload(m.Movie.characters),
+        )
     )
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
@@ -165,7 +117,16 @@ def get_movie(
                 key=actor.key,
                 first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
                 last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
-                character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
+                # character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
+                character_name=next(
+                    (
+                        t.name
+                        for t in next(
+                            (с for с in movie.characters if actor.id in [a.id for a in с.actors])
+                        ).translations
+                        if t.language == lang.value
+                    )
+                ),
                 avatar_url=actor.avatar,
             )
             for actor in movie.actors

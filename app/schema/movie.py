@@ -158,6 +158,25 @@ class MovieOutList(BaseModel):
     )
 
 
+class MoviePreviewOut(BaseModel):
+    key: str
+    title: str
+    poster: str | None = None
+    release_date: datetime | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MoviePreviewOutList(BaseModel):
+    movies: list[MoviePreviewOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieSearchOut(BaseModel):
     key: str
     title: str

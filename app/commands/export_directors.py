@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from googleapiclient.discovery import build
 
+import sqlalchemy as sa
 from app import models as m
 from app import schema as s
 from app.database import db
@@ -28,6 +29,9 @@ AVATAR = "avatar"
 def write_directors_in_db(directors: list[s.DirectorExportCreate]):
     with db.begin() as session:
         for director in directors:
+            if session.scalar(sa.select(m.Director).where(m.Director.key == director.key)):
+                continue
+
             new_director = m.Director(
                 key=director.key,
                 born=director.born,

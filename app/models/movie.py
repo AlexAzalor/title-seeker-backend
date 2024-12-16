@@ -8,6 +8,7 @@ from .movie_actors import movie_actors
 from .movie_directors import movie_directors
 from .genres.movie_genres import movie_genres
 from .genres.movie_subgenres import movie_subgenres
+from .movie_characters import movie_characters
 
 from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
     from .genres.genre import Genre
     from .genres.subgenre import Subgenre
     from .rating import Rating
+    from .character import Character
 
 
 # Questions/Ideas:
@@ -75,6 +77,10 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     average_rating: orm.Mapped[float] = orm.mapped_column(sa.Float, default=0.00)
     ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
     rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
+
+    characters: orm.Mapped[list["Character"]] = orm.relationship(
+        "Character", secondary=movie_characters, back_populates="movies"
+    )
 
     # rating - relationship? or just a column? There will be very advanced rating system.
     # related_movies - relationship

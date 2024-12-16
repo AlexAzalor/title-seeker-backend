@@ -18,7 +18,7 @@ def test_get_movies(client: TestClient, db: Session):
 
     response = client.get("/api/movies")
     assert response.status_code == status.HTTP_200_OK
-    data = s.MovieOutList.model_validate(response.json())
+    data = s.MoviePreviewOutList.model_validate(response.json())
     assert data
 
     # Test get by key
@@ -32,6 +32,20 @@ def test_get_movies(client: TestClient, db: Session):
 
     response = client.get("/api/movies", params={"lang": s.Language.EN.value})
     assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_get_movie(client: TestClient, db: Session):
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+
+    response = client.get(f"/api/movies/{movie.key}")
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieOut.model_validate(response.json())
+    assert data
+    assert data.key == movie.key
+    for actor in data.actors:
+        assert actor.character_name
 
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")

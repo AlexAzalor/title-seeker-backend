@@ -18,3 +18,7 @@ from .genres.movie_genres import movie_genres
 from .genres.genre_subgenres import genre_subgenres
 from .genres.movie_subgenres import movie_subgenres
 from .rating import Rating
+from .character import Character
+from .character_translation import CharacterTranslation
+from .movie_characters import movie_characters
+from .actor_characters import actor_characters

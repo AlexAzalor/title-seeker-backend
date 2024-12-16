@@ -115,6 +115,14 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def fill_db_with_characters():
+        """Fill characters with subgenres data from google spreadsheets"""
+        from .export_characters import export_characters_from_google_spreadsheets
+
+        export_characters_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets
@@ -124,6 +132,7 @@ def init(app: Flask):
         from .export_subgenres import export_subgenres_from_google_spreadsheets
         from .export_movies import export_movies_from_google_spreadsheets
         from .export_rating import export_ratings_from_google_spreadsheets
+        from .export_characters import export_characters_from_google_spreadsheets
 
         export_users_from_google_spreadsheets()
         export_actors_from_google_spreadsheets()
@@ -132,4 +141,5 @@ def init(app: Flask):
         export_subgenres_from_google_spreadsheets()
         export_movies_from_google_spreadsheets()
         export_ratings_from_google_spreadsheets()
+        export_characters_from_google_spreadsheets()
         print("done")

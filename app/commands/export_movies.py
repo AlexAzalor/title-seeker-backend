@@ -68,7 +68,9 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             raise Exception("Genre table is empty. Please run `flask fill-db-with-genres` first")
 
         for movie in movies:
-            print("[DB BLOCK] MOVIE KEY: ", movie.key)
+            if session.scalar(sa.select(m.Movie).where(m.Movie.key == movie.key)):
+                continue
+
             subgenres = (
                 [
                     session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))

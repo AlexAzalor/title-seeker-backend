@@ -17,8 +17,6 @@ class ActorExportCreate(BaseModel):
     died: datetime | None = None
     born_in_uk: str
     born_in_en: str
-    character_name_uk: str
-    character_name_en: str
     avatar: str | None = None
 
     model_config = ConfigDict(

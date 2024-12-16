@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from googleapiclient.discovery import build
 
+import sqlalchemy as sa
 from app import models as m
 from app import schema as s
 from app.database import db
@@ -22,14 +23,15 @@ BORN = "born"
 DIED = "died"
 BORN_IN_UK = "born_in_uk"
 BORN_IN_EN = "born_in_en"
-CHARACTER_NAME_UK = "character_name_uk"
-CHARACTER_NAME_EN = "character_name_en"
 AVATAR = "avatar"
 
 
 def write_actors_in_db(actors: list[s.ActorExportCreate]):
     with db.begin() as session:
         for actor in actors:
+            if session.scalar(sa.select(m.Actor).where(m.Actor.key == actor.key)):
+                continue
+
             new_actor = m.Actor(
                 key=actor.key,
                 born=actor.born,
@@ -41,14 +43,12 @@ def write_actors_in_db(actors: list[s.ActorExportCreate]):
                         first_name=actor.first_name_uk,
                         last_name=actor.last_name_uk,
                         born_in=actor.born_in_uk,
-                        character_name=actor.character_name_uk,
                     ),
                     m.ActorTranslation(
                         language=s.Language.EN.value,
                         first_name=actor.first_name_en,
                         last_name=actor.last_name_en,
                         born_in=actor.born_in_en,
-                        character_name=actor.character_name_en,
                     ),
                 ],
             )
@@ -98,8 +98,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     DIED_INDEX = values[0].index(DIED)
     BORN_IN_UK_INDEX = values[0].index(BORN_IN_UK)
     BORN_IN_EN_INDEX = values[0].index(BORN_IN_EN)
-    CHARACTER_NAME_UK_INDEX = values[0].index(CHARACTER_NAME_UK)
-    CHARACTER_NAME_EN_INDEX = values[0].index(CHARACTER_NAME_EN)
     AVATAR_INDEX = values[0].index(AVATAR)
 
     print("values: ", values[:1])
@@ -133,12 +131,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
         born_in_en = row[BORN_IN_EN_INDEX]
         assert born_in_en, f"The born_in_en {born_in_en} is missing"
 
-        character_name_uk = row[CHARACTER_NAME_UK_INDEX]
-        assert character_name_uk, f"The character_name_uk {character_name_uk} is missing"
-
-        character_name_en = row[CHARACTER_NAME_EN_INDEX]
-        assert character_name_en, f"The character_name_en {character_name_en} is missing"
-
         avatar = row[AVATAR_INDEX]
 
         actors.append(
@@ -152,8 +144,6 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 died=datetime.strptime(died, "%d.%m.%Y") if died else None,
                 born_in_uk=born_in_uk,
                 born_in_en=born_in_en,
-                character_name_uk=character_name_uk,
-                character_name_en=character_name_en,
                 avatar=avatar,
             )
         )

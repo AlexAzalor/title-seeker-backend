@@ -5,10 +5,6 @@ from app.database import db
 from app.schema.language import Language
 
 from .utils import ModelMixin
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .actor import Actor
 
 
 class ActorTranslation(db.Model, ModelMixin):
@@ -21,12 +17,6 @@ class ActorTranslation(db.Model, ModelMixin):
     first_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), nullable=False)
     last_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), nullable=False)
     born_in: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
-    character_name: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
-
-    actor: orm.Mapped["Actor"] = orm.relationship(
-        "Actor",
-        back_populates="translations",
-    )
 
     @property
     def full_name(self) -> str:
