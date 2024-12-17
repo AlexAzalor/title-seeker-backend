@@ -15,7 +15,7 @@ from .utility import authorized_user_in_google_spreadsheets
 
 CFG = config()
 
-# ['ID', 'owner_id', 'worker_id', 'title', 'description', 'service', 'location', 'address', 'created_at', 'started_at', 'finished_at', 'rate_owner', 'rate_worker']
+# Table columns
 ID = "ID"
 KEY = "key"
 TITLE_UK = "title_uk"
@@ -30,8 +30,8 @@ WORLDWIDE_GROSS = "worldwide_gross"
 POSTER = "poster"
 ACTORS_IDS = "actors_ids"
 DIRECTORS_IDS = "directors_ids"
-GENRES_IDS = "genres_ids"
-SUBGENRES_IDS = "subgenres_ids"
+GENRES_IDS_WITH_PERCENTAGE_MATCH = "genres_ids_with_percentage_match"
+SUBGENRES_IDS_WITH_PERCENTAGE_MATCH = "subgenres_ids_with_percentage_match"
 LOCATION_UK = "location_uk"
 LOCATION_EN = "location_en"
 USERS_RATINGS = "users_ratings"
@@ -70,6 +70,8 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
         for movie in movies:
             if session.scalar(sa.select(m.Movie).where(m.Movie.key == movie.key)):
                 continue
+
+            # print('movie', movie.key)
 
             subgenres = (
                 [
@@ -131,11 +133,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             log(log.DEBUG, "Job with title [%s] created", movie.title_uk)
 
             for rating in movie.users_ratings:
-                # print('--------------------rating----------------------', rating)
-
                 for user_id, rating_value in rating.items():
-                    # print(f"================ Key: {user_id}, Value: {rating_value}")
-
                     user = session.scalar(sa.select(m.User).where(m.User.id == user_id))
                     if not user:
                         log(log.ERROR, "User [%s] not found", user_id)
@@ -160,6 +158,40 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                     )
 
                     session.add(new_rating)
+
+            for percentage_match_dict in movie.genre_percentage_match_list:
+                for genre_id, percentage in percentage_match_dict.items():
+                    genre = session.scalar(sa.select(m.Genre).where(m.Genre.id == genre_id))
+
+                    if not genre:
+                        log(log.ERROR, "Genre [%s] not found", genre_id)
+                        raise Exception(f"Genre [{genre_id}] not found")
+
+                    movie_genre = (
+                        m.movie_genres.update()
+                        .values({"percentage_match": percentage})
+                        .where(m.movie_genres.c.movie_id == new_movie.id, m.movie_genres.c.genre_id == genre_id)
+                    )
+                    session.execute(movie_genre)
+
+            if movie.subgenre_percentage_match_list:
+                for subgenre_percentage_match_dict in movie.subgenre_percentage_match_list:
+                    for subgenre_id, percentage in subgenre_percentage_match_dict.items():
+                        subgenre = session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))
+
+                        if not subgenre:
+                            log(log.ERROR, "Subgenre [%s] not found", subgenre_id)
+                            raise Exception(f"Subgenre [{subgenre_id}] not found")
+
+                        movie_subgenre = (
+                            m.movie_subgenres.update()
+                            .values({"percentage_match": percentage})
+                            .where(
+                                m.movie_subgenres.c.movie_id == new_movie.id,
+                                m.movie_subgenres.c.subgenre_id == subgenre_id,
+                            )
+                        )
+                        session.execute(movie_subgenre)
 
         session.commit()
 
@@ -189,6 +221,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     assert values, "No data found"
 
+    print("movies table row", values[:1])
     movies: list[s.MovieExportCreate] = []
 
     # indexes of row values
@@ -206,8 +239,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     POSTER_INDEX = values[0].index(POSTER)
     ACTORS_IDS_INDEX = values[0].index(ACTORS_IDS)
     DIRECTORS_IDS_INDEX = values[0].index(DIRECTORS_IDS)
-    GENRES_IDS_INDEX = values[0].index(GENRES_IDS)
-    SUBGENRES_IDS_INDEX = values[0].index(SUBGENRES_IDS)
+    GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(GENRES_IDS_WITH_PERCENTAGE_MATCH)
+    SUBGENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(SUBGENRES_IDS_WITH_PERCENTAGE_MATCH)
     LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
     LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
     USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
@@ -260,13 +293,26 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         assert directors_ids, f"The directors_ids {directors_ids} is missing"
         directors_ids = convert_string_to_list_of_integers(directors_ids)
 
-        genres_ids = row[GENRES_IDS_INDEX]
-        assert genres_ids, f"The genres_ids {genres_ids} is missing"
-        genres_ids = convert_string_to_list_of_integers(genres_ids)
+        # Genres
+        genres_ids_with_percentage_match = row[GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX]
+        assert (
+            genres_ids_with_percentage_match
+        ), f"The genres_ids_with_percentage_match {genres_ids_with_percentage_match} is missing"
+        genre_percentage_match_list: list[dict] = ast.literal_eval(genres_ids_with_percentage_match)
 
-        subgenres_ids = row[SUBGENRES_IDS_INDEX]
-        if subgenres_ids:
-            subgenres_ids = convert_string_to_list_of_integers(subgenres_ids)
+        genres_ids = [list(genre_id.keys())[0] for genre_id in genre_percentage_match_list]
+        assert genres_ids, f"The genres_ids {genres_ids} is missing"
+
+        # Subgenres
+        subgenres_ids_with_percentage_match = row[SUBGENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX]
+        subgenre_percentage_match_list = None
+        subgenres_ids = None
+        if subgenres_ids_with_percentage_match:
+            subgenre_percentage_match_list = ast.literal_eval(subgenres_ids_with_percentage_match)
+
+        if subgenre_percentage_match_list:
+            subgenres_ids = [list(subgenre_id.keys())[0] for subgenre_id in subgenre_percentage_match_list]
+            assert subgenres_ids, f"The subgenres_ids {subgenres_ids} is missing"
 
         location_uk = row[LOCATION_UK_INDEX]
         assert location_uk, f"The location_uk {location_uk} is missing"
@@ -303,6 +349,10 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 location_en=location_en,
                 users_ratings=users_rating,
                 rating_criterion=rating_criterion,
+                genre_percentage_match_list=genre_percentage_match_list,
+                subgenre_percentage_match_list=subgenre_percentage_match_list
+                if subgenre_percentage_match_list
+                else None,
                 # rating_criterion=s.RatingCriterion(rating_criterion),
             )
         )

@@ -6,7 +6,7 @@
             "name_en": "Cyberpunk",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 18
+            "parent_genre_id": 17
         },
         {
             "key": "space-opera",
@@ -14,7 +14,7 @@
             "name_en": "Space Opera",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 18
+            "parent_genre_id": 17
         },
         {
             "key": "superhero",
@@ -25,12 +25,12 @@
             "parent_genre_id": 1
         },
         {
-            "key": "pirate",
-            "name_uk": "\u041f\u0456\u0440\u0430\u0442\u0438",
-            "name_en": "Pirate",
+            "key": "dark-fantasy",
+            "name_uk": "\u0422\u0435\u043c\u043d\u0435 \u0444\u0435\u043d\u0442\u0435\u0437\u0456",
+            "name_en": "Dark Fantasy",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 2
+            "parent_genre_id": 11
         },
         {
             "key": "cgi-animation",
@@ -43,26 +43,26 @@
         {
             "key": "dark-black",
             "name_uk": "\u0427\u043e\u0440\u043d\u0430 \u043a\u043e\u043c\u0435\u0434\u0456\u044f",
-            "name_en": "Dark/black",
+            "name_en": "Dark/black comedy",
             "description_uk": "",
             "description_en": "",
             "parent_genre_id": 5
         },
         {
-            "key": "political",
-            "name_uk": "\u041f\u043e\u043b\u0456\u0442\u0438\u0447\u043d\u0438\u0439",
-            "name_en": "Political",
+            "key": "buddy-comedy",
+            "name_uk": "\u0411\u0430\u0434\u0434\u0456-\u043a\u043e\u043c\u0435\u0434\u0456\u044f",
+            "name_en": "Buddy comedy",
+            "description_uk": "\u0426\u0435\u0439 \u0442\u0438\u043f \u043a\u043e\u043c\u0435\u0434\u0456\u0457 \u0437\u043e\u0441\u0435\u0440\u0435\u0434\u0436\u0443\u0454\u0442\u044c\u0441\u044f \u043d\u0430 \u0434\u0438\u0432\u043d\u0456\u0439 \u043f\u0430\u0440\u0456, \u044f\u043a\u0430 \u0454 \u043c\u0430\u043b\u043e\u0439\u043c\u043e\u0432\u0456\u0440\u043d\u043e\u044e \u043f\u0430\u0440\u043e\u044e.",
+            "description_en": "This type of comedy centers on an odd couple who makes an unlikely pair.",
+            "parent_genre_id": 5
+        },
+        {
+            "key": "melodrama",
+            "name_uk": "\u041c\u0435\u043b\u043e\u0434\u0440\u0430\u043c\u0430",
+            "name_en": "Melodrama",
             "description_uk": "",
             "description_en": "",
             "parent_genre_id": 9
-        },
-        {
-            "key": "epic",
-            "name_uk": "\u0415\u043f\u0456\u0447\u043d\u0430",
-            "name_en": "Epic",
-            "description_uk": "\u0415\u043f\u0456\u0447\u043d\u0438\u0439 \u043f\u0456\u0434\u0436\u0430\u043d\u0440 \u043c\u0456\u0441\u0442\u0438\u0442\u044c \u0433\u0440\u0430\u043d\u0434\u0456\u043e\u0437\u043d\u0456 \u0442\u0430 \u043c\u0430\u0441\u0448\u0442\u0430\u0431\u043d\u0456 \u0456\u0441\u0442\u043e\u0440\u0456\u0457, \u044f\u043a\u0456 \u0447\u0430\u0441\u0442\u043e \u0440\u043e\u0437\u0433\u043e\u0440\u0442\u0430\u044e\u0442\u044c\u0441\u044f \u043d\u0430 \u0432\u0430\u0436\u043b\u0438\u0432\u043e\u043c\u0443 \u0456\u0441\u0442\u043e\u0440\u0438\u0447\u043d\u043e\u043c\u0443, \u043a\u0443\u043b\u044c\u0442\u0443\u0440\u043d\u043e\u043c\u0443 \u0447\u0438 \u0441\u0443\u0441\u043f\u0456\u043b\u044c\u043d\u043e\u043c\u0443 \u0442\u043b\u0456. \u0415\u043f\u0456\u0447\u043d\u0456 \u0434\u0440\u0430\u043c\u0438 \u0445\u0430\u0440\u0430\u043a\u0442\u0435\u0440\u0438\u0437\u0443\u044e\u0442\u044c\u0441\u044f \u0440\u043e\u0437\u043c\u0430\u0445\u043e\u043c, \u043c\u0430\u0441\u0448\u0442\u0430\u0431\u043e\u043c \u0456 \u0447\u0430\u0441\u0442\u043e \u0442\u0440\u0438\u0432\u0430\u043b\u043e\u044e \u0442\u0440\u0438\u0432\u0430\u043b\u0456\u0441\u0442\u044e, \u043e\u0441\u043a\u0456\u043b\u044c\u043a\u0438 \u0432\u043e\u043d\u0438 \u043c\u0430\u044e\u0442\u044c \u043d\u0430 \u043c\u0435\u0442\u0456 \u0432\u0456\u0434\u043e\u0431\u0440\u0430\u0437\u0438\u0442\u0438 \u0432\u0435\u043b\u0438\u0447 \u043b\u044e\u0434\u0441\u044c\u043a\u0438\u0445 \u043f\u0435\u0440\u0435\u0436\u0438\u0432\u0430\u043d\u044c, \u043f\u043e\u0434\u0456\u0439 \u0442\u0430 \u0435\u043c\u043e\u0446\u0456\u0439.",
-            "description_en": "The epic subgenre features grand and sweeping stories often set against significant historical, cultural, or societal backdrops. Epic dramas are characterized by their scope, scale, and often lengthy runtime, as they aim to capture the grandeur of human experiences, events, and emotions.",
-            "parent_genre_id": 11
         },
         {
             "key": "alternate-history",
@@ -81,12 +81,12 @@
             "parent_genre_id": 13
         },
         {
-            "key": "psychological",
-            "name_uk": "\u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0439",
-            "name_en": "Psychological",
+            "key": "paranormal",
+            "name_uk": "\u041f\u0430\u0440\u0430\u043d\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u0435",
+            "name_en": "Paranormal",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 20
+            "parent_genre_id": 13
         },
         {
             "key": "spaghetti",
@@ -94,7 +94,7 @@
             "name_en": "Spaghetti",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 22
+            "parent_genre_id": 21
         },
         {
             "key": "artificial-intelligence",
@@ -102,7 +102,7 @@
             "name_en": "Artificial Intelligence",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 18
+            "parent_genre_id": 17
         },
         {
             "key": "martial-arts",
@@ -129,20 +129,28 @@
             "parent_genre_id": 11
         },
         {
-            "key": "parody",
-            "name_uk": "\u041f\u0430\u0440\u043e\u0434\u0456\u044f",
-            "name_en": "Parody",
-            "description_uk": "\u041f\u0430\u0440\u043e\u0434\u0456\u0439\u043d\u0438\u0439 \u043f\u0456\u0434\u0436\u0430\u043d\u0440 \u0456\u043c\u0456\u0442\u0443\u0454, \u043f\u0435\u0440\u0435\u0431\u0456\u043b\u044c\u0448\u0443\u0454 \u0442\u0430 \u0441\u0430\u0442\u0438\u0440\u0438\u0437\u0443\u0454 \u0441\u0442\u0438\u043b\u044c, \u0442\u0435\u043c\u0438, \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456\u0432 \u0430\u0431\u043e \u0443\u043c\u043e\u0432\u043d\u043e\u0441\u0442\u0456 \u0456\u043d\u0448\u043e\u0433\u043e \u0442\u0432\u043e\u0440\u0443, \u0436\u0430\u043d\u0440\u0443 \u0447\u0438 \u043a\u0443\u043b\u044c\u0442\u0443\u0440\u043d\u043e\u0433\u043e \u044f\u0432\u0438\u0449\u0430. \u041f\u0430\u0440\u043e\u0434\u0456\u0457 \u0447\u0430\u0441\u0442\u043e \u0432\u043a\u043b\u044e\u0447\u0430\u044e\u0442\u044c \u0432\u0437\u044f\u0442\u0442\u044f \u0434\u043e\u0431\u0440\u0435 \u0432\u0456\u0434\u043e\u043c\u0438\u0445 \u0435\u043b\u0435\u043c\u0435\u043d\u0442\u0456\u0432 \u0437 \u043f\u0435\u0440\u0448\u043e\u0434\u0436\u0435\u0440\u0435\u043b\u0430 \u0442\u0430 \u043f\u043e\u0434\u0430\u043d\u043d\u044f \u0457\u0445 \u0443 \u0436\u0430\u0440\u0442\u0456\u0432\u043b\u0438\u0432\u0456\u0439 \u0442\u0430 \u043f\u0435\u0440\u0435\u0431\u0456\u043b\u044c\u0448\u0435\u043d\u0456\u0439 \u043c\u0430\u043d\u0435\u0440\u0456 \u0434\u043b\u044f \u0441\u0442\u0432\u043e\u0440\u0435\u043d\u043d\u044f \u043a\u043e\u043c\u0435\u0434\u0456\u0439\u043d\u043e\u0433\u043e \u0435\u0444\u0435\u043a\u0442\u0443.",
-            "description_en": "The parody subgenre imitates, exaggerates, and satirizes the style, themes, characters, or conventions of another work, genre, or cultural phenomenon. Parodies often involve taking well-known elements from the original source and presenting them in a humorous and exaggerated manner to create a comedic effect.",
-            "parent_genre_id": 5
-        },
-        {
-            "key": "prison",
-            "name_uk": "\u0412'\u044f\u0437\u043d\u0438\u0446\u044f",
-            "name_en": "Prison",
+            "key": "classic-detective",
+            "name_uk": "\u041a\u043b\u0430\u0441\u0438\u0447\u043d\u0438\u0439 \u0434\u0435\u0442\u0435\u043a\u0442\u0438\u0432",
+            "name_en": "Classic detective",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 6
+            "parent_genre_id": 7
+        },
+        {
+            "key": "noir",
+            "name_uk": "\u041d\u0443\u0430\u0440",
+            "name_en": "Noir",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 7
+        },
+        {
+            "key": "police",
+            "name_uk": "\u041f\u043e\u043b\u0456\u0446\u0435\u0439\u0441\u044c\u043a\u0438\u0439",
+            "name_en": "Police",
+            "description_uk": "",
+            "description_en": "",
+            "parent_genre_id": 7
         },
         {
             "key": "serial-killer",
@@ -153,20 +161,12 @@
             "parent_genre_id": 6
         },
         {
-            "key": "animal",
-            "name_uk": "\u0422\u0432\u0430\u0440\u0438\u043d\u0438",
-            "name_en": "Animal",
-            "description_uk": "",
-            "description_en": "",
-            "parent_genre_id": 2
-        },
-        {
             "key": "time-travel",
             "name_uk": "\u041f\u043e\u0434\u043e\u0440\u043e\u0436 \u0443 \u0447\u0430\u0441\u0456",
             "name_en": "Time Travel",
             "description_uk": "\u041f\u043e\u0434\u0436\u0430\u043d\u0440 \u043f\u043e\u0434\u043e\u0440\u043e\u0436\u0435\u0439 \u0443 \u0447\u0430\u0441\u0456 \u043f\u0435\u0440\u0435\u0434\u0431\u0430\u0447\u0430\u0454 \u043f\u043e\u0434\u043e\u0440\u043e\u0436\u0456 \u043d\u0430\u0437\u0430\u0434 \u0430\u0431\u043e \u0432\u043f\u0435\u0440\u0435\u0434 \u0443 \u0447\u0430\u0441\u0456, \u0449\u043e \u0447\u0430\u0441\u0442\u043e \u043f\u0440\u0438\u0437\u0432\u043e\u0434\u0438\u0442\u044c \u0434\u043e \u0442\u043e\u0433\u043e, \u0449\u043e \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456 \u0441\u0442\u0438\u043a\u0430\u044e\u0442\u044c\u0441\u044f \u0437 \u0430\u043b\u044c\u0442\u0435\u0440\u043d\u0430\u0442\u0438\u0432\u043d\u0438\u043c\u0438 \u0447\u0430\u0441\u043e\u0432\u0438\u043c\u0438 \u0448\u043a\u0430\u043b\u0430\u043c\u0438, \u043f\u0430\u0440\u0430\u0434\u043e\u043a\u0441\u0430\u043c\u0438 \u0442\u0430 \u043c\u043e\u0436\u043b\u0438\u0432\u0456\u0441\u0442\u044e \u0437\u043c\u0456\u043d\u0438\u0442\u0438 \u0456\u0441\u0442\u043e\u0440\u0456\u044e. \u0426\u0456 \u0456\u0441\u0442\u043e\u0440\u0456\u0457 \u0437\u0430\u0433\u043b\u0438\u0431\u043b\u044e\u044e\u0442\u044c\u0441\u044f \u0432 \u0441\u043a\u043b\u0430\u0434\u043d\u0456\u0441\u0442\u044c \u043f\u0440\u0438\u0447\u0438\u043d\u043d\u043e-\u043d\u0430\u0441\u043b\u0456\u0434\u043a\u043e\u0432\u0438\u0445 \u0437\u0432\u2019\u044f\u0437\u043a\u0456\u0432, \u043f\u0440\u0438\u0440\u043e\u0434\u0443 \u0440\u0435\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0456 \u0442\u0430 \u0444\u0456\u043b\u043e\u0441\u043e\u0444\u0441\u044c\u043a\u0456 \u043d\u0430\u0441\u043b\u0456\u0434\u043a\u0438 \u043c\u0430\u043d\u0456\u043f\u0443\u043b\u044e\u0432\u0430\u043d\u043d\u044f \u0447\u0430\u0441\u043e\u043c.",
             "description_en": "The time travel subgenre features traveling backward or forward in time, often resulting in characters encountering alternate timelines, paradoxes, and the potential to alter history. These stories delve into the complexities of causality, the nature of reality, and the philosophical implications of manipulating time.",
-            "parent_genre_id": 18
+            "parent_genre_id": 17
         },
         {
             "key": "dystopian",
@@ -174,23 +174,7 @@
             "name_en": "Dystopian",
             "description_uk": "",
             "description_en": "",
-            "parent_genre_id": 18
-        },
-        {
-            "key": "sci-fi-epic",
-            "name_uk": "\u0415\u043f\u0456\u0447\u043d\u0430 \u0444\u0430\u043d\u0442\u0430\u0441\u0442\u0438\u043a\u0430",
-            "name_en": "Sci-Fi Epic",
-            "description_uk": "\u041d\u0430\u0443\u043a\u043e\u0432\u043e-\u0444\u0430\u043d\u0442\u0430\u0441\u0442\u0438\u0447\u043d\u0438\u0439 \u0435\u043f\u0456\u0447\u043d\u0438\u0439 \u043f\u0456\u0434\u0436\u0430\u043d\u0440 \u043c\u0456\u0441\u0442\u0438\u0442\u044c \u0433\u0440\u0430\u043d\u0434\u0456\u043e\u0437\u043d\u0456 \u043e\u043f\u043e\u0432\u0456\u0434\u0456, \u0449\u043e \u0440\u043e\u0437\u0433\u043e\u0440\u0442\u0430\u044e\u0442\u044c\u0441\u044f \u0432 \u043e\u0431\u0448\u0438\u0440\u043d\u0438\u0445 \u0442\u0430 \u0442\u0432\u043e\u0440\u0447\u0438\u0445 \u0441\u0432\u0456\u0442\u0430\u0445. \u041d\u0430\u0443\u043a\u043e\u0432\u043e-\u0444\u0430\u043d\u0442\u0430\u0441\u0442\u0438\u0447\u043d\u0456 \u0435\u043f\u043e\u043f\u0435\u0457 \u0447\u0430\u0441\u0442\u043e \u043e\u0445\u043e\u043f\u043b\u044e\u044e\u0442\u044c \u0432\u0435\u043b\u0438\u0447\u0435\u0437\u043d\u0456 \u043f\u0435\u0440\u0456\u043e\u0434\u0438 \u0447\u0430\u0441\u0443, \u0440\u0456\u0437\u043d\u0456 \u043c\u0456\u0441\u0446\u044f \u0442\u0430 \u043c\u0456\u0441\u0442\u044f\u0442\u044c \u0437\u0430\u043f\u043b\u0443\u0442\u0430\u043d\u0456 \u0441\u044e\u0436\u0435\u0442\u0438, \u044f\u043a\u0456 \u0434\u043e\u0441\u043b\u0456\u0434\u0436\u0443\u044e\u0442\u044c \u0441\u043a\u043b\u0430\u0434\u043d\u0456 \u0442\u0435\u043c\u0438, \u0441\u0443\u0441\u043f\u0456\u043b\u044c\u043d\u0456 \u0437\u043c\u0456\u043d\u0438, \u0442\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0456\u0457 \u0442\u0430 \u0435\u0432\u043e\u043b\u044e\u0446\u0456\u044e \u0446\u0438\u0432\u0456\u043b\u0456\u0437\u0430\u0446\u0456\u0439.",
-            "description_en": "The sci-fi epic subgenre features grand narratives set in expansive and imaginative worlds. Sci-fi epics often span vast time periods, multiple locations, and involve intricate plots that explore complex themes, societal changes, technology, and the evolution of civilizations.",
-            "parent_genre_id": 18
-        },
-        {
-            "key": "psychological-gorror",
-            "name_uk": "\u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0439 \u0445\u043e\u0440\u0440\u043e\u0440",
-            "name_en": "Psychological Horror",
-            "description_uk": "\u041f\u0456\u0434\u0436\u0430\u043d\u0440 \u043f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0445 \u0436\u0430\u0445\u0456\u0432 \u0434\u0435\u043c\u043e\u043d\u0441\u0442\u0440\u0443\u0454 \u043f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0443 \u043d\u0430\u043f\u0440\u0443\u0433\u0443, \u0441\u0442\u0440\u0430\u0445 \u0456 \u043d\u0430\u043f\u0440\u0443\u0433\u0443, \u0449\u043e\u0431 \u0432\u0438\u043a\u043b\u0438\u043a\u0430\u0442\u0438 \u0443 \u0433\u043b\u044f\u0434\u0430\u0447\u0456\u0432 \u0432\u0456\u0434\u0447\u0443\u0442\u0442\u044f \u0441\u0442\u0440\u0430\u0445\u0443 \u0442\u0430 \u0442\u0440\u0438\u0432\u043e\u0433\u0438. \u0417\u0430\u043c\u0456\u0441\u0442\u044c \u0442\u043e\u0433\u043e, \u0449\u043e\u0431 \u043f\u043e\u043a\u043b\u0430\u0434\u0430\u0442\u0438\u0441\u044f \u0432\u0438\u043a\u043b\u044e\u0447\u043d\u043e \u043d\u0430 \u0433\u0440\u0430\u0444\u0456\u0447\u043d\u0435 \u043d\u0430\u0441\u0438\u043b\u044c\u0441\u0442\u0432\u043e \u0447\u0438 \u0441\u0442\u0440\u0438\u0431\u043a\u0438, \u043f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0439 \u0445\u043e\u0440\u0440\u043e\u0440 \u0437\u043e\u0441\u0435\u0440\u0435\u0434\u0436\u0443\u0454\u0442\u044c\u0441\u044f \u043d\u0430 \u043f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0438\u0445 \u0442\u0430 \u0435\u043c\u043e\u0446\u0456\u0439\u043d\u0438\u0445 \u043f\u0435\u0440\u0435\u0436\u0438\u0432\u0430\u043d\u043d\u044f\u0445 \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456\u0432, \u0447\u0430\u0441\u0442\u043e \u0434\u043e\u0441\u043b\u0456\u0434\u0436\u0443\u044e\u0447\u0438 \u0457\u0445\u043d\u0456 \u0432\u043d\u0443\u0442\u0440\u0456\u0448\u043d\u0456 \u0441\u0442\u0440\u0430\u0445\u0438, \u0442\u0440\u0438\u0432\u043e\u0433\u0438 \u0442\u0430 \u0441\u043f\u0440\u0438\u0439\u043d\u044f\u0442\u0442\u044f.",
-            "description_en": "The psychological horror subgenre features psychological tension, fear, and suspense to evoke feelings of dread and unease in the audience. Rather than relying solely on graphic violence or jump scares, psychological horror focuses on the psychological and emotional experiences of characters, often exploring their inner fears, anxieties, and perceptions.",
-            "parent_genre_id": 13
+            "parent_genre_id": 17
         }
     ]
 }

@@ -31,6 +31,8 @@ class MovieExportCreate(BaseModel):
     location_en: str
     users_ratings: list[dict[int, float]]
     rating_criterion: RatingCriterion
+    genre_percentage_match_list: list[dict[int, float]]
+    subgenre_percentage_match_list: list[dict[int, float]] | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -72,6 +74,7 @@ class MovieGenre(BaseModel):
     key: str
     name: str
     description: str | None = None
+    percentage_match: float
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -83,6 +86,7 @@ class MovieSubgenre(BaseModel):
     parent_genre: MovieGenre
     name: str
     description: str | None = None
+    percentage_match: float
 
     model_config = ConfigDict(
         from_attributes=True,

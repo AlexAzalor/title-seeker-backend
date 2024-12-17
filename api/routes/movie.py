@@ -145,6 +145,13 @@ def get_movie(
                 key=genre.key,
                 name=next((t.name for t in genre.translations if t.language == lang.value)),
                 description=next((t.description for t in genre.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=genre.id)
+                    ),
+                    0.0,
+                ),
             )
             for genre in movie.genres
         ],
@@ -155,9 +162,23 @@ def get_movie(
                     key=subgenre.genre.key,
                     name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
                     description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
+                    percentage_match=next(
+                        (
+                            mg.percentage_match
+                            for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=subgenre.genre.id)
+                        ),
+                        0.0,
+                    ),
                 ),
                 name=next((t.name for t in subgenre.translations if t.language == lang.value)),
                 description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_subgenres).filter_by(movie_id=movie.id, subgenre_id=subgenre.id)
+                    ),
+                    0.0,
+                ),
             )
             for subgenre in movie.subgenres
         ],
@@ -250,6 +271,11 @@ def search_movies(
 
     query = sa.select(m.Movie).options(joinedload(m.Movie.translations))
 
+    # What Happens to the Query at Each Filter Step?
+    # It is augmented, not replaced.
+    # Each call to query.where() appends additional conditions, effectively adding AND logic to the query.
+    # Both genre and subgenre conditions are combined, meaning that the final query will only return movies that satisfy both filters (if both are provided).
+
     if actor_name:
         query = query.where(sa.and_(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor_name]))
 
@@ -262,6 +288,7 @@ def search_movies(
     if genre_name:
         query = query.where(sa.and_(*[m.Movie.genres.any(m.Genre.key == genre_key) for genre_key in genre_name]))
 
+    # Filter only by subgenre
     if subgenre_name:
         query = query.where(
             sa.and_(*[m.Movie.subgenres.any(m.Subgenre.key == subgenre_key) for subgenre_key in subgenre_name])

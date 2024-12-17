@@ -31,7 +31,16 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "9": 7.88
+                },
+                {
+                    "6": 8.01
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "the-dark-knight",
@@ -70,7 +79,26 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "1": 7.81
+                },
+                {
+                    "2": 8.02
+                },
+                {
+                    "6": 8.04
+                },
+                {
+                    "9": 8.05
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "3": 7.31
+                }
+            ]
         },
         {
             "key": "pulp-fiction",
@@ -106,7 +134,16 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "6": 6.85
+                },
+                {
+                    "9": 8.21
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "inception",
@@ -135,11 +172,9 @@
             "genres_ids": [
                 1,
                 2,
-                18
+                17
             ],
-            "subgenres_ids": [
-                23
-            ],
+            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -147,7 +182,19 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 4.51
+                },
+                {
+                    "2": 8.66
+                },
+                {
+                    "17": 9.54
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "django-unchained",
@@ -174,7 +221,7 @@
             "genres_ids": [
                 5,
                 9,
-                22
+                21
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
@@ -184,7 +231,19 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "5": 4.53
+                },
+                {
+                    "9": 8.63
+                },
+                {
+                    "21": 9.53
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "groundhog-day",
@@ -208,7 +267,7 @@
                 5,
                 9,
                 11,
-                17
+                16
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
@@ -218,7 +277,22 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "5": 2.81
+                },
+                {
+                    "9": 4.02
+                },
+                {
+                    "11": 5.04
+                },
+                {
+                    "16": 6.05
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "the-matrix",
@@ -244,7 +318,7 @@
             ],
             "genres_ids": [
                 1,
-                18
+                17
             ],
             "subgenres_ids": [
                 1,
@@ -258,7 +332,26 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 6.15
+                },
+                {
+                    "17": 9.51
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "1": 1.41
+                },
+                {
+                    "13": 4.26
+                },
+                {
+                    "14": 3.43
+                }
+            ]
         },
         {
             "key": "the-lord-of-the-rings-the-fellowship-of-the-ring",
@@ -302,7 +395,29 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "2": 1.11
+                },
+                {
+                    "9": 2.26
+                },
+                {
+                    "11": 3.53
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "8": 6.41
+                },
+                {
+                    "15": 4.66
+                },
+                {
+                    "16": 3.46
+                }
+            ]
         },
         {
             "key": "avengers-infinity-war",
@@ -338,7 +453,7 @@
             "genres_ids": [
                 1,
                 2,
-                18
+                17
             ],
             "subgenres_ids": [
                 3
@@ -350,7 +465,23 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 7.11
+                },
+                {
+                    "2": 2.76
+                },
+                {
+                    "17": 7.53
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "3": 45.31
+                }
+            ]
         },
         {
             "key": "star-wars-episode-4-a-new-Hope",
@@ -379,12 +510,11 @@
                 1,
                 2,
                 11,
-                18
+                17
             ],
             "subgenres_ids": [
                 2,
-                15,
-                8
+                15
             ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
@@ -393,7 +523,29 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 1.82
+                },
+                {
+                    "2": 4.22
+                },
+                {
+                    "11": 2.04
+                },
+                {
+                    "17": 6.25
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "2": 26.85
+                },
+                {
+                    "15": 38.21
+                }
+            ]
         },
         {
             "key": "schindlers-list",
@@ -419,7 +571,7 @@
                 4,
                 9,
                 12,
-                21
+                20
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
@@ -429,7 +581,22 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "4": 1.12
+                },
+                {
+                    "9": 4.99
+                },
+                {
+                    "12": 9.04
+                },
+                {
+                    "20": 6.95
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "shrek",
@@ -459,11 +626,10 @@
                 5,
                 10,
                 11,
-                17
+                16
             ],
             "subgenres_ids": [
-                15,
-                17
+                15
             ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
@@ -472,7 +638,32 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "2": 2.22
+                },
+                {
+                    "3": 3.39
+                },
+                {
+                    "5": 5.04
+                },
+                {
+                    "10": 1.95
+                },
+                {
+                    "11": 6.11
+                },
+                {
+                    "16": 6.96
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "15": 35.1
+                }
+            ]
         },
         {
             "key": "the-shining",
@@ -496,9 +687,7 @@
                 9,
                 13
             ],
-            "subgenres_ids": [
-                24
-            ],
+            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -506,7 +695,16 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "scare_factor"
+            "rating_criterion": "scare_factor",
+            "genre_percentage_match_list": [
+                {
+                    "9": 9.15
+                },
+                {
+                    "13": 3.33
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "the-green-mile",
@@ -531,11 +729,9 @@
             "genres_ids": [
                 6,
                 9,
-                16
+                15
             ],
-            "subgenres_ids": [
-                18
-            ],
+            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -543,7 +739,19 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "6": 1.01
+                },
+                {
+                    "9": 2.16
+                },
+                {
+                    "15": 7.13
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "real-steel",
@@ -567,8 +775,8 @@
             "genres_ids": [
                 1,
                 9,
-                18,
-                19
+                17,
+                18
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0406\u043d\u0434\u0456\u044f",
@@ -578,7 +786,22 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 8.82
+                },
+                {
+                    "9": 4.28
+                },
+                {
+                    "17": 2.84
+                },
+                {
+                    "18": 8.25
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "the-silence-of-the-lambs",
@@ -602,11 +825,10 @@
             "genres_ids": [
                 6,
                 9,
-                20
+                19
             ],
             "subgenres_ids": [
-                11,
-                19
+                20
             ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
@@ -615,7 +837,23 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "6": 1.91
+                },
+                {
+                    "9": 2.19
+                },
+                {
+                    "19": 9.19
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "20": 75.15
+                }
+            ]
         },
         {
             "key": "the-lion-king",
@@ -646,11 +884,9 @@
                 9,
                 10,
                 11,
-                15
+                14
             ],
-            "subgenres_ids": [
-                20
-            ],
+            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -658,7 +894,28 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "basic"
+            "rating_criterion": "basic",
+            "genre_percentage_match_list": [
+                {
+                    "2": 2.21
+                },
+                {
+                    "3": 3.31
+                },
+                {
+                    "9": 5.94
+                },
+                {
+                    "10": 9.95
+                },
+                {
+                    "11": 6.91
+                },
+                {
+                    "14": 4.46
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "harry-potter-and-the-sorcerers-stone",
@@ -694,7 +951,19 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "2": 1.71
+                },
+                {
+                    "10": 2.11
+                },
+                {
+                    "11": 7.11
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "terminator-2-judgment-day",
@@ -720,12 +989,11 @@
             "genres_ids": [
                 1,
                 2,
-                18
+                17
             ],
             "subgenres_ids": [
                 13,
-                21,
-                22
+                21
             ],
             "location_uk": "\u0421\u0428\u0410, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
             "location_en": "US, France",
@@ -734,7 +1002,26 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 3.71
+                },
+                {
+                    "2": 2.31
+                },
+                {
+                    "17": 7.13
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "13": 56.85
+                },
+                {
+                    "21": 18.21
+                }
+            ]
         },
         {
             "key": "the-mask",
@@ -772,7 +1059,26 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "1": 8.81
+                },
+                {
+                    "5": 4.58
+                },
+                {
+                    "6": 6.84
+                },
+                {
+                    "11": 8.21
+                }
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "3": 33.1
+                }
+            ]
         },
         {
             "key": "alien",
@@ -795,7 +1101,7 @@
             ],
             "genres_ids": [
                 13,
-                18
+                17
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
@@ -805,7 +1111,16 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "full"
+            "rating_criterion": "full",
+            "genre_percentage_match_list": [
+                {
+                    "13": 3.15
+                },
+                {
+                    "17": 3.73
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "the-substance",
@@ -829,7 +1144,7 @@
             ],
             "genres_ids": [
                 9,
-                18
+                17
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
@@ -839,7 +1154,16 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "9": 3.19
+                },
+                {
+                    "17": 9.73
+                }
+            ],
+            "subgenre_percentage_match_list": null
         },
         {
             "key": "cloud-atlas",
@@ -867,9 +1191,9 @@
             ],
             "genres_ids": [
                 9,
-                16,
-                18,
-                20
+                15,
+                17,
+                19
             ],
             "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u0430, \u0413\u043e\u043d\u043a\u043e\u043d\u0433, \u0421\u0456\u043d\u0433\u0430\u043f\u0443\u0440, \u041a\u0438\u0442\u0430\u0439, \u0412\u0435\u043b\u0438\u043a\u043e\u0431\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0406\u0441\u043f\u0430\u043d\u0456\u044f",
@@ -879,7 +1203,22 @@
                     "3": 7.88
                 }
             ],
-            "rating_criterion": "visual_effects"
+            "rating_criterion": "visual_effects",
+            "genre_percentage_match_list": [
+                {
+                    "9": 8.89
+                },
+                {
+                    "15": 4.51
+                },
+                {
+                    "17": 6.87
+                },
+                {
+                    "19": 9.29
+                }
+            ],
+            "subgenre_percentage_match_list": null
         }
     ]
 }
