@@ -38,6 +38,9 @@ def db() -> Generator[orm.Session, None, None]:
         from app.commands.export_directors import export_directors_from_json_file
         from app.commands.export_genres import export_genres_from_json_file
         from app.commands.export_subgenres import export_subgenres_from_json_file
+        from app.commands.export_specifications import export_specifications_from_json_file
+        from app.commands.export_keywords import export_keywords_from_json_file
+        from app.commands.export_action_times import export_action_times_from_json_file
         from app.commands.export_movies import export_movies_from_json_file
         from app.commands.export_rating import export_ratings_from_json_file
         from app.commands.export_characters import export_characters_from_json_file
@@ -47,6 +50,9 @@ def db() -> Generator[orm.Session, None, None]:
         export_directors_from_json_file()
         export_genres_from_json_file()
         export_subgenres_from_json_file()
+        export_specifications_from_json_file()
+        export_keywords_from_json_file()
+        export_action_times_from_json_file()
         export_movies_from_json_file()
         export_ratings_from_json_file()
         export_characters_from_json_file()

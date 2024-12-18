@@ -9,6 +9,9 @@ from .movie_directors import movie_directors
 from .genres.movie_genres import movie_genres
 from .genres.movie_subgenres import movie_subgenres
 from .movie_characters import movie_characters
+from .movie_filters.movie_specifications import movie_specifications
+from .movie_filters.movie_keywords import movie_keywords
+from .movie_filters.movie_action_times import movie_action_times
 
 from app.models.mixins import CreatableMixin, UpdatableMixin
 import app.schema as s
@@ -24,6 +27,9 @@ if TYPE_CHECKING:
     from .genres.subgenre import Subgenre
     from .rating import Rating
     from .character import Character
+    from .movie_filters.specification import Specification
+    from .movie_filters.keyword import Keyword
+    from .movie_filters.action_time import ActionTime
 
 
 # Questions/Ideas:
@@ -70,6 +76,24 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     subgenres: orm.Mapped[list["Subgenre"]] = orm.relationship(
         "Subgenre",
         secondary=movie_subgenres,
+        back_populates="movies",
+    )
+
+    specifications: orm.Mapped[list["Specification"]] = orm.relationship(
+        "Specification",
+        secondary=movie_specifications,
+        back_populates="movies",
+    )
+
+    keywords: orm.Mapped[list["Keyword"]] = orm.relationship(
+        "Keyword",
+        secondary=movie_keywords,
+        back_populates="movies",
+    )
+
+    action_times: orm.Mapped[list["ActionTime"]] = orm.relationship(
+        "ActionTime",
+        secondary=movie_action_times,
         back_populates="movies",
     )
 

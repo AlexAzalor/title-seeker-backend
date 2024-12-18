@@ -211,6 +211,55 @@ def get_movie(
         if user_rating
         else None,
         rating_criterion=s.RatingCriterion(movie.rating_criterion),
+        specifications=[
+            s.MovieSpecification(
+                key=specification.key,
+                name=next((t.name for t in specification.translations if t.language == lang.value)),
+                description=next((t.description for t in specification.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_specifications).filter_by(
+                            movie_id=movie.id, specification_id=specification.id
+                        )
+                    ),
+                    0.0,
+                ),
+            )
+            for specification in movie.specifications
+        ],
+        keywords=[
+            s.MovieKeyword(
+                key=keyword.key,
+                name=next((t.name for t in keyword.translations if t.language == lang.value)),
+                description=next((t.description for t in keyword.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_keywords).filter_by(movie_id=movie.id, keyword_id=keyword.id)
+                    ),
+                    0.0,
+                ),
+            )
+            for keyword in movie.keywords
+        ],
+        action_times=[
+            s.MovieActionTime(
+                key=action_time.key,
+                name=next((t.name for t in action_time.translations if t.language == lang.value)),
+                description=next((t.description for t in action_time.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_action_times).filter_by(
+                            movie_id=movie.id, action_time_id=action_time.id
+                        )
+                    ),
+                    0.0,
+                ),
+            )
+            for action_time in movie.action_times
+        ],
     )
 
 
@@ -264,6 +313,9 @@ def search_movies(
     subgenre_name: Annotated[list[str], Query()] = [],
     actor_name: Annotated[list[str], Query()] = [],
     director_name: Annotated[list[str], Query()] = [],
+    specification_name: Annotated[list[str], Query()] = [],
+    keyword_name: Annotated[list[str], Query()] = [],
+    action_time_name: Annotated[list[str], Query()] = [],
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -292,6 +344,28 @@ def search_movies(
     if subgenre_name:
         query = query.where(
             sa.and_(*[m.Movie.subgenres.any(m.Subgenre.key == subgenre_key) for subgenre_key in subgenre_name])
+        )
+
+    if specification_name:
+        query = query.where(
+            sa.and_(
+                *[
+                    m.Movie.specifications.any(m.Specification.key == specification_key)
+                    for specification_key in specification_name
+                ]
+            )
+        )
+
+    if keyword_name:
+        query = query.where(
+            sa.and_(*[m.Movie.keywords.any(m.Keyword.key == keyword_key) for keyword_key in keyword_name])
+        )
+
+    if action_time_name:
+        query = query.where(
+            sa.and_(
+                *[m.Movie.action_times.any(m.ActionTime.key == action_time_key) for action_time_key in action_time_name]
+            )
         )
 
     movies_db = db.scalars(query).unique().all()
@@ -386,6 +460,21 @@ async def get_movie_filters(
         log(log.ERROR, "Genres [%s] not found")
         raise HTTPException(status_code=404, detail="Genres not found")
 
+    specifications = db.scalars(sa.select(m.Specification)).all()
+    if not specifications:
+        log(log.ERROR, "Specifications [%s] not found")
+        raise HTTPException(status_code=404, detail="Specifications not found")
+
+    keywords = db.scalars(sa.select(m.Keyword)).all()
+    if not keywords:
+        log(log.ERROR, "Keywords [%s] not found")
+        raise HTTPException(status_code=404, detail="Keywords not found")
+
+    action_times = db.scalars(sa.select(m.ActionTime)).all()
+    if not action_times:
+        log(log.ERROR, "Action times [%s] not found")
+        raise HTTPException(status_code=404, detail="Action times not found")
+
     actors_out = []
 
     for actor in actors:
@@ -424,4 +513,43 @@ async def get_movie_filters(
                 ],
             )
         )
-    return s.MovieFiltersListOut(genres=genres_out, actors=actors_out, directors=directors_out)
+
+    specifications_out = []
+
+    for specification in specifications:
+        specifications_out.append(
+            s.SpecificationOut(
+                key=specification.key,
+                name=next((t.name for t in specification.translations if t.language == lang.value)),
+                description=next((t.description for t in specification.translations if t.language == lang.value)),
+            )
+        )
+
+    keywords_out = []
+    for keyword in keywords:
+        keywords_out.append(
+            s.KeywordOut(
+                key=keyword.key,
+                name=next((t.name for t in keyword.translations if t.language == lang.value)),
+                description=next((t.description for t in keyword.translations if t.language == lang.value)),
+            )
+        )
+
+    action_times_out = []
+    for action_time in action_times:
+        action_times_out.append(
+            s.ActionTimeOut(
+                key=action_time.key,
+                name=next((t.name for t in action_time.translations if t.language == lang.value)),
+                description=next((t.description for t in action_time.translations if t.language == lang.value)),
+            )
+        )
+
+    return s.MovieFiltersListOut(
+        genres=genres_out,
+        actors=actors_out,
+        directors=directors_out,
+        specifications=specifications_out,
+        keywords=keywords_out,
+        action_times=action_times_out,
+    )

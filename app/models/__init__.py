@@ -22,3 +22,12 @@ from .character import Character
 from .character_translation import CharacterTranslation
 from .movie_characters import movie_characters
 from .actor_characters import actor_characters
+from .movie_filters.specification_translation import SpecificationTranslation
+from .movie_filters.specification import Specification
+from .movie_filters.movie_specifications import movie_specifications
+from .movie_filters.keyword_translation import KeywordTranslation
+from .movie_filters.movie_keywords import movie_keywords
+from .movie_filters.keyword import Keyword
+from .movie_filters.action_time_translation import ActionTimeTranslation
+from .movie_filters.action_time import ActionTime
+from .movie_filters.movie_action_times import movie_action_times

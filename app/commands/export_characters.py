@@ -61,7 +61,7 @@ def write_characters_in_db(characters: list[s.CharacterExportCreate]):
             session.add(new_character)
             session.flush()
 
-            log(log.INFO, "Character [%s] created", new_character.key)
+            log(log.DEBUG, "Character [%s] created", new_character.key)
 
         session.commit()
 

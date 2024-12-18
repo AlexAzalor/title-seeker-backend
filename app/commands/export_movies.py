@@ -32,6 +32,9 @@ ACTORS_IDS = "actors_ids"
 DIRECTORS_IDS = "directors_ids"
 GENRES_IDS_WITH_PERCENTAGE_MATCH = "genres_ids_with_percentage_match"
 SUBGENRES_IDS_WITH_PERCENTAGE_MATCH = "subgenres_ids_with_percentage_match"
+SPECIFICATIONS = "specifications"
+KEYWORDS = "keywords"
+ACTION_TIMES = "action_times"
 LOCATION_UK = "location_uk"
 LOCATION_EN = "location_en"
 USERS_RATINGS = "users_ratings"
@@ -126,6 +129,18 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                 ]
                 if movie.subgenres_ids
                 else [],
+                specifications=[
+                    session.scalar(sa.select(m.Specification).where(m.Specification.id == specification_id))
+                    for specification_id in movie.specifications_ids
+                ],
+                keywords=[
+                    session.scalar(sa.select(m.Keyword).where(m.Keyword.id == keyword_id))
+                    for keyword_id in movie.keywords_ids
+                ],
+                action_times=[
+                    session.scalar(sa.select(m.ActionTime).where(m.ActionTime.id == action_time_id))
+                    for action_time_id in movie.action_times_ids
+                ],
             )
 
             session.add(new_movie)
@@ -193,6 +208,62 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                         )
                         session.execute(movie_subgenre)
 
+            for specification in movie.specifications_list:
+                for specification_id, percentage in specification.items():
+                    specification = session.scalar(
+                        sa.select(m.Specification).where(m.Specification.id == specification_id)
+                    )
+
+                    if not specification:
+                        log(log.ERROR, "Specification [%s] not found", specification_id)
+                        raise Exception(f"Specification [{specification_id}] not found")
+
+                    movie_specification = (
+                        m.movie_specifications.update()
+                        .values({"percentage_match": percentage})
+                        .where(
+                            m.movie_specifications.c.movie_id == new_movie.id,
+                            m.movie_specifications.c.specification_id == specification_id,
+                        )
+                    )
+                    session.execute(movie_specification)
+
+            for keyword in movie.keywords_list:
+                for keyword_id, percentage in keyword.items():
+                    keyword = session.scalar(sa.select(m.Keyword).where(m.Keyword.id == keyword_id))
+
+                    if not keyword:
+                        log(log.ERROR, "Keyword [%s] not found", keyword_id)
+                        raise Exception(f"Keyword [{keyword_id}] not found")
+
+                    movie_keyword = (
+                        m.movie_keywords.update()
+                        .values({"percentage_match": percentage})
+                        .where(
+                            m.movie_keywords.c.movie_id == new_movie.id,
+                            m.movie_keywords.c.keyword_id == keyword_id,
+                        )
+                    )
+                    session.execute(movie_keyword)
+
+            for action_time in movie.action_times_list:
+                for action_time_id, percentage in action_time.items():
+                    action_time = session.scalar(sa.select(m.ActionTime).where(m.ActionTime.id == action_time_id))
+
+                    if not action_time:
+                        log(log.ERROR, "Action Time [%s] not found", action_time_id)
+                        raise Exception(f"Action Time [{action_time_id}] not found")
+
+                    movie_action_time = (
+                        m.movie_action_times.update()
+                        .values({"percentage_match": percentage})
+                        .where(
+                            m.movie_action_times.c.movie_id == new_movie.id,
+                            m.movie_action_times.c.action_time_id == action_time_id,
+                        )
+                    )
+                    session.execute(movie_action_time)
+
         session.commit()
 
     calculate_average_rating()
@@ -208,7 +279,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "U"
+    LAST_SHEET_COLUMN = "X"
     RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -241,6 +312,9 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     DIRECTORS_IDS_INDEX = values[0].index(DIRECTORS_IDS)
     GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(GENRES_IDS_WITH_PERCENTAGE_MATCH)
     SUBGENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(SUBGENRES_IDS_WITH_PERCENTAGE_MATCH)
+    SPECIFICATIONS_INDEX = values[0].index(SPECIFICATIONS)
+    KEYWORDS_INDEX = values[0].index(KEYWORDS)
+    ACTION_TIMES_INDEX = values[0].index(ACTION_TIMES)
     LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
     LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
     USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
@@ -314,6 +388,32 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
             subgenres_ids = [list(subgenre_id.keys())[0] for subgenre_id in subgenre_percentage_match_list]
             assert subgenres_ids, f"The subgenres_ids {subgenres_ids} is missing"
 
+        # Specifications
+        specifications = row[SPECIFICATIONS_INDEX]
+        assert specifications, f"The specifications {specifications} is missing"
+        specifications_list: list[dict] = ast.literal_eval(specifications)
+
+        specifications_ids = [list(specification_id.keys())[0] for specification_id in specifications_list]
+        assert specifications_ids, f"The specifications_ids {specifications_ids} is missing"
+
+        # Keywords
+        keywords = row[KEYWORDS_INDEX]
+        assert keywords, f"The keywords {keywords} is missing"
+        keywords_list: list[dict] = ast.literal_eval(keywords)
+
+        keywords_ids = [list(keyword_id.keys())[0] for keyword_id in keywords_list]
+
+        # Action Times
+        action_times = row[ACTION_TIMES_INDEX]
+        assert action_times, f"The action_times {action_times} is missing"
+        action_times_list: list[dict] = ast.literal_eval(action_times)
+
+        action_times_ids = [list(action_time_id.keys())[0] for action_time_id in action_times_list]
+        assert action_times_ids, f"The action_times_ids {action_times_ids} is missing"
+
+        # print('1', action_times_ids)
+        # print('2', action_times_list)
+
         location_uk = row[LOCATION_UK_INDEX]
         assert location_uk, f"The location_uk {location_uk} is missing"
 
@@ -353,6 +453,12 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 subgenre_percentage_match_list=subgenre_percentage_match_list
                 if subgenre_percentage_match_list
                 else None,
+                specifications_ids=specifications_ids,
+                specifications_list=specifications_list,
+                keywords_ids=keywords_ids,
+                keywords_list=keywords_list,
+                action_times_ids=action_times_ids,
+                action_times_list=action_times_list,
                 # rating_criterion=s.RatingCriterion(rating_criterion),
             )
         )
@@ -364,6 +470,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         print("Movies data saved to [data/movies.json] file")
 
     write_movies_in_db(movies)
+    log(log.INFO, "Movies data SUCCESSFULLY saved to database")
 
 
 def export_movies_from_json_file(max_movies_limit: int | None = None):

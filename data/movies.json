@@ -19,11 +19,6 @@
             "directors_ids": [
                 1
             ],
-            "genres_ids": [
-                9,
-                6
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -32,15 +27,48 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                6,
+                9
+            ],
             "genre_percentage_match_list": [
                 {
-                    "9": 7.88
+                    "6": 30.0
                 },
                 {
-                    "6": 8.01
+                    "9": 80.0
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                11,
+                3
+            ],
+            "specifications_list": [
+                {
+                    "11": 95.0
+                },
+                {
+                    "3": 50.0
+                }
+            ],
+            "keywords_ids": [
+                15
+            ],
+            "keywords_list": [
+                {
+                    "15": 100.0
+                }
+            ],
+            "action_times_ids": [
+                5
+            ],
+            "action_times_list": [
+                {
+                    "5": 100.0
+                }
+            ]
         },
         {
             "key": "the-dark-knight",
@@ -63,15 +91,6 @@
             "directors_ids": [
                 2
             ],
-            "genres_ids": [
-                1,
-                2,
-                6,
-                9
-            ],
-            "subgenres_ids": [
-                3
-            ],
             "location_uk": "\n\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -80,23 +99,60 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                1,
+                6,
+                9
+            ],
             "genre_percentage_match_list": [
                 {
-                    "1": 7.81
+                    "1": 70.0
                 },
                 {
-                    "2": 8.02
+                    "6": 50.0
                 },
                 {
-                    "6": 8.04
-                },
-                {
-                    "9": 8.05
+                    "9": 30.0
                 }
+            ],
+            "subgenres_ids": [
+                3
             ],
             "subgenre_percentage_match_list": [
                 {
-                    "3": 7.31
+                    "3": 75.0
+                }
+            ],
+            "specifications_ids": [
+                8
+            ],
+            "specifications_list": [
+                {
+                    "8": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1,
+                2,
+                3
+            ],
+            "keywords_list": [
+                {
+                    "1": 40.0
+                },
+                {
+                    "2": 100.0
+                },
+                {
+                    "3": 20.0
+                }
+            ],
+            "action_times_ids": [
+                6
+            ],
+            "action_times_list": [
+                {
+                    "6": 100.0
                 }
             ]
         },
@@ -122,11 +178,6 @@
             "directors_ids": [
                 3
             ],
-            "genres_ids": [
-                6,
-                9
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -135,15 +186,44 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                6,
+                9
+            ],
             "genre_percentage_match_list": [
                 {
-                    "6": 6.85
+                    "6": 80.0
                 },
                 {
-                    "9": 8.21
+                    "9": 40.0
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                23
+            ],
+            "specifications_list": [
+                {
+                    "23": 90.0
+                }
+            ],
+            "keywords_ids": [
+                15
+            ],
+            "keywords_list": [
+                {
+                    "15": 75.0
+                }
+            ],
+            "action_times_ids": [
+                5
+            ],
+            "action_times_list": [
+                {
+                    "5": 100.0
+                }
+            ]
         },
         {
             "key": "inception",
@@ -169,12 +249,6 @@
             "directors_ids": [
                 2
             ],
-            "genres_ids": [
-                1,
-                2,
-                17
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -183,18 +257,52 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                2,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
-                    "1": 4.51
+                    "1": 75.0
                 },
                 {
-                    "2": 8.66
+                    "2": 60.0
                 },
                 {
-                    "17": 9.54
+                    "17": 50.0
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                8,
+                1
+            ],
+            "specifications_list": [
+                {
+                    "8": 70.0
+                },
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                16
+            ],
+            "keywords_list": [
+                {
+                    "16": 100.0
+                }
+            ],
+            "action_times_ids": [
+                6
+            ],
+            "action_times_list": [
+                {
+                    "6": 100.0
+                }
+            ]
         },
         {
             "key": "django-unchained",
@@ -218,12 +326,6 @@
             "directors_ids": [
                 3
             ],
-            "genres_ids": [
-                5,
-                9,
-                21
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -232,18 +334,54 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                5,
+                9,
+                21
+            ],
             "genre_percentage_match_list": [
                 {
-                    "5": 4.53
+                    "5": 30.0
                 },
                 {
-                    "9": 8.63
+                    "9": 40.0
                 },
                 {
-                    "21": 9.53
+                    "21": 80.0
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": [
+                6
+            ],
+            "subgenre_percentage_match_list": [
+                {
+                    "6": 50.0
+                }
+            ],
+            "specifications_ids": [
+                24
+            ],
+            "specifications_list": [
+                {
+                    "24": 90.0
+                }
+            ],
+            "keywords_ids": [
+                15
+            ],
+            "keywords_list": [
+                {
+                    "15": 50.0
+                }
+            ],
+            "action_times_ids": [
+                4
+            ],
+            "action_times_list": [
+                {
+                    "4": 100.0
+                }
+            ]
         },
         {
             "key": "groundhog-day",
@@ -263,13 +401,6 @@
             "directors_ids": [
                 4
             ],
-            "genres_ids": [
-                5,
-                9,
-                11,
-                16
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -278,6 +409,12 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                5,
+                9,
+                11,
+                16
+            ],
             "genre_percentage_match_list": [
                 {
                     "5": 2.81
@@ -292,7 +429,32 @@
                     "16": 6.05
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "the-matrix",
@@ -316,15 +478,6 @@
                 5,
                 6
             ],
-            "genres_ids": [
-                1,
-                17
-            ],
-            "subgenres_ids": [
-                1,
-                13,
-                14
-            ],
             "location_uk": "\u0421\u0428\u0410, \u0410\u0432\u0441\u0442\u0440\u0430\u043b\u0456\u044f",
             "location_en": "US, Australia",
             "users_ratings": [
@@ -333,6 +486,10 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 6.15
@@ -340,6 +497,11 @@
                 {
                     "17": 9.51
                 }
+            ],
+            "subgenres_ids": [
+                1,
+                13,
+                14
             ],
             "subgenre_percentage_match_list": [
                 {
@@ -350,6 +512,30 @@
                 },
                 {
                     "14": 3.43
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -378,16 +564,6 @@
             "directors_ids": [
                 7
             ],
-            "genres_ids": [
-                2,
-                9,
-                11
-            ],
-            "subgenres_ids": [
-                8,
-                15,
-                16
-            ],
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -396,6 +572,11 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                2,
+                9,
+                11
+            ],
             "genre_percentage_match_list": [
                 {
                     "2": 1.11
@@ -407,6 +588,11 @@
                     "11": 3.53
                 }
             ],
+            "subgenres_ids": [
+                8,
+                15,
+                16
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "8": 6.41
@@ -416,6 +602,30 @@
                 },
                 {
                     "16": 3.46
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -450,14 +660,6 @@
                 8,
                 9
             ],
-            "genres_ids": [
-                1,
-                2,
-                17
-            ],
-            "subgenres_ids": [
-                3
-            ],
             "location_uk": "\u0421\u0428\u0410, \u041d\u043e\u0440\u0432\u0435\u0433\u0456\u044f",
             "location_en": "US, Norway",
             "users_ratings": [
@@ -466,6 +668,11 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                2,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 7.11
@@ -477,9 +684,36 @@
                     "17": 7.53
                 }
             ],
+            "subgenres_ids": [
+                3
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "3": 45.31
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -506,16 +740,6 @@
             "directors_ids": [
                 10
             ],
-            "genres_ids": [
-                1,
-                2,
-                11,
-                17
-            ],
-            "subgenres_ids": [
-                2,
-                15
-            ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -524,6 +748,12 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                2,
+                11,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 1.82
@@ -538,12 +768,40 @@
                     "17": 6.25
                 }
             ],
+            "subgenres_ids": [
+                2,
+                15
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "2": 26.85
                 },
                 {
                     "15": 38.21
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -567,13 +825,6 @@
             "directors_ids": [
                 11
             ],
-            "genres_ids": [
-                4,
-                9,
-                12,
-                20
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -582,6 +833,12 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                4,
+                9,
+                12,
+                20
+            ],
             "genre_percentage_match_list": [
                 {
                     "4": 1.12
@@ -596,7 +853,32 @@
                     "20": 6.95
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "shrek",
@@ -620,17 +902,6 @@
             "directors_ids": [
                 12
             ],
-            "genres_ids": [
-                2,
-                3,
-                5,
-                10,
-                11,
-                16
-            ],
-            "subgenres_ids": [
-                15
-            ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -639,6 +910,14 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                2,
+                3,
+                5,
+                10,
+                11,
+                16
+            ],
             "genre_percentage_match_list": [
                 {
                     "2": 2.22
@@ -659,9 +938,36 @@
                     "16": 6.96
                 }
             ],
+            "subgenres_ids": [
+                15
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "15": 35.1
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -683,11 +989,6 @@
             "directors_ids": [
                 13
             ],
-            "genres_ids": [
-                9,
-                13
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -696,6 +997,10 @@
                 }
             ],
             "rating_criterion": "scare_factor",
+            "genres_ids": [
+                9,
+                13
+            ],
             "genre_percentage_match_list": [
                 {
                     "9": 9.15
@@ -704,7 +1009,32 @@
                     "13": 3.33
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "the-green-mile",
@@ -726,12 +1056,6 @@
             "directors_ids": [
                 1
             ],
-            "genres_ids": [
-                6,
-                9,
-                15
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -740,6 +1064,11 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                6,
+                9,
+                15
+            ],
             "genre_percentage_match_list": [
                 {
                     "6": 1.01
@@ -751,7 +1080,32 @@
                     "15": 7.13
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "real-steel",
@@ -772,13 +1126,6 @@
             "directors_ids": [
                 14
             ],
-            "genres_ids": [
-                1,
-                9,
-                17,
-                18
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0406\u043d\u0434\u0456\u044f",
             "location_en": "US, India",
             "users_ratings": [
@@ -787,6 +1134,12 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                9,
+                17,
+                18
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 8.82
@@ -801,7 +1154,32 @@
                     "18": 8.25
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "the-silence-of-the-lambs",
@@ -822,14 +1200,6 @@
             "directors_ids": [
                 15
             ],
-            "genres_ids": [
-                6,
-                9,
-                19
-            ],
-            "subgenres_ids": [
-                20
-            ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -838,6 +1208,11 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                6,
+                9,
+                19
+            ],
             "genre_percentage_match_list": [
                 {
                     "6": 1.91
@@ -849,9 +1224,36 @@
                     "19": 9.19
                 }
             ],
+            "subgenres_ids": [
+                20
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "20": 75.15
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -878,15 +1280,6 @@
                 16,
                 17
             ],
-            "genres_ids": [
-                2,
-                3,
-                9,
-                10,
-                11,
-                14
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -895,6 +1288,14 @@
                 }
             ],
             "rating_criterion": "basic",
+            "genres_ids": [
+                2,
+                3,
+                9,
+                10,
+                11,
+                14
+            ],
             "genre_percentage_match_list": [
                 {
                     "2": 2.21
@@ -915,7 +1316,32 @@
                     "14": 4.46
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "harry-potter-and-the-sorcerers-stone",
@@ -938,12 +1364,6 @@
             "directors_ids": [
                 18
             ],
-            "genres_ids": [
-                2,
-                10,
-                11
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0421\u0428\u0410",
             "location_en": "UK, US",
             "users_ratings": [
@@ -952,6 +1372,11 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                2,
+                10,
+                11
+            ],
             "genre_percentage_match_list": [
                 {
                     "2": 1.71
@@ -963,7 +1388,32 @@
                     "11": 7.11
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "terminator-2-judgment-day",
@@ -986,15 +1436,6 @@
             "directors_ids": [
                 19
             ],
-            "genres_ids": [
-                1,
-                2,
-                17
-            ],
-            "subgenres_ids": [
-                13,
-                21
-            ],
             "location_uk": "\u0421\u0428\u0410, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
             "location_en": "US, France",
             "users_ratings": [
@@ -1003,6 +1444,11 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                2,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 3.71
@@ -1014,12 +1460,40 @@
                     "17": 7.13
                 }
             ],
+            "subgenres_ids": [
+                13,
+                21
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "13": 56.85
                 },
                 {
                     "21": 18.21
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -1043,15 +1517,6 @@
             "directors_ids": [
                 20
             ],
-            "genres_ids": [
-                1,
-                5,
-                6,
-                11
-            ],
-            "subgenres_ids": [
-                3
-            ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
             "users_ratings": [
@@ -1060,6 +1525,12 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                1,
+                5,
+                6,
+                11
+            ],
             "genre_percentage_match_list": [
                 {
                     "1": 8.81
@@ -1074,9 +1545,36 @@
                     "11": 8.21
                 }
             ],
+            "subgenres_ids": [
+                3
+            ],
             "subgenre_percentage_match_list": [
                 {
                     "3": 33.1
+                }
+            ],
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
                 }
             ]
         },
@@ -1099,11 +1597,6 @@
             "directors_ids": [
                 21
             ],
-            "genres_ids": [
-                13,
-                17
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
             "users_ratings": [
@@ -1112,6 +1605,10 @@
                 }
             ],
             "rating_criterion": "full",
+            "genres_ids": [
+                13,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "13": 3.15
@@ -1120,7 +1617,32 @@
                     "17": 3.73
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "the-substance",
@@ -1142,11 +1664,6 @@
             "directors_ids": [
                 22
             ],
-            "genres_ids": [
-                9,
-                17
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
             "location_en": "US, UK, France",
             "users_ratings": [
@@ -1155,6 +1672,10 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                9,
+                17
+            ],
             "genre_percentage_match_list": [
                 {
                     "9": 3.19
@@ -1163,7 +1684,32 @@
                     "17": 9.73
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         },
         {
             "key": "cloud-atlas",
@@ -1189,13 +1735,6 @@
                 5,
                 6
             ],
-            "genres_ids": [
-                9,
-                15,
-                17,
-                19
-            ],
-            "subgenres_ids": null,
             "location_uk": "\u0421\u0428\u0410, \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u0430, \u0413\u043e\u043d\u043a\u043e\u043d\u0433, \u0421\u0456\u043d\u0433\u0430\u043f\u0443\u0440, \u041a\u0438\u0442\u0430\u0439, \u0412\u0435\u043b\u0438\u043a\u043e\u0431\u0440\u0438\u0442\u0430\u043d\u0456\u044f, \u0406\u0441\u043f\u0430\u043d\u0456\u044f",
             "location_en": "US, Germany, Hong Kong, Singapore, China, UK, Spain",
             "users_ratings": [
@@ -1204,6 +1743,12 @@
                 }
             ],
             "rating_criterion": "visual_effects",
+            "genres_ids": [
+                9,
+                15,
+                17,
+                19
+            ],
             "genre_percentage_match_list": [
                 {
                     "9": 8.89
@@ -1218,7 +1763,32 @@
                     "19": 9.29
                 }
             ],
-            "subgenre_percentage_match_list": null
+            "subgenres_ids": null,
+            "subgenre_percentage_match_list": null,
+            "specifications_ids": [
+                1
+            ],
+            "specifications_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "keywords_list": [
+                {
+                    "1": 75.0
+                }
+            ],
+            "action_times_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "1": 100.0
+                }
+            ]
         }
     ]
 }

@@ -41,6 +41,9 @@ from .movie import (
     UserRatingCriteria,
     MoviePreviewOut,
     MoviePreviewOutList,
+    MovieSpecification,
+    MovieKeyword,
+    MovieActionTime,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut
@@ -49,3 +52,6 @@ from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile
+from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut
+from .keyword import KeywordExportCreate, KeywordsJSONFile, KeywordOut
+from .action_time import ActionTimeExportCreate, ActionTimesJSONFile, ActionTimeOut

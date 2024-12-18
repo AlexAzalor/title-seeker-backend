@@ -120,6 +120,29 @@ def init(app: Flask):
         from .export_characters import export_characters_from_google_spreadsheets
 
         export_characters_from_google_spreadsheets()
+
+    @app.cli.command()
+    def fill_db_with_specifications():
+        """Fill specifications table with data from google spreadsheets"""
+        from .export_specifications import export_specifications_from_google_spreadsheets
+
+        export_specifications_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_keywords():
+        """Fill keywords table with data from google spreadsheets"""
+        from .export_keywords import export_keywords_from_google_spreadsheets
+
+        export_keywords_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_action_times():
+        """Fill ActionTime table with data from google spreadsheets"""
+        from .export_action_times import export_action_times_from_google_spreadsheets
+
+        export_action_times_from_google_spreadsheets()
         print("done")
 
     @app.cli.command()
@@ -130,6 +153,9 @@ def init(app: Flask):
         from .export_directors import export_directors_from_google_spreadsheets
         from .export_genres import export_genres_from_google_spreadsheets
         from .export_subgenres import export_subgenres_from_google_spreadsheets
+        from .export_specifications import export_specifications_from_google_spreadsheets
+        from .export_keywords import export_keywords_from_google_spreadsheets
+        from .export_action_times import export_action_times_from_google_spreadsheets
         from .export_movies import export_movies_from_google_spreadsheets
         from .export_rating import export_ratings_from_google_spreadsheets
         from .export_characters import export_characters_from_google_spreadsheets
@@ -139,7 +165,12 @@ def init(app: Flask):
         export_directors_from_google_spreadsheets()
         export_genres_from_google_spreadsheets()
         export_subgenres_from_google_spreadsheets()
+        export_specifications_from_google_spreadsheets()
+        export_keywords_from_google_spreadsheets()
+        export_action_times_from_google_spreadsheets()
         export_movies_from_google_spreadsheets()
         export_ratings_from_google_spreadsheets()
         export_characters_from_google_spreadsheets()
-        print("done")
+        print("==================================================")
+        print("DATABASE FILLED WITH DATA FROM GOOGLE SPREADSHEETS")
+        print("==================================================")

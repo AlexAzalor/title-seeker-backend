@@ -6,6 +6,9 @@ from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
 from app.schema.genre import GenreOut
 from app.schema.rating import RatingCriterion
+from app.schema.specifications import SpecificationOut
+from app.schema.keyword import KeywordOut
+from app.schema.action_time import ActionTimeOut
 from config import config
 
 CFG = config()
@@ -25,14 +28,25 @@ class MovieExportCreate(BaseModel):
     poster: str | None = None
     actors_ids: list[int]
     directors_ids: list[int]
-    genres_ids: list[int]
-    subgenres_ids: list[int] | None = None
     location_uk: str
     location_en: str
     users_ratings: list[dict[int, float]]
     rating_criterion: RatingCriterion
+    # Genres
+    genres_ids: list[int]
     genre_percentage_match_list: list[dict[int, float]]
+    # Subgenres
+    subgenres_ids: list[int] | None = None
     subgenre_percentage_match_list: list[dict[int, float]] | None = None
+    # Specifications
+    specifications_ids: list[int]
+    specifications_list: list[dict[int, float]]
+    # Keywords
+    keywords_ids: list[int]
+    keywords_list: list[dict[int, float]]
+    # Action times
+    action_times_ids: list[int]
+    action_times_list: list[dict[int, float]]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -129,6 +143,39 @@ class UserRatingCriteria(BaseModel):
     )
 
 
+class MovieSpecification(BaseModel):
+    key: str
+    name: str
+    description: str | None = None
+    percentage_match: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieKeyword(BaseModel):
+    key: str
+    name: str
+    description: str | None = None
+    percentage_match: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieActionTime(BaseModel):
+    key: str
+    name: str
+    description: str | None = None
+    percentage_match: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -148,6 +195,9 @@ class MovieOut(BaseModel):
     ratings_count: int
     user_rating: UserRatingCriteria | None = None
     rating_criterion: RatingCriterion
+    specifications: list[MovieSpecification] = []
+    keywords: list[MovieKeyword] = []
+    action_times: list[MovieActionTime] = []
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -222,6 +272,9 @@ class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
     actors: list[ActorOut]
     directors: list[DirectorOut]
+    specifications: list[SpecificationOut]
+    keywords: list[KeywordOut]
+    action_times: list[ActionTimeOut]
 
     model_config = ConfigDict(
         from_attributes=True,
