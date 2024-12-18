@@ -25,6 +25,10 @@ BORN_IN_UK = "born_in_uk"
 BORN_IN_EN = "born_in_en"
 AVATAR = "avatar"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "L"
+ACTORS_RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_actors_in_db(actors: list[s.ActorExportCreate]):
     with db.begin() as session:
@@ -66,16 +70,12 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "L"
-    RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=ACTORS_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"

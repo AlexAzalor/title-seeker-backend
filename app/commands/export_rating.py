@@ -29,6 +29,10 @@ SCARE_FACTOR = "scare_factor"
 RATING = "rating"
 COMMENT = "comment"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "P"
+RATING_RANGE_NAME = f"Rating!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
     with db.begin() as session:
@@ -37,6 +41,26 @@ def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
                 sa.select(m.Rating).where(m.Rating.user_id == rating.user_id, m.Rating.movie_id == rating.movie_id)
             ):
                 log(log.DEBUG, "Rating [%s] already exists", rating.id)
+                # Update rating
+                session.execute(
+                    sa.update(m.Rating)
+                    .where(m.Rating.user_id == rating.user_id, m.Rating.movie_id == rating.movie_id)
+                    .values(
+                        rating=rating.rating,
+                        acting=rating.acting,
+                        plot_storyline=rating.plot_storyline,
+                        music=rating.music,
+                        re_watchability=rating.re_watchability,
+                        emotional_impact=rating.emotional_impact,
+                        dialogue=rating.dialogue,
+                        production_design=rating.production_design,
+                        duration=rating.duration,
+                        visual_effects=rating.visual_effects,
+                        scare_factor=rating.scare_factor,
+                        comment=rating.comment if rating.comment else "",
+                    )
+                )
+                session.flush()
                 continue
 
             new_rating = m.Rating(
@@ -75,16 +99,12 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "P"
-    RANGE_NAME = f"Rating!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RATING_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"

@@ -46,6 +46,14 @@ def test_get_movie(client: TestClient, db: Session):
     assert data.key == movie.key
     for actor in data.actors:
         assert actor.character_name
+    assert data.actors
+    assert data.directors
+    assert data.genres
+    # assert data.subgenres
+    assert data.specifications
+    assert data.keywords
+    assert data.action_times
+    assert data.ratings
 
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")

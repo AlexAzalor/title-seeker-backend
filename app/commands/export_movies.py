@@ -37,8 +37,11 @@ KEYWORDS = "keywords"
 ACTION_TIMES = "action_times"
 LOCATION_UK = "location_uk"
 LOCATION_EN = "location_en"
-USERS_RATINGS = "users_ratings"
+# USERS_RATINGS = "users_ratings"
 RATING_CRITERION = "rating_criterion"
+
+LAST_SHEET_COLUMN = "W"
+MOVIES_RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
 
 def calculate_average_rating():
@@ -149,32 +152,49 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             session.flush()
             log(log.DEBUG, "Job with title [%s] created", movie.title_uk)
 
-            for rating in movie.users_ratings:
-                for user_id, rating_value in rating.items():
-                    user = session.scalar(sa.select(m.User).where(m.User.id == user_id))
-                    if not user:
-                        log(log.ERROR, "User [%s] not found", user_id)
-                        raise Exception(f"User [{user_id}] not found")
+            # for rating in movie.users_ratings:
+            #     for user_id, rating_value in rating.items():
+            # user = session.scalar(sa.select(m.User).where(m.User.id == user_id))
+            # if not user:
+            #     log(log.ERROR, "User [%s] not found", user_id)
+            #     raise Exception(f"User [{user_id}] not found")
 
-                    min_rate = 0.01
+            min_rate = 0.01
+            min_rating = 0.08
+            default_user_id = 1
 
-                    new_rating = m.Rating(
-                        user_id=user_id,
-                        movie_id=new_movie.id,
-                        rating=rating_value,
-                        acting=min_rate,
-                        plot_storyline=min_rate,
-                        music=min_rate,
-                        re_watchability=min_rate,
-                        emotional_impact=min_rate,
-                        dialogue=min_rate,
-                        production_design=min_rate,
-                        duration=min_rate,
-                        visual_effects=min_rate if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS else None,
-                        scare_factor=min_rate if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR else None,
-                    )
+            ve_rate = (
+                min_rate
+                if movie.rating_criterion in [s.RatingCriterion.VISUAL_EFFECTS, s.RatingCriterion.FULL]
+                else None
+            )
+            sf_rate = (
+                min_rate if movie.rating_criterion in [s.RatingCriterion.SCARE_FACTOR, s.RatingCriterion.FULL] else None
+            )
 
-                    session.add(new_rating)
+            if ve_rate:
+                min_rating += ve_rate
+
+            if sf_rate:
+                min_rating += sf_rate
+
+            new_rating = m.Rating(
+                user_id=default_user_id,
+                movie_id=new_movie.id,
+                rating=min_rating,
+                acting=min_rate,
+                plot_storyline=min_rate,
+                music=min_rate,
+                re_watchability=min_rate,
+                emotional_impact=min_rate,
+                dialogue=min_rate,
+                production_design=min_rate,
+                duration=min_rate,
+                visual_effects=ve_rate,
+                scare_factor=sf_rate,
+            )
+
+            session.add(new_rating)
 
             for percentage_match_dict in movie.genre_percentage_match_list:
                 for genre_id, percentage in percentage_match_dict.items():
@@ -282,15 +302,12 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    LAST_SHEET_COLUMN = "X"
-    RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=MOVIES_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"
@@ -320,7 +337,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     ACTION_TIMES_INDEX = values[0].index(ACTION_TIMES)
     LOCATION_UK_INDEX = values[0].index(LOCATION_UK)
     LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
-    USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
+    # USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
     RATING_CRITERION_INDEX = values[0].index(RATING_CRITERION)
 
     for row in values[1:]:
@@ -426,10 +443,10 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         location_en = row[LOCATION_EN_INDEX]
         assert location_en, f"The location_en {location_en} is missing"
 
-        users_ratings = row[USERS_RATINGS_INDEX]
-        assert users_ratings, f"The users_ratings {users_ratings} is missing"
+        # users_ratings = row[USERS_RATINGS_INDEX]
+        # assert users_ratings, f"The users_ratings {users_ratings} is missing"
 
-        users_rating: list[dict] = ast.literal_eval(users_ratings)
+        # users_rating: list[dict] = ast.literal_eval(users_ratings)
 
         rating_criterion = row[RATING_CRITERION_INDEX]
         assert rating_criterion, f"The rating_criterion {rating_criterion} is missing"
@@ -454,7 +471,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 subgenres_ids=subgenres_ids if subgenres_ids else None,
                 location_uk=location_uk,
                 location_en=location_en,
-                users_ratings=users_rating,
+                # users_ratings=users_rating,
                 rating_criterion=rating_criterion,
                 genre_percentage_match_list=genre_percentage_match_list,
                 subgenre_percentage_match_list=subgenre_percentage_match_list

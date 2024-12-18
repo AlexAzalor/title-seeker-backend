@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException, Depends, status
 import app.models as m
 import sqlalchemy as sa
@@ -62,6 +63,38 @@ def update_rate_movie(
 
     log(log.DEBUG, "Rating for movie [%s] updated", movie.key)
 
+    # backgroud task?
+    # https://fastapi.tiangolo.com/tutorial/background-tasks/
+    ratings = db.scalars(sa.select(m.Rating)).all()
+    if not ratings:
+        log(log.ERROR, "Ratings are empty!")
+
+    ratings_to_file = []
+    for rating in ratings:
+        ratings_to_file.append(
+            s.RatingExportCreate(
+                id=rating.id,
+                movie_id=rating.movie_id,
+                user_id=rating.user_id,
+                rating=rating.rating,
+                acting=rating.acting,
+                plot_storyline=rating.plot_storyline,
+                music=rating.music,
+                re_watchability=rating.re_watchability,
+                emotional_impact=rating.emotional_impact,
+                dialogue=rating.dialogue,
+                production_design=rating.production_design,
+                duration=rating.duration,
+                visual_effects=rating.visual_effects,
+                scare_factor=rating.scare_factor,
+                comment=rating.comment,
+            )
+        )
+
+    with open("data/ratings.json", "w") as file:
+        json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
+        print("Ratings data saved to [data/ratings.json] file")
+
 
 @user_router.post(
     "/rate-movie/{user_uuid}",
@@ -117,3 +150,35 @@ def rate_movie(
     db.commit()
 
     log(log.DEBUG, "Rating for movie [%s] updated", movie.key)
+
+    # backgroud task?
+    # https://fastapi.tiangolo.com/tutorial/background-tasks/
+    ratings = db.scalars(sa.select(m.Rating)).all()
+    if not ratings:
+        log(log.ERROR, "Ratings are empty!")
+
+    ratings_to_file = []
+    for rating in ratings:
+        ratings_to_file.append(
+            s.RatingExportCreate(
+                id=rating.id,
+                movie_id=rating.movie_id,
+                user_id=rating.user_id,
+                rating=rating.rating,
+                acting=rating.acting,
+                plot_storyline=rating.plot_storyline,
+                music=rating.music,
+                re_watchability=rating.re_watchability,
+                emotional_impact=rating.emotional_impact,
+                dialogue=rating.dialogue,
+                production_design=rating.production_design,
+                duration=rating.duration,
+                visual_effects=rating.visual_effects,
+                scare_factor=rating.scare_factor,
+                comment=rating.comment,
+            )
+        )
+
+    with open("data/ratings.json", "w") as file:
+        json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
+        print("Ratings data saved to [data/ratings.json] file")

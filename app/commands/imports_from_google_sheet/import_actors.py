@@ -4,6 +4,7 @@ from googleapiclient.discovery import build
 from app import schema as s
 from app.logger import log
 from config import config
+from ..export_actors import ACTORS_RANGE_NAME
 
 from ..utility import authorized_user_in_google_spreadsheets
 
@@ -48,17 +49,13 @@ def import_actors_to_google_spreadsheets():
     try:
         credentials = authorized_user_in_google_spreadsheets()
 
-        # Last column need to be filled!
-        LAST_SHEET_COLUMN = "L"
-        RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
-
         resource = build("sheets", "v4", credentials=credentials)
         sheets = resource.spreadsheets()
 
         body = {"values": values}
 
         sheets.values().append(
-            spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME, valueInputOption="RAW", body=body
+            spreadsheetId=CFG.SPREADSHEET_ID, range=ACTORS_RANGE_NAME, valueInputOption="RAW", body=body
         ).execute()
     except Exception as e:
         log(log.ERROR, "Error occurred while appending data to google spreadsheets - [%s]", e)

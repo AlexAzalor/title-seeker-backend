@@ -31,7 +31,7 @@ class MovieExportCreate(BaseModel):
     directors_ids: list[int]
     location_uk: str
     location_en: str
-    users_ratings: list[dict[int, float]]
+    # users_ratings: list[dict[int, float]]
     rating_criterion: RatingCriterion
     # Genres
     genres_ids: list[int]

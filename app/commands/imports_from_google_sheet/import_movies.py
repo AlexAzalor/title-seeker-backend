@@ -2,6 +2,7 @@ import json
 from googleapiclient.discovery import build
 
 from app import schema as s
+from ..export_movies import MOVIES_RANGE_NAME
 from app.logger import log
 from config import config
 
@@ -47,7 +48,7 @@ def append_data_to_google_spreadsheets():
             str(movie.action_times_list),
             movie.location_uk,
             movie.location_en,
-            str(movie.users_ratings),
+            # str(movie.users_ratings),
             movie.rating_criterion.value,
             movie.id,
         ]
@@ -59,17 +60,13 @@ def append_data_to_google_spreadsheets():
     try:
         credentials = authorized_user_in_google_spreadsheets()
 
-        # Last column need to be filled!
-        LAST_SHEET_COLUMN = "X"
-        RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
-
         resource = build("sheets", "v4", credentials=credentials)
         sheets = resource.spreadsheets()
 
         body = {"values": values}
 
         sheets.values().append(
-            spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME, valueInputOption="RAW", body=body
+            spreadsheetId=CFG.SPREADSHEET_ID, range=MOVIES_RANGE_NAME, valueInputOption="RAW", body=body
         ).execute()
     except Exception as e:
         log(log.ERROR, "Error occurred while appending data to google spreadsheets - [%s]", e)
