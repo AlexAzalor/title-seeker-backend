@@ -61,18 +61,13 @@ def write_actors_in_db(actors: list[s.ActorExportCreate]):
         session.commit()
 
 
-def convert_string_to_list_of_integers(input_string):
-    string_numbers = input_string.split(", ")
-    return [int(num) for num in string_numbers]
-
-
 def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: bool = False):
     """Fill actors table with data from google spreadsheets"""
 
     credentials = authorized_user_in_google_spreadsheets()
 
     # Last column need to be filled!
-    LAST_SHEET_COLUMN = "N"
+    LAST_SHEET_COLUMN = "L"
     RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
@@ -105,6 +100,9 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
         if not row[INDEX_ID]:
             continue
 
+        id = row[INDEX_ID]
+        assert id, f"The id {id} is missing"
+
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
 
@@ -135,6 +133,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         actors.append(
             s.ActorExportCreate(
+                id=id,
                 key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,

@@ -146,6 +146,22 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def import_movies():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_movies import append_data_to_google_spreadsheets
+
+        append_data_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_actors():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_actors import import_actors_to_google_spreadsheets
+
+        import_actors_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets
@@ -171,6 +187,6 @@ def init(app: Flask):
         export_movies_from_google_spreadsheets()
         export_ratings_from_google_spreadsheets()
         export_characters_from_google_spreadsheets()
-        print("==================================================")
-        print("DATABASE FILLED WITH DATA FROM GOOGLE SPREADSHEETS")
-        print("==================================================")
+        print("===============================================================")
+        print("DATABASE SUCCESSFULLY FILLED WITH DATA FROM GOOGLE SPREADSHEETS")
+        print("===============================================================")

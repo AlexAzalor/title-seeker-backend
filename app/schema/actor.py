@@ -8,6 +8,7 @@ CFG = config()
 
 
 class ActorExportCreate(BaseModel):
+    id: int
     key: str
     first_name_uk: str
     last_name_uk: str

@@ -58,7 +58,7 @@ class BaseConfig(BaseSettings):
     MAX_JOBS_SEARCH_RESULTS: int = 15
 
     # for test data from google spreadsheets
-
+    # "https://www.googleapis.com/auth/drive.file"
     SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets"]
     SPREADSHEET_ID: str = "1DxRxVDESUw-C6U-DwfpX5d0uTW7-61y49Xuu0yfaJhM"
 

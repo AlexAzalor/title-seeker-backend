@@ -15,6 +15,7 @@ CFG = config()
 
 
 class MovieExportCreate(BaseModel):
+    id: int
     key: str
     title_uk: str
     title_en: str

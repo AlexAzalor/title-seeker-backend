@@ -56,6 +56,7 @@ def calculate_average_rating():
 
 
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
+    skipped_movies = 0
     with db.begin() as session:
         if not session.scalar(sa.select(m.Actor)):
             log(log.ERROR, "Actor table is empty")
@@ -72,6 +73,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
 
         for movie in movies:
             if session.scalar(sa.select(m.Movie).where(m.Movie.key == movie.key)):
+                skipped_movies += 1
                 continue
 
             # print('movie', movie.key)
@@ -266,6 +268,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
 
         session.commit()
 
+    log(log.INFO, "Skipped movies: %s", skipped_movies)
     calculate_average_rating()
 
 
@@ -327,6 +330,9 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         if not row[INDEX_ID]:
             continue
 
+        id = row[INDEX_ID]
+        assert id, f"The id {id} is missing"
+
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
 
@@ -361,11 +367,11 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         actors_ids = row[ACTORS_IDS_INDEX]
         assert actors_ids, f"The actors_ids {actors_ids} is missing"
-        actors_ids = convert_string_to_list_of_integers(actors_ids)
+        actors_ids = ast.literal_eval(actors_ids)
 
         directors_ids = row[DIRECTORS_IDS_INDEX]
         assert directors_ids, f"The directors_ids {directors_ids} is missing"
-        directors_ids = convert_string_to_list_of_integers(directors_ids)
+        directors_ids = ast.literal_eval(directors_ids)
 
         # Genres
         genres_ids_with_percentage_match = row[GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX]
@@ -430,6 +436,7 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         movies.append(
             s.MovieExportCreate(
+                id=id,
                 key=key,
                 title_uk=title_uk,
                 title_en=title_en,
