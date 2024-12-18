@@ -30,8 +30,8 @@ WORLDWIDE_GROSS = "worldwide_gross"
 POSTER = "poster"
 ACTORS_IDS = "actors_ids"
 DIRECTORS_IDS = "directors_ids"
-GENRES_IDS_WITH_PERCENTAGE_MATCH = "genres_ids_with_percentage_match"
-SUBGENRES_IDS_WITH_PERCENTAGE_MATCH = "subgenres_ids_with_percentage_match"
+GENRES = "genres"
+SUBGENRES = "subgenres"
 SPECIFICATIONS = "specifications"
 KEYWORDS = "keywords"
 ACTION_TIMES = "action_times"
@@ -196,7 +196,7 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
 
             session.add(new_rating)
 
-            for percentage_match_dict in movie.genre_percentage_match_list:
+            for percentage_match_dict in movie.genres_list:
                 for genre_id, percentage in percentage_match_dict.items():
                     genre = session.scalar(sa.select(m.Genre).where(m.Genre.id == genre_id))
 
@@ -211,8 +211,8 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                     )
                     session.execute(movie_genre)
 
-            if movie.subgenre_percentage_match_list:
-                for subgenre_percentage_match_dict in movie.subgenre_percentage_match_list:
+            if movie.subgenres_list:
+                for subgenre_percentage_match_dict in movie.subgenres_list:
                     for subgenre_id, percentage in subgenre_percentage_match_dict.items():
                         subgenre = session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))
 
@@ -330,8 +330,8 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     POSTER_INDEX = values[0].index(POSTER)
     ACTORS_IDS_INDEX = values[0].index(ACTORS_IDS)
     DIRECTORS_IDS_INDEX = values[0].index(DIRECTORS_IDS)
-    GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(GENRES_IDS_WITH_PERCENTAGE_MATCH)
-    SUBGENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX = values[0].index(SUBGENRES_IDS_WITH_PERCENTAGE_MATCH)
+    GENRES_INDEX = values[0].index(GENRES)
+    SUBGENRES_INDEX = values[0].index(SUBGENRES)
     SPECIFICATIONS_INDEX = values[0].index(SPECIFICATIONS)
     KEYWORDS_INDEX = values[0].index(KEYWORDS)
     ACTION_TIMES_INDEX = values[0].index(ACTION_TIMES)
@@ -391,24 +391,23 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         directors_ids = ast.literal_eval(directors_ids)
 
         # Genres
-        genres_ids_with_percentage_match = row[GENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX]
-        assert (
-            genres_ids_with_percentage_match
-        ), f"The genres_ids_with_percentage_match {genres_ids_with_percentage_match} is missing"
-        genre_percentage_match_list: list[dict] = ast.literal_eval(genres_ids_with_percentage_match)
+        genres = row[GENRES_INDEX]
+        assert genres, f"The genres {genres} is missing"
+        genres_list: list[dict] = ast.literal_eval(genres)
 
-        genres_ids = [list(genre_id.keys())[0] for genre_id in genre_percentage_match_list]
+        genres_ids = [list(genre_id.keys())[0] for genre_id in genres_list]
         assert genres_ids, f"The genres_ids {genres_ids} is missing"
 
         # Subgenres
-        subgenres_ids_with_percentage_match = row[SUBGENRES_IDS_WITH_PERCENTAGE_MATCH_INDEX]
-        subgenre_percentage_match_list = None
+        subgenres = row[SUBGENRES_INDEX]
+        subgenres_list = None
         subgenres_ids = None
-        if subgenres_ids_with_percentage_match:
-            subgenre_percentage_match_list = ast.literal_eval(subgenres_ids_with_percentage_match)
 
-        if subgenre_percentage_match_list:
-            subgenres_ids = [list(subgenre_id.keys())[0] for subgenre_id in subgenre_percentage_match_list]
+        if subgenres:
+            subgenres_list = ast.literal_eval(subgenres)
+
+        if subgenres_list:
+            subgenres_ids = [list(subgenre_id.keys())[0] for subgenre_id in subgenres_list]
             assert subgenres_ids, f"The subgenres_ids {subgenres_ids} is missing"
 
         # Specifications
@@ -467,20 +466,23 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 poster=poster,
                 actors_ids=actors_ids,
                 directors_ids=directors_ids,
-                genres_ids=genres_ids,
-                subgenres_ids=subgenres_ids if subgenres_ids else None,
                 location_uk=location_uk,
                 location_en=location_en,
+                # Genres
+                genres_list=genres_list,
+                genres_ids=genres_ids,
+                # Subgenres
+                subgenres_list=subgenres_list if subgenres_list else None,
+                subgenres_ids=subgenres_ids if subgenres_ids else None,
                 # users_ratings=users_rating,
                 rating_criterion=rating_criterion,
-                genre_percentage_match_list=genre_percentage_match_list,
-                subgenre_percentage_match_list=subgenre_percentage_match_list
-                if subgenre_percentage_match_list
-                else None,
+                # Specifications
                 specifications_ids=specifications_ids,
                 specifications_list=specifications_list,
+                # Keyword
                 keywords_ids=keywords_ids,
                 keywords_list=keywords_list,
+                # Action times
                 action_times_ids=action_times_ids,
                 action_times_list=action_times_list,
                 # rating_criterion=s.RatingCriterion(rating_criterion),

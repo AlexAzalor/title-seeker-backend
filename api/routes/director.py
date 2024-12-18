@@ -11,7 +11,7 @@ director_router = APIRouter(prefix="/directorrs", tags=["Directors"])
 
 
 @director_router.get("/", status_code=status.HTTP_200_OK, response_model=s.DirectorListOut)
-async def get_directors(
+def get_directors(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):

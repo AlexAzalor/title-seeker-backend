@@ -34,20 +34,20 @@ class MovieExportCreate(BaseModel):
     # users_ratings: list[dict[int, float]]
     rating_criterion: RatingCriterion
     # Genres
+    genres_list: list[dict[int, float]]
     genres_ids: list[int]
-    genre_percentage_match_list: list[dict[int, float]]
     # Subgenres
+    subgenres_list: list[dict[int, float]] | None = None
     subgenres_ids: list[int] | None = None
-    subgenre_percentage_match_list: list[dict[int, float]] | None = None
     # Specifications
-    specifications_ids: list[int]
     specifications_list: list[dict[int, float]]
+    specifications_ids: list[int]
     # Keywords
-    keywords_ids: list[int]
     keywords_list: list[dict[int, float]]
+    keywords_ids: list[int]
     # Action times
-    action_times_ids: list[int]
     action_times_list: list[dict[int, float]]
+    action_times_ids: list[int]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -276,6 +276,35 @@ class MovieFiltersListOut(BaseModel):
     specifications: list[SpecificationOut]
     keywords: list[KeywordOut]
     action_times: list[ActionTimeOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieIn(BaseModel):
+    id: int
+    key: str
+    title_uk: str
+    title_en: str
+    description_uk: str
+    description_en: str
+    release_date: str
+    duration: int
+    budget: int
+    domestic_gross: int
+    worldwide_gross: int
+    poster: str
+    actors_ids: list[int]
+    directors_ids: list[int]
+    genres: list[dict[int, float]]
+    subgenres: list[dict[int, float]]
+    specifications: list[dict[int, float]]
+    keywords: list[dict[int, float]]
+    action_times: list[dict[int, float]]
+    location_uk: str
+    location_en: str
+    rating_criterion: RatingCriterion
 
     model_config = ConfigDict(
         from_attributes=True,

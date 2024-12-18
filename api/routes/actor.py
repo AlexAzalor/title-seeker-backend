@@ -11,7 +11,7 @@ actor_router = APIRouter(prefix="/actors", tags=["Actors"])
 
 
 @actor_router.get("/", status_code=status.HTTP_200_OK, response_model=s.ActorListOut)
-async def get_actors(
+def get_actors(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
