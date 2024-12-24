@@ -263,6 +263,7 @@ def get_movie(
     )
 
 
+# need async?
 @movie_router.post("/upload-poster/{movie_id}", status_code=status.HTTP_200_OK)
 async def upload_poster(movie_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload poster for movie"""
@@ -439,7 +440,7 @@ def get_movies_by_actor(
 
 
 @movie_router.get("/filters/", status_code=status.HTTP_200_OK, response_model=s.MovieFiltersListOut)
-async def get_movie_filters(
+def get_movie_filters(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -508,6 +509,7 @@ async def get_movie_filters(
                         key=subgenre.key,
                         name=next((t.name for t in subgenre.translations if t.language == lang.value)),
                         description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                        parent_genre_key=subgenre.genre.key,
                     )
                     for subgenre in genre.subgenres
                 ],
@@ -550,6 +552,165 @@ async def get_movie_filters(
         actors=actors_out,
         directors=directors_out,
         specifications=specifications_out,
+        keywords=keywords_out,
+        action_times=action_times_out,
+    )
+
+
+@movie_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"}},
+)
+def create_movie(
+    movie_in: s.MovieIn,
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Create a new movie"""
+
+    if db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_in.key)):
+        message = "Фільм вже існує" if lang == s.Language.UK else "Movie already exists"
+        raise HTTPException(status_code=400, detail=message)
+
+    # movie = m.Movie(**movie_in.dict())
+    # db.add(movie)
+    # db.commit()
+
+    return {"info": "Movie created successfully"}
+
+
+@movie_router.get(
+    "/pre-create/",
+    response_model=s.MoviePreCreateData,
+    status_code=status.HTTP_200_OK,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Data not found"}},
+)
+def get_pre_create_data(
+    # movie_in: s.MovieIn,
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get pre-create data for a new movie"""
+
+    last_movie_id = db.scalar(sa.select(m.Movie.id).order_by(sa.desc(m.Movie.id)).limit(1))
+    if not last_movie_id:
+        log(log.ERROR, "Last movie ID not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
+
+    next_movie_id = last_movie_id + 1
+
+    actors = db.scalars(sa.select(m.Actor)).all()
+    if not actors:
+        log(log.ERROR, "Actors [%s] not found")
+        raise HTTPException(status_code=404, detail="Actors not found")
+
+    directors = db.scalars(sa.select(m.Director)).all()
+    if not directors:
+        log(log.ERROR, "Director [%s] not found")
+        raise HTTPException(status_code=404, detail="Director not found")
+
+    genres = (
+        db.scalars(sa.select(m.Genre).options(joinedload(m.Genre.subgenres), joinedload(m.Genre.translations)))
+        .unique()
+        .all()
+    )
+    if not genres:
+        log(log.ERROR, "Genres [%s] not found")
+        raise HTTPException(status_code=404, detail="Genres not found")
+
+    specifications = db.scalars(sa.select(m.Specification)).all()
+    if not specifications:
+        log(log.ERROR, "Specifications [%s] not found")
+        raise HTTPException(status_code=404, detail="Specifications not found")
+
+    keywords = db.scalars(sa.select(m.Keyword)).all()
+    if not keywords:
+        log(log.ERROR, "Keywords [%s] not found")
+        raise HTTPException(status_code=404, detail="Keywords not found")
+
+    action_times = db.scalars(sa.select(m.ActionTime)).all()
+    if not action_times:
+        log(log.ERROR, "Action times [%s] not found")
+        raise HTTPException(status_code=404, detail="Action times not found")
+
+    actors_out = []
+
+    for actor in actors:
+        actors_out.append(
+            s.ActorOut(
+                key=actor.key,
+                full_name=actor.full_name(lang),
+            )
+        )
+
+    directors_out = []
+
+    for director in directors:
+        directors_out.append(
+            s.DirectorOut(
+                key=director.key,
+                full_name=director.full_name(lang),
+            )
+        )
+
+    specifications_out = []
+
+    for specification in specifications:
+        specifications_out.append(
+            s.SpecificationOut(
+                key=specification.key,
+                name=next((t.name for t in specification.translations if t.language == lang.value)),
+                description=next((t.description for t in specification.translations if t.language == lang.value)),
+            )
+        )
+
+    genres_out = []
+
+    for genre in genres:
+        genres_out.append(
+            s.GenreOut(
+                key=genre.key,
+                name=next((t.name for t in genre.translations if t.language == lang.value)),
+                description=next((t.description for t in genre.translations if t.language == lang.value)),
+                subgenres=[
+                    s.SubgenreOut(
+                        key=subgenre.key,
+                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                        parent_genre_key=subgenre.genre.key,
+                    )
+                    for subgenre in genre.subgenres
+                ],
+            )
+        )
+
+    keywords_out = []
+    for keyword in keywords:
+        keywords_out.append(
+            s.KeywordOut(
+                key=keyword.key,
+                name=next((t.name for t in keyword.translations if t.language == lang.value)),
+                description=next((t.description for t in keyword.translations if t.language == lang.value)),
+            )
+        )
+
+    action_times_out = []
+    for action_time in action_times:
+        action_times_out.append(
+            s.ActionTimeOut(
+                key=action_time.key,
+                name=next((t.name for t in action_time.translations if t.language == lang.value)),
+                description=next((t.description for t in action_time.translations if t.language == lang.value)),
+            )
+        )
+
+    return s.MoviePreCreateData(
+        next_movie_id=next_movie_id,
+        actors=actors_out,
+        directors=directors_out,
+        specifications=specifications_out,
+        genres=genres_out,
         keywords=keywords_out,
         action_times=action_times_out,
     )

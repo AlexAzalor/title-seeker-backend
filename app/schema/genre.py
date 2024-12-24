@@ -29,6 +29,7 @@ class SubgenreOut(BaseModel):
     key: str
     name: str
     description: str | None = None
+    parent_genre_key: str
 
     model_config = ConfigDict(
         from_attributes=True,

@@ -282,6 +282,12 @@ class MovieFiltersListOut(BaseModel):
     )
 
 
+class MovieFilterField(BaseModel):
+    key: str
+    percentage_match: float
+    subgenre_parent_key: str | None = None
+
+
 class MovieIn(BaseModel):
     id: int
     key: str
@@ -295,16 +301,30 @@ class MovieIn(BaseModel):
     domestic_gross: int
     worldwide_gross: int
     poster: str
-    actors_ids: list[int]
-    directors_ids: list[int]
-    genres: list[dict[int, float]]
-    subgenres: list[dict[int, float]]
-    specifications: list[dict[int, float]]
-    keywords: list[dict[int, float]]
-    action_times: list[dict[int, float]]
     location_uk: str
     location_en: str
+    actors_keys: list[str]
+    directors_keys: list[str]
+    genres: list[MovieFilterField]
+    subgenres: list[MovieFilterField]
+    specifications: list[MovieFilterField]
+    keywords: list[MovieFilterField]
+    action_times: list[MovieFilterField]
     rating_criterion: RatingCriterion
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MoviePreCreateData(BaseModel):
+    next_movie_id: int
+    actors: list[ActorOut]
+    directors: list[DirectorOut]
+    genres: list[GenreOut]
+    specifications: list[SpecificationOut]
+    keywords: list[KeywordOut]
+    action_times: list[ActionTimeOut]
 
     model_config = ConfigDict(
         from_attributes=True,

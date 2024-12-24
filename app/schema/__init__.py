@@ -44,8 +44,10 @@ from .movie import (
     MovieSpecification,
     MovieKeyword,
     MovieActionTime,
+    MovieIn,
+    MoviePreCreateData,
 )
-from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut
+from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile

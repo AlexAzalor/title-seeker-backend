@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict
 
 from config import config
@@ -44,6 +45,23 @@ class ActorOut(BaseModel):
 
 class ActorListOut(BaseModel):
     actors: list[ActorOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class ActorIn(BaseModel):
+    key: str
+    first_name_uk: str
+    last_name_uk: str
+    first_name_en: str
+    last_name_en: str
+    born: str
+    died: str | None = None
+    born_in_uk: str
+    born_in_en: str
+    avatar: UploadFile
 
     model_config = ConfigDict(
         from_attributes=True,

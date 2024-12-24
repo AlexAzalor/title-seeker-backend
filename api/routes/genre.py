@@ -35,6 +35,7 @@ def get_genres(
                         key=subgenre.key,
                         name=next((t.name for t in subgenre.translations if t.language == lang.value)),
                         description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                        parent_genre_key=subgenre.genre.key,
                     )
                     for subgenre in genre.subgenres
                 ],

@@ -77,7 +77,7 @@ def test_search_movies(client: TestClient, db: Session):
     # Test search by all filters
     GENRES = ["adventure", "drama", "fantasy"]
     SUBGENRES = ["quest", "sword-sorcery"]
-    ACTORS = ["hugo-weaving", "elijah-wood", "lan-mckellen"]
+    ACTORS = ["hugo-weaving", "elijah-wood", "ian-mckellen"]
     DIRECTORS = ["peter-jackson"]
     RESULT_MOVIE = ["the-lord-of-the-rings-the-fellowship-of-the-ring"]
 
