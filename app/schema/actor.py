@@ -52,6 +52,7 @@ class ActorListOut(BaseModel):
 
 
 # This use for the direcors too
+# Not used in router, how to validate?
 class ActorIn(BaseModel):
     key: str
     first_name_uk: str

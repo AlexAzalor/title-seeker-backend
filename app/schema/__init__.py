@@ -49,7 +49,7 @@ from .movie import (
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
-from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut
+from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
