@@ -48,7 +48,7 @@ from .movie import (
     MoviePreCreateData,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
-from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut
+from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn

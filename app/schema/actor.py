@@ -51,6 +51,7 @@ class ActorListOut(BaseModel):
     )
 
 
+# This use for the direcors too
 class ActorIn(BaseModel):
     key: str
     first_name_uk: str
