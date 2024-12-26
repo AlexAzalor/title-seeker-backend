@@ -21,6 +21,10 @@ NAME_EN = "name_en"
 DESCRIPTION_UK = "description_uk"
 DESCRIPTION_EN = "description_en"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "H"
+SUBGENRES_RANGE_NAME = f"Subgenres!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_subgenres_in_db(subgenres: list[s.SubgenreExportCreate]):
     with db.begin() as session:
@@ -65,16 +69,12 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "H"
-    RANGE_NAME = f"Subgenres!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=SUBGENRES_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"
@@ -95,6 +95,9 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
         if not row[INDEX_ID]:
             continue
 
+        id = row[INDEX_ID]
+        assert id, f"The id {id} is missing"
+
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
 
@@ -113,6 +116,7 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
 
         subgenres.append(
             s.SubgenreExportCreate(
+                id=id,
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,
