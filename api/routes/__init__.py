@@ -8,6 +8,7 @@ from .actor import actor_router
 from .director import director_router
 from .user import user_router
 from .subgenre import subgenre_router
+from .specification import specification_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
@@ -19,6 +20,7 @@ router.include_router(actor_router)
 router.include_router(director_router)
 router.include_router(user_router)
 router.include_router(subgenre_router)
+router.include_router(specification_router)
 
 
 @router.get("/list-endpoints/")

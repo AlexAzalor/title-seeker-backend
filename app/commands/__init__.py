@@ -194,6 +194,14 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def import_specifications():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_specifications import import_specifications_to_google_spreadsheets
+
+        import_specifications_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets
