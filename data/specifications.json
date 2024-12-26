@@ -239,6 +239,22 @@
             "name_en": "test SPEC 3",
             "description_uk": "fdsfdsf",
             "description_en": "fdsfdsfd"
+        },
+        {
+            "id": 31,
+            "key": "test-keyword-1",
+            "name_uk": "fdfdf",
+            "name_en": "test keyword 1",
+            "description_uk": "fdsf",
+            "description_en": "fdsfd"
+        },
+        {
+            "id": 32,
+            "key": "test-keyword-2",
+            "name_uk": "fdfdf",
+            "name_en": "test keyword 2",
+            "description_uk": "fdsf",
+            "description_en": "fdsfd"
         }
     ]
 }
