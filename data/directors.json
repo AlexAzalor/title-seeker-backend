@@ -301,29 +301,29 @@
         },
         {
             "id": 24,
-            "key": "ggg-hhh",
-            "first_name_uk": "hgfhvb",
-            "last_name_uk": "gfdgfdg",
-            "first_name_en": "ggg",
-            "last_name_en": "hhh",
-            "born": "2024-12-08T00:00:00",
-            "died": "2024-12-08T00:00:00",
-            "born_in_uk": "gfdg",
-            "born_in_en": "gfdg",
-            "avatar": "24_Tom Tykwer.png"
+            "key": "mary-harron",
+            "first_name_uk": "\u041c\u0435\u0440\u0456",
+            "last_name_uk": "\u0413\u0435\u0440\u0440\u043e\u043d",
+            "first_name_en": "Mary",
+            "last_name_en": "Harron",
+            "born": "1953-01-12T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0411\u0440\u0435\u0439\u0441\u0431\u0440\u0438\u0434\u0436, \u041e\u043d\u0442\u0430\u0440\u0456\u043e, \u041a\u0430\u043d\u0430\u0434\u0430",
+            "born_in_en": "Bracebridge, Ontario, Canada",
+            "avatar": "24_Mary Harron.png"
         },
         {
             "id": 25,
-            "key": "iii-ddd",
-            "first_name_uk": "gg",
-            "last_name_uk": "hgfh",
-            "first_name_en": "iii",
-            "last_name_en": "ddd",
-            "born": "2024-12-08T00:00:00",
+            "key": "bong-joon-ho",
+            "first_name_uk": "\u041f\u043e\u043d",
+            "last_name_uk": "\u0427\u0436\u0443\u043d \u0425\u043e",
+            "first_name_en": "Bong",
+            "last_name_en": "Joon Ho",
+            "born": "1969-09-14T00:00:00",
             "died": null,
-            "born_in_uk": "hghg",
-            "born_in_en": "hhhg",
-            "avatar": "25_Tom Tykwer.png"
+            "born_in_uk": "\u0422\u0435\u0433\u0443, \u041f\u0456\u0432\u0434\u0435\u043d\u043d\u0430 \u041a\u043e\u0440\u0435\u044f",
+            "born_in_en": "Daegu, South Korea",
+            "avatar": "25_Bong Joon Ho.png"
         }
     ]
 }

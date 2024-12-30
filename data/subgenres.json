@@ -197,69 +197,6 @@
             "description_uk": "",
             "description_en": "",
             "parent_genre_id": 17
-        },
-        {
-            "id": 24,
-            "key": "fdgfdg",
-            "name_uk": "dfgfdg",
-            "name_en": "fdgfdg",
-            "description_uk": "fgdfg",
-            "description_en": "dfgfdg",
-            "parent_genre_id": 1
-        },
-        {
-            "id": 25,
-            "key": "fdgfdg222",
-            "name_uk": "dfgfdg",
-            "name_en": "fdgfdg222",
-            "description_uk": "fgdfg",
-            "description_en": "dfgfdg",
-            "parent_genre_id": 1
-        },
-        {
-            "id": 26,
-            "key": "aaa-bbbb",
-            "name_uk": "aaa",
-            "name_en": "aaa bbbb",
-            "description_uk": null,
-            "description_en": null,
-            "parent_genre_id": 1
-        },
-        {
-            "id": 27,
-            "key": "jjjjjjjj",
-            "name_uk": "hgfhgf",
-            "name_en": "jjjjjjjj",
-            "description_uk": null,
-            "description_en": null,
-            "parent_genre_id": 8
-        },
-        {
-            "id": 28,
-            "key": "subtest1",
-            "name_uk": "gfhg",
-            "name_en": "subtest1",
-            "description_uk": null,
-            "description_en": null,
-            "parent_genre_id": 28
-        },
-        {
-            "id": 29,
-            "key": "comedy-new1",
-            "name_uk": "fdsfdsf",
-            "name_en": "comedy-new1",
-            "description_uk": null,
-            "description_en": null,
-            "parent_genre_id": 5
-        },
-        {
-            "id": 30,
-            "key": "subgenre-of-new-genre-1",
-            "name_uk": "fdsfds",
-            "name_en": "subgenre of new GENRE 1",
-            "description_uk": null,
-            "description_en": null,
-            "parent_genre_id": 29
         }
     ]
 }

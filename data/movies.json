@@ -1693,6 +1693,232 @@
             "action_times_ids": [
                 1
             ]
+        },
+        {
+            "id": 24,
+            "key": "american-psycho",
+            "title_uk": "\u0410\u043c\u0435\u0440\u0438\u043a\u0430\u043d\u0441\u044c\u043a\u0438\u0439 \u043f\u0441\u0438\u0445\u043e\u043f\u0430\u0442",
+            "title_en": "American Psycho",
+            "description_uk": "\u0411\u0430\u0433\u0430\u0442\u0438\u0439 \u043a\u0435\u0440\u0456\u0432\u043d\u0438\u043a \u0456\u043d\u0432\u0435\u0441\u0442\u0438\u0446\u0456\u0439\u043d\u043e\u0433\u043e \u0431\u0430\u043d\u043a\u0443 \u041d\u044c\u044e-\u0419\u043e\u0440\u043a\u0430 \u041f\u0430\u0442\u0440\u0456\u043a \u0411\u0435\u0439\u0442\u043c\u0430\u043d \u043f\u0440\u0438\u0445\u043e\u0432\u0443\u0454 \u0441\u0432\u043e\u0454 \u0430\u043b\u044c\u0442\u0435\u0440\u043d\u0430\u0442\u0438\u0432\u043d\u0435 \u043f\u0441\u0438\u0445\u043e\u043f\u0430\u0442\u0438\u0447\u043d\u0435 \u0435\u0433\u043e \u0432\u0456\u0434 \u0441\u0432\u043e\u0457\u0445 \u043a\u043e\u043b\u0435\u0433 \u0456 \u0434\u0440\u0443\u0437\u0456\u0432, \u0433\u043b\u0438\u0431\u0448\u0435 \u0437\u0430\u0433\u043b\u0438\u0431\u043b\u044e\u044e\u0447\u0438\u0441\u044c \u0443 \u0441\u0432\u043e\u0457 \u0431\u0443\u0440\u0445\u043b\u0438\u0432\u0456 \u0433\u0435\u0434\u043e\u043d\u0456\u0441\u0442\u0438\u0447\u043d\u0456 \u0444\u0430\u043d\u0442\u0430\u0437\u0456\u0457.",
+            "description_en": "A wealthy New York City investment banking executive, Patrick Bateman, hides his alternate psychopathic ego from his co-workers and friends as he delves deeper into his violent, hedonistic fantasies.",
+            "release_date": "2000-04-13T00:00:00",
+            "duration": 102,
+            "budget": 7000000,
+            "domestic_gross": 15070285,
+            "worldwide_gross": 34266679,
+            "poster": "24_American Psycho.png",
+            "actors_ids": [
+                3,
+                90,
+                91,
+                92
+            ],
+            "directors_ids": [
+                24
+            ],
+            "location_uk": "\u0421\u0428\u0410",
+            "location_en": "US",
+            "rating_criterion": "basic",
+            "genres_list": [
+                {
+                    "6": 50.0
+                },
+                {
+                    "9": 40.0
+                },
+                {
+                    "19": 30.0
+                }
+            ],
+            "genres_ids": [
+                6,
+                9,
+                19
+            ],
+            "subgenres_list": [
+                {
+                    "20": 50.0
+                }
+            ],
+            "subgenres_ids": [
+                20
+            ],
+            "specifications_list": [
+                {
+                    "1": 80.0
+                },
+                {
+                    "7": 20.0
+                }
+            ],
+            "specifications_ids": [
+                1,
+                7
+            ],
+            "keywords_list": [
+                {
+                    "1": 50.0
+                }
+            ],
+            "keywords_ids": [
+                1
+            ],
+            "action_times_list": [
+                {
+                    "6": 100.0
+                }
+            ],
+            "action_times_ids": [
+                6
+            ]
+        },
+        {
+            "id": 25,
+            "key": "inglourious-basterds",
+            "title_uk": "\u0411\u0435\u0437\u0441\u043b\u0430\u0432\u043d\u0456 \u0432\u0438\u0440\u043e\u0434\u043a\u0438",
+            "title_en": "Inglourious Basterds",
+            "description_uk": "\u0412 \u043e\u043a\u0443\u043f\u043e\u0432\u0430\u043d\u0456\u0439 \u043d\u0430\u0446\u0438\u0441\u0442\u0430\u043c\u0438 \u0424\u0440\u0430\u043d\u0446\u0456\u0457 \u043f\u0456\u0434 \u0447\u0430\u0441 \u0414\u0440\u0443\u0433\u043e\u0457 \u0441\u0432\u0456\u0442\u043e\u0432\u043e\u0457 \u0432\u0456\u0439\u043d\u0438 \u043f\u043b\u0430\u043d \u0432\u0431\u0438\u0432\u0441\u0442\u0432\u0430 \u043d\u0430\u0446\u0438\u0441\u0442\u0441\u044c\u043a\u0438\u0445 \u043b\u0456\u0434\u0435\u0440\u0456\u0432 \u0433\u0440\u0443\u043f\u043e\u044e \u0454\u0432\u0440\u0435\u0439\u0441\u044c\u043a\u0438\u0445 \u0441\u043e\u043b\u0434\u0430\u0442\u0456\u0432 \u0421\u0428\u0410 \u0437\u0431\u0456\u0433\u0430\u0454\u0442\u044c\u0441\u044f \u0437 \u043c\u0441\u0442\u0438\u0432\u0438\u043c\u0438 \u043f\u043b\u0430\u043d\u0430\u043c\u0438 \u0432\u043b\u0430\u0441\u043d\u0438\u043a\u0430 \u0442\u0435\u0430\u0442\u0440\u0443.",
+            "description_en": "In Nazi-occupied France during World War II, a plan to assassinate Nazi leaders by a group of Jewish U.S. soldiers coincides with a theatre owner's vengeful plans for the same.",
+            "release_date": "2009-08-20T00:00:00",
+            "duration": 153,
+            "budget": 70000000,
+            "domestic_gross": 120540719,
+            "worldwide_gross": 321461041,
+            "poster": "25_Inglourious Basterds.png",
+            "actors_ids": [
+                18,
+                93,
+                94,
+                95,
+                96
+            ],
+            "directors_ids": [
+                3
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u0430",
+            "location_en": "US, Germany",
+            "rating_criterion": "basic",
+            "genres_list": [
+                {
+                    "2": 50.0
+                },
+                {
+                    "9": 70.0
+                },
+                {
+                    "20": 30.0
+                }
+            ],
+            "genres_ids": [
+                2,
+                9,
+                20
+            ],
+            "subgenres_list": null,
+            "subgenres_ids": null,
+            "specifications_list": [
+                {
+                    "23": 50.0
+                },
+                {
+                    "27": 100.0
+                }
+            ],
+            "specifications_ids": [
+                23,
+                27
+            ],
+            "keywords_list": [
+                {
+                    "2": 80.0
+                }
+            ],
+            "keywords_ids": [
+                2
+            ],
+            "action_times_list": [
+                {
+                    "5": 100.0
+                }
+            ],
+            "action_times_ids": [
+                5
+            ]
+        },
+        {
+            "id": 26,
+            "key": "parasite",
+            "title_uk": "\u041f\u0430\u0440\u0430\u0437\u0438\u0442\u0438",
+            "title_en": "Parasite",
+            "description_uk": "\u0416\u0430\u0434\u0456\u0431\u043d\u0456\u0441\u0442\u044c \u0456 \u043a\u043b\u0430\u0441\u043e\u0432\u0430 \u0434\u0438\u0441\u043a\u0440\u0438\u043c\u0456\u043d\u0430\u0446\u0456\u044f \u0437\u0430\u0433\u0440\u043e\u0436\u0443\u044e\u0442\u044c \u043d\u043e\u0432\u043e\u0441\u0442\u0432\u043e\u0440\u0435\u043d\u0438\u043c \u0441\u0438\u043c\u0431\u0456\u043e\u0442\u0438\u0447\u043d\u0438\u043c \u0441\u0442\u043e\u0441\u0443\u043d\u043a\u0430\u043c \u043c\u0456\u0436 \u0437\u0430\u043c\u043e\u0436\u043d\u043e\u044e \u0440\u043e\u0434\u0438\u043d\u043e\u044e \u041f\u0430\u0440\u043a \u0456 \u0437\u043d\u0435\u0434\u043e\u043b\u0435\u043d\u0438\u043c \u043a\u043b\u0430\u043d\u043e\u043c \u041a\u0456\u043c.",
+            "description_en": "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+            "release_date": "2019-11-07T00:00:00",
+            "duration": 132,
+            "budget": 11400000,
+            "domestic_gross": 53369749,
+            "worldwide_gross": 262129969,
+            "poster": "26_Parasite.png",
+            "actors_ids": [
+                97
+            ],
+            "directors_ids": [
+                25
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u041f\u0456\u0432\u0434\u0435\u043d\u043d\u0430 \u041a\u043e\u0440\u0435\u044f",
+            "location_en": "US, South Korea",
+            "rating_criterion": "basic",
+            "genres_list": [
+                {
+                    "9": 60.0
+                },
+                {
+                    "19": 30.0
+                },
+                {
+                    "5": 20.0
+                }
+            ],
+            "genres_ids": [
+                9,
+                19,
+                5
+            ],
+            "subgenres_list": [
+                {
+                    "6": 50.0
+                }
+            ],
+            "subgenres_ids": [
+                6
+            ],
+            "specifications_list": [
+                {
+                    "1": 30.0
+                },
+                {
+                    "6": 100.0
+                }
+            ],
+            "specifications_ids": [
+                1,
+                6
+            ],
+            "keywords_list": [
+                {
+                    "17": 70.0
+                }
+            ],
+            "keywords_ids": [
+                17
+            ],
+            "action_times_list": [
+                {
+                    "6": 100.0
+                }
+            ],
+            "action_times_ids": [
+                6
+            ]
         }
     ]
 }

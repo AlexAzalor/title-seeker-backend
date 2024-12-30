@@ -152,3 +152,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
 
     def __repr__(self):
         return f"<Movie [{self.id}]: {self.translations[0].title}>"
+
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)

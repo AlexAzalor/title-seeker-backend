@@ -19,7 +19,7 @@
         {
             "id": 3,
             "key": "middle-ages",
-            "name_uk": "Early Modern Era",
+            "name_uk": "\u0421\u0435\u0440\u0435\u0434\u043d\u044c\u043e\u0432\u0456\u0447\u0447\u044f",
             "name_en": "Middle Ages",
             "description_uk": "",
             "description_en": ""
@@ -71,22 +71,6 @@
             "name_en": "Indefinite time",
             "description_uk": "",
             "description_en": ""
-        },
-        {
-            "id": 10,
-            "key": "test-act-time-1",
-            "name_uk": "gfdgfdg",
-            "name_en": "test act TIME 1",
-            "description_uk": null,
-            "description_en": null
-        },
-        {
-            "id": 11,
-            "key": "test-act-2",
-            "name_uk": "hgfhg",
-            "name_en": "test act 2",
-            "description_uk": "fdsfd",
-            "description_en": "fdsfdsfd"
         }
     ]
 }

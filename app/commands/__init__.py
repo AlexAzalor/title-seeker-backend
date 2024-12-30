@@ -145,6 +145,14 @@ def init(app: Flask):
         export_action_times_from_google_spreadsheets()
         print("done")
 
+    # @app.cli.command()
+    # def fill_db_with_characters():
+    #     """Fill Characters table with data from google spreadsheets"""
+    #     from .export_characters import export_characters_from_google_spreadsheets
+
+    #     export_characters_from_google_spreadsheets()
+    #     print("done")
+
     @app.cli.command()
     def import_movies():
         """Append data to google spreadsheets"""
@@ -215,6 +223,14 @@ def init(app: Flask):
         from .imports_from_google_sheet.import_action_times import import_action_times_to_google_spreadsheets
 
         import_action_times_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_characters():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_characters import import_characters_to_google_spreadsheets
+
+        import_characters_to_google_spreadsheets()
         print("done")
 
     @app.cli.command()
