@@ -20,6 +20,10 @@ NAME_EN = "name_en"
 DESCRIPTION_UK = "description_uk"
 DESCRIPTION_EN = "description_en"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "G"
+SPEC_RANGE_NAME = f"Specifications!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_specifications_in_db(specifications: list[s.SpecificationExportCreate]):
     with db.begin() as session:
@@ -63,16 +67,12 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "G"
-    RANGE_NAME = f"Specifications!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=SPEC_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"
@@ -92,6 +92,9 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
         if not row[INDEX_ID]:
             continue
 
+        id = row[INDEX_ID]
+        assert id, f"The id {id} is missing"
+
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
 
@@ -107,6 +110,7 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
 
         specifications.append(
             s.SpecificationExportCreate(
+                id=id,
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,

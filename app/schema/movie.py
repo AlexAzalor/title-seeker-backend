@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from fastapi import File, UploadFile
 from pydantic import BaseModel, ConfigDict
 
 from app.schema.actor import ActorOut
@@ -21,7 +22,7 @@ class MovieExportCreate(BaseModel):
     title_en: str
     description_uk: str
     description_en: str
-    release_date: datetime
+    release_date: datetime | None = None
     duration: int
     budget: int
     domestic_gross: int | None = None
@@ -282,6 +283,23 @@ class MovieFiltersListOut(BaseModel):
     )
 
 
+class MovieFilterField(BaseModel):
+    key: str
+    percentage_match: float
+    subgenre_parent_key: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MoviePersonFilterField(BaseModel):
+    key: str
+    character_key: str
+    character_name_uk: str
+    character_name_en: str
+
+
 class MovieIn(BaseModel):
     id: int
     key: str
@@ -295,16 +313,33 @@ class MovieIn(BaseModel):
     domestic_gross: int
     worldwide_gross: int
     poster: str
-    actors_ids: list[int]
-    directors_ids: list[int]
-    genres: list[dict[int, float]]
-    subgenres: list[dict[int, float]]
-    specifications: list[dict[int, float]]
-    keywords: list[dict[int, float]]
-    action_times: list[dict[int, float]]
     location_uk: str
     location_en: str
-    rating_criterion: RatingCriterion
+    actors_keys: list[MoviePersonFilterField]
+    directors_keys: list[str]
+    genres: list[MovieFilterField]
+    subgenres: list[MovieFilterField]
+    specifications: list[MovieFilterField]
+    keywords: list[MovieFilterField]
+    action_times: list[MovieFilterField]
+    rating_criterion_type: RatingCriterion
+    rating_criteria: UserRatingCriteria
+    rating: float
+    file: UploadFile = File(None)
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MoviePreCreateData(BaseModel):
+    next_movie_id: int
+    actors: list[ActorOut]
+    directors: list[DirectorOut]
+    genres: list[GenreOut]
+    specifications: list[SpecificationOut]
+    keywords: list[KeywordOut]
+    action_times: list[ActionTimeOut]
 
     model_config = ConfigDict(
         from_attributes=True,

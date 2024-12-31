@@ -93,7 +93,7 @@
         },
         {
             "id": 8,
-            "key": "bruce-willist",
+            "key": "bruce-willis",
             "first_name_uk": "\u0411\u0440\u044e\u0441",
             "last_name_uk": "\u0412\u0456\u043b\u043b\u0456\u0441",
             "first_name_en": "Bruce",
@@ -340,7 +340,7 @@
         },
         {
             "id": 27,
-            "key": "lan-mckellen",
+            "key": "ian-mckellen",
             "first_name_uk": "\u0406\u0454\u043d",
             "last_name_uk": "\u041c\u0430\u043a\u043a\u0435\u043b\u043b\u0435\u043d",
             "first_name_en": "Ian",
@@ -418,7 +418,7 @@
         },
         {
             "id": 33,
-            "key": "robert-downey-jr\r\n",
+            "key": "robert-downey-jr",
             "first_name_uk": " \u0420\u043e\u0431\u0435\u0440\u0442",
             "last_name_uk": "\u0414\u0430\u0443\u043d\u0456-\u043c\u043e\u043b\u043e\u0434\u0448\u0438\u0439",
             "first_name_en": "Robert",
@@ -626,7 +626,7 @@
         },
         {
             "id": 49,
-            "key": "\u0437eter-\u0441ushing",
+            "key": "peter-cushing",
             "first_name_uk": "\u041f\u0456\u0442\u0435\u0440",
             "last_name_uk": "\u041a\u0443\u0448\u0438\u043d\u0433",
             "first_name_en": "Peter",
@@ -1156,6 +1156,110 @@
             "born_in_uk": "\u041b\u0456\u043d\u043a\u043e\u043b\u044c\u043d, \u041b\u0456\u043d\u043a\u043e\u043b\u044c\u043d\u0448\u0438\u0440, \u0410\u043d\u0433\u043b\u0456\u044f, \u0412\u0435\u043b\u0438\u043a\u043e\u0431\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "born_in_en": "Lincoln, Lincolnshire, England, UK",
             "avatar": "89_Jim Broadbent.png"
+        },
+        {
+            "id": 90,
+            "key": "willem-dafoe",
+            "first_name_uk": "\u0412\u0456\u043b\u043b\u0435\u043c",
+            "last_name_uk": "\u0414\u0435\u0444\u043e",
+            "first_name_en": "Willem",
+            "last_name_en": "Dafoe",
+            "born": "1955-07-22T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0415\u043f\u043f\u043b\u0442\u043e\u043d, \u0412\u0456\u0441\u043a\u043e\u043d\u0441\u0456\u043d, \u0421\u0428\u0410",
+            "born_in_en": "Appleton, Wisconsin, USA",
+            "avatar": "90_Willem Dafoe.png"
+        },
+        {
+            "id": 91,
+            "key": "jared-leto",
+            "first_name_uk": "\u0414\u0436\u0430\u0440\u0435\u0434",
+            "last_name_uk": "\u041b\u0435\u0442\u043e",
+            "first_name_en": "Jared",
+            "last_name_en": "Leto",
+            "born": "1971-12-26T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0411\u043e\u0441\u044c\u0454 \u0421\u0456\u0442\u0456, \u041b\u0443\u0457\u0437\u0456\u0430\u043d\u0430, \u0421\u0428\u0410",
+            "born_in_en": "Bossier City, Louisiana, USA",
+            "avatar": "91_Jared Leto.png"
+        },
+        {
+            "id": 92,
+            "key": "reese-witherspoon",
+            "first_name_uk": "\u0420\u0456\u0437",
+            "last_name_uk": "\u0412\u0456\u0437\u0435\u0440\u0441\u043f\u0443\u043d",
+            "first_name_en": "Reese",
+            "last_name_en": "Witherspoon",
+            "born": "1977-03-22T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041d\u043e\u0432\u0438\u0439 \u041e\u0440\u043b\u0435\u0430\u043d, \u041b\u0443\u0457\u0437\u0456\u0430\u043d\u0430, \u0421\u0428\u0410",
+            "born_in_en": "New Orleans, Louisiana, USA",
+            "avatar": "92_Reese Witherspoon.png"
+        },
+        {
+            "id": 93,
+            "key": "diane-kruger",
+            "first_name_uk": "\u0414\u0456\u0430\u043d\u0435",
+            "last_name_uk": "\u041a\u0440\u044e\u0433\u0435\u0440",
+            "first_name_en": "Diane",
+            "last_name_en": "Kruger",
+            "born": "1976-07-15T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0410\u043b\u044c\u0433\u0435\u0440\u043c\u0456\u0441\u0441\u0435\u043d, \u041d\u0438\u0436\u043d\u044f \u0421\u0430\u043a\u0441\u043e\u043d\u0456\u044f, \u0417\u0430\u0445\u0456\u0434\u043d\u0430 \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u0430",
+            "born_in_en": "Algermissen, Lower Saxony, West Germany",
+            "avatar": "93_Diane Kruger.png"
+        },
+        {
+            "id": 94,
+            "key": "brad-pitt",
+            "first_name_uk": "\u0411\u0440\u0435\u0434",
+            "last_name_uk": "\u041f\u0456\u0442\u0442",
+            "first_name_en": "Brad",
+            "last_name_en": "Pitt",
+            "born": "1963-12-18T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0428\u043e\u043d\u0456, \u041e\u043a\u043b\u0430\u0445\u043e\u043c\u0430, \u0421\u0428\u0410",
+            "born_in_en": "Shawnee, Oklahoma, USA",
+            "avatar": "94_Brad Pitt.png"
+        },
+        {
+            "id": 95,
+            "key": "m-lanie-laurent",
+            "first_name_uk": "\u041c\u0435\u043b\u0430\u043d\u0456",
+            "last_name_uk": "\u041b\u043e\u0440\u0430\u043d",
+            "first_name_en": "M\u00e9lanie",
+            "last_name_en": "Laurent",
+            "born": "1983-02-21T00:00:00",
+            "died": null,
+            "born_in_uk": "\u041f\u0430\u0440\u0438\u0436, \u0424\u0440\u0430\u043d\u0446\u0456\u044f",
+            "born_in_en": "Paris, France",
+            "avatar": "95_M\u00e9lanie Laurent.png"
+        },
+        {
+            "id": 96,
+            "key": "michael-fassbender",
+            "first_name_uk": "\u041c\u0430\u0439\u043a\u043b",
+            "last_name_uk": "\u0424\u0430\u0441\u0441\u0431\u0435\u043d\u0434\u0435\u0440",
+            "first_name_en": "Michael",
+            "last_name_en": "Fassbender",
+            "born": "1977-04-02T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0413\u0435\u0439\u0434\u0435\u043b\u044c\u0431\u0435\u0440\u0433, \u0411\u0430\u0434\u0435\u043d-\u0412\u044e\u0440\u0442\u0435\u043c\u0431\u0435\u0440\u0433, \u0417\u0430\u0445\u0456\u0434\u043d\u0430 \u041d\u0456\u043c\u0435\u0447\u0447\u0438\u043d\u0430",
+            "born_in_en": "Heidelberg, Baden-W\u00fcrttemberg, West Germany",
+            "avatar": "96_Michael Fassbender.png"
+        },
+        {
+            "id": 97,
+            "key": "song-kang-ho",
+            "first_name_uk": "\u0421\u043e\u043d",
+            "last_name_uk": "\u041a\u0430\u043d \u0425\u043e",
+            "first_name_en": "Song",
+            "last_name_en": "Kang-ho",
+            "born": "1967-01-17T00:00:00",
+            "died": null,
+            "born_in_uk": "\u0413\u0456\u043c\u0445\u0435, \u043f\u0440\u043e\u0432\u0456\u043d\u0446\u0456\u044f \u041f\u0456\u0432\u0434\u0435\u043d\u043d\u0438\u0439 \u041a\u044c\u043e\u043d\u0441\u0430\u043d, \u041f\u0456\u0432\u0434\u0435\u043d\u043d\u0430 \u041a\u043e\u0440\u0435\u044f",
+            "born_in_en": "Gim-hae, South Gyeongsang Povince, South Korea",
+            "avatar": "97_Song Kang-ho.png"
         }
     ]
 }

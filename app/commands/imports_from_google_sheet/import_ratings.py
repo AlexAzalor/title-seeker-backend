@@ -24,10 +24,10 @@ def import_ratings_to_google_spreadsheets():
     assert ratings, "Ratings are empty!"
     print("Ratings COUNT: ", len(ratings))
 
-    values = []
+    rating = ratings[-1]
 
-    for rating in ratings:
-        rating_row = [
+    values = [
+        [
             rating.id,
             rating.movie_id,
             rating.user_id,
@@ -45,11 +45,9 @@ def import_ratings_to_google_spreadsheets():
             rating.comment if rating.comment else "",
             rating.id,
         ]
-        assert rating_row, "rating_row are empty!"
-
-        values.append(rating_row)
-
-    print("VALUES COUNT: ", len(values[0]))
+    ]
+    assert values[0], "Values are empty!"
+    print("values: ", values)
 
     try:
         credentials = authorized_user_in_google_spreadsheets()

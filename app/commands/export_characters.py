@@ -20,6 +20,10 @@ NAME_EN = "name_en"
 ACTORS_IDS = "actors_ids"
 MOVIES_IDS = "movies_ids"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "G"
+CHARS_RANGE_NAME = f"Characters!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_characters_in_db(characters: list[s.CharacterExportCreate]):
     with db.begin() as session:
@@ -32,6 +36,10 @@ def write_characters_in_db(characters: list[s.CharacterExportCreate]):
                 log(log.ERROR, "Movie table is empty")
                 log(log.ERROR, "Please run `flask fill-db-with-movies` first")
                 raise Exception("Movie table is empty. Please run `flask fill-db-with-movies` first")
+
+            if not session.scalar(sa.select(m.Movie).where(sa.and_(m.Movie.id.in_(character.movies_ids)))):
+                log(log.ERROR, "Movies with ids %s not found", character.movies_ids)
+                raise Exception("Movies not found")
 
             if session.scalar(sa.select(m.Character).where(m.Character.key == character.key)):
                 continue
@@ -76,16 +84,12 @@ def export_characters_from_google_spreadsheets(with_print: bool = True, in_json:
 
     credentials = authorized_user_in_google_spreadsheets()
 
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "G"
-    RANGE_NAME = f"Characters!A1:{LAST_SHEET_COLUMN}"
-
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=CHARS_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"
@@ -127,6 +131,7 @@ def export_characters_from_google_spreadsheets(with_print: bool = True, in_json:
 
         characters.append(
             s.CharacterExportCreate(
+                id=id,
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,

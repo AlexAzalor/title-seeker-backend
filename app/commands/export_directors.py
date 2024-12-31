@@ -25,6 +25,10 @@ BORN_IN_UK = "born_in_uk"
 BORN_IN_EN = "born_in_en"
 AVATAR = "avatar"
 
+# Last column need to be filled!
+LAST_SHEET_COLUMN = "L"
+DIRECTORS_RANGE_NAME = f"Directors!A1:{LAST_SHEET_COLUMN}"
+
 
 def write_directors_in_db(directors: list[s.DirectorExportCreate]):
     with db.begin() as session:
@@ -61,26 +65,17 @@ def write_directors_in_db(directors: list[s.DirectorExportCreate]):
         session.commit()
 
 
-def convert_string_to_list_of_integers(input_string):
-    string_numbers = input_string.split(", ")
-    return [int(num) for num in string_numbers]
-
-
 def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: bool = False):
     """Fill directors table with data from google spreadsheets"""
 
     credentials = authorized_user_in_google_spreadsheets()
-
-    # Last column need to be filled!
-    LAST_SHEET_COLUMN = "L"
-    RANGE_NAME = f"Directors!A1:{LAST_SHEET_COLUMN}"
 
     # get data from google spreadsheets
     resource = build("sheets", "v4", credentials=credentials)
     sheets = resource.spreadsheets()
 
     # get all values from sheet Users
-    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=RANGE_NAME).execute()
+    result = sheets.values().get(spreadsheetId=CFG.SPREADSHEET_ID, range=DIRECTORS_RANGE_NAME).execute()
     values = result.get("values", [])
 
     assert values, "No data found"
@@ -104,6 +99,9 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue
+
+        id = row[INDEX_ID]
+        assert id, f"The id {id} is missing"
 
         key = row[KEY_INDEX]
         assert key, f"The key {key} is missing"
@@ -135,6 +133,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
 
         directors.append(
             s.DirectorExportCreate(
+                id=id,
                 key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,

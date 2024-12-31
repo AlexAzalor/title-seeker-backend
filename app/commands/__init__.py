@@ -145,6 +145,14 @@ def init(app: Flask):
         export_action_times_from_google_spreadsheets()
         print("done")
 
+    # @app.cli.command()
+    # def fill_db_with_characters():
+    #     """Fill Characters table with data from google spreadsheets"""
+    #     from .export_characters import export_characters_from_google_spreadsheets
+
+    #     export_characters_from_google_spreadsheets()
+    #     print("done")
+
     @app.cli.command()
     def import_movies():
         """Append data to google spreadsheets"""
@@ -167,6 +175,62 @@ def init(app: Flask):
         from .imports_from_google_sheet.import_ratings import import_ratings_to_google_spreadsheets
 
         import_ratings_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_directors():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_directors import import_directors_to_google_spreadsheets
+
+        import_directors_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_genres():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_genres import import_genres_to_google_spreadsheets
+
+        import_genres_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_subgenres():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_subgenres import import_subgenres_to_google_spreadsheets
+
+        import_subgenres_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_specifications():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_specifications import import_specifications_to_google_spreadsheets
+
+        import_specifications_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_keywords():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_keywords import import_keywords_to_google_spreadsheets
+
+        import_keywords_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_action_times():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_action_times import import_action_times_to_google_spreadsheets
+
+        import_action_times_to_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def import_characters():
+        """Append data to google spreadsheets"""
+        from .imports_from_google_sheet.import_characters import import_characters_to_google_spreadsheets
+
+        import_characters_to_google_spreadsheets()
         print("done")
 
     @app.cli.command()

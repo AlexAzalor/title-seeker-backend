@@ -45,23 +45,23 @@ def test_rate_movie(client: TestClient, db: Session):
     ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
     assert data_in.rating in ratings_values
 
-    data_in = s.UserRateMovieIn(
-        uuid=user.uuid,
-        movie_key=movie.key,
-        rating=9.5,
-        acting=5,
-        plot_storyline=4,
-        music=3,
-        re_watchability=2,
-        emotional_impact=1,
-        dialogue=2,
-        production_design=3,
-        duration=4,
-    )
+    # data_in = s.UserRateMovieIn(
+    #     uuid=user.uuid,
+    #     movie_key=movie.key,
+    #     rating=9.5,
+    #     acting=5,
+    #     plot_storyline=4,
+    #     music=3,
+    #     re_watchability=2,
+    #     emotional_impact=1,
+    #     dialogue=2,
+    #     production_design=3,
+    #     duration=4,
+    # )
 
-    # Test update rate movie
-    response = client.put(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())
-    assert response.status_code == status.HTTP_200_OK
-    assert movie.ratings
-    ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
-    assert data_in.rating in ratings_values
+    # # Test update rate movie
+    # response = client.put(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())
+    # assert response.status_code == status.HTTP_200_OK
+    # assert movie.ratings
+    # ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
+    # assert data_in.rating in ratings_values

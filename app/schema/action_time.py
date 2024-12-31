@@ -6,6 +6,7 @@ CFG = config()
 
 
 class ActionTimeExportCreate(BaseModel):
+    id: int
     key: str
     name_uk: str
     name_en: str
