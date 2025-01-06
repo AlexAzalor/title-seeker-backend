@@ -1,3 +1,4 @@
+import os
 import pytest
 
 import sqlalchemy as sa
@@ -128,3 +129,99 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert data.genres
     assert data.actors
     assert data.directors
+
+
+def test_create_movie(client: TestClient, db: Session):
+    actor = db.scalar(sa.select(m.Actor))
+    assert actor
+    director = db.scalar(sa.select(m.Director))
+    assert director
+
+    genre = db.scalar(sa.select(m.Genre).where(m.Genre.subgenres.any()))
+    assert genre
+    assert genre.subgenres
+
+    specification = db.scalar(sa.select(m.Specification))
+    assert specification
+    keyword = db.scalar(sa.select(m.Keyword))
+    assert keyword
+    action_time = db.scalar(sa.select(m.ActionTime))
+    assert action_time
+
+    form_data = s.MovieFormData(
+        key="test-create-key",
+        title_uk="Test create UK",
+        title_en="Test create EN",
+        description_uk="Text UK",
+        description_en="Text EN",
+        release_date="2025-01-03T09:56:44.611Z",
+        duration=100,
+        budget=1000000,
+        domestic_gross=3000000,
+        worldwide_gross=5000000,
+        poster="id_title.png",
+        location_uk="Location UK",
+        location_en="Location EN",
+        actors_keys=[
+            s.MoviePersonFilterField(
+                key=actor.key,
+                character_key="Char key",
+                character_name_uk="Char uk name",
+                character_name_en="Char en name",
+            )
+        ],
+        directors_keys=[director.key],
+        genres=[
+            s.MovieFilterField(
+                key=genre.key,
+                percentage_match=100,
+            )
+        ],
+        subgenres=[
+            s.MovieFilterField(
+                key=genre.subgenres[0].key,
+                percentage_match=80,
+                subgenre_parent_key=genre.key,
+            )
+        ],
+        specifications=[s.MovieFilterField(key=specification.key, percentage_match=70)],
+        keywords=[s.MovieFilterField(key=keyword.key, percentage_match=50)],
+        action_times=[s.MovieFilterField(key=action_time.key, percentage_match=100)],
+        rating_criterion_type=s.RatingCriterion.BASIC,
+        rating=5,
+        rating_criteria=s.UserRatingCriteria(
+            acting=5,
+            plot_storyline=5,
+            music=5,
+            re_watchability=5,
+            emotional_impact=5,
+            dialogue=5,
+            production_design=5,
+            duration=5,
+            visual_effects=5,
+            scare_factor=5,
+            # comment="Test comment",
+        ),
+    )
+    # 1_The Shawshank Redemption.png
+    with open("./uploads/movie-posters/1_The Shawshank Redemption.png", "rb") as image:
+        response = client.post(
+            "/api/movies",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
+            params={"lang": s.Language.EN.value, "save_to_json_and_google_sheet": False},
+        )
+        # delete file
+        # os.remove("./uploads/movie-posters/27_1_The Shawshank Redemption.png")
+    assert response.status_code == status.HTTP_201_CREATED
+    # data = s.MovieOut.model_validate(response.json())
+    # assert data
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
+    assert movie
+    os.remove(f"./uploads/movie-posters/{movie.id}_1_The Shawshank Redemption.png")
+
+
+# b'{"detail":[{"type":"missing","loc":["body","form_data"],"msg":"Field required","input":null,"url":"https://errors.pydantic.dev/2.9/v/missing"}]}'
+# # content=s.JobStatusIn.model_validate({"status": s.JobStatus.COMPLETED}).model_dump_json(),
+# b'{"detail":[{"type":"value_error","loc":["body","file"],"msg":"Value error, Expected UploadFile, received: <class \'str\'>","input":"image/png","ctx":{"error":{}},"url":"https://errors.pydantic.dev/2.9/v/value_error"}]}'
+# "file": ("1_The Shawshank Redemption.png", image, "image/png")

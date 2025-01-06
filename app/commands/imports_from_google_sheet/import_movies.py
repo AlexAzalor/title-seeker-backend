@@ -13,11 +13,14 @@ CFG = config()
 # [['ID', 'key', 'title_uk', 'title_en', 'description_uk', 'description_en', 'release_date', 'duration', 'budget', 'domestic_gross', 'worldwide_gross', 'poster', 'actors_ids', 'directors_ids', 'genres_ids_with_percentage_match', 'subgenres_ids_with_percentage_match', 'specifications', 'keywords', 'action_times', 'location_uk', 'location_en', 'users_ratings', 'rating_criterion', 'ID-2']]
 
 
-def append_data_to_google_spreadsheets():
+def append_data_to_google_spreadsheets(movies_data: s.MoviesJSONFile | None = None):
     """Append data to google spreadsheets"""
 
-    with open("data/movies.json", "r") as file:
-        file_data = s.MoviesJSONFile.model_validate(json.load(file))
+    if not movies_data:
+        with open("data/movies.json", "r") as file:
+            file_data = s.MoviesJSONFile.model_validate(json.load(file))
+    else:
+        file_data = movies_data
 
     movies = file_data.movies
     print("Movies COUNT: ", len(movies))
@@ -68,7 +71,11 @@ def append_data_to_google_spreadsheets():
         sheets.values().append(
             spreadsheetId=CFG.SPREADSHEET_ID, range=MOVIES_RANGE_NAME, valueInputOption="RAW", body=body
         ).execute()
+
+        log(log.INFO, "Movies data imported to google spreadsheets")
     except Exception as e:
         log(log.ERROR, "Error occurred while appending data to google spreadsheets - [%s]", e)
         log(log.INFO, "===== Perhaps you need update [VALUES] data =====")
+        message = "Error importing [MOVIES] data to google spreadsheets"
+        e.args = (*e.args, message)
         raise e

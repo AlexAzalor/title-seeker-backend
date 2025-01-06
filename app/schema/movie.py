@@ -1,7 +1,8 @@
 from datetime import datetime
+import json
 
 from fastapi import File, UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
@@ -344,3 +345,36 @@ class MoviePreCreateData(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class MovieFormData(BaseModel):
+    key: str
+    title_uk: str
+    title_en: str
+    description_uk: str
+    description_en: str
+    release_date: str
+    duration: int
+    budget: int
+    actors_keys: list[MoviePersonFilterField]
+    directors_keys: list[str]
+    genres: list[MovieFilterField]
+    subgenres: list[MovieFilterField]
+    specifications: list[MovieFilterField]
+    keywords: list[MovieFilterField]
+    action_times: list[MovieFilterField]
+    rating_criterion_type: RatingCriterion
+    rating_criteria: UserRatingCriteria
+    rating: float
+    domestic_gross: int | None = None
+    worldwide_gross: int | None = None
+    poster: str | None = None
+    location_uk: str | None = None
+    location_en: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value

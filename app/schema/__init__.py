@@ -48,6 +48,7 @@ from .movie import (
     MoviePreCreateData,
     MovieFilterField,
     MoviePersonFilterField,
+    MovieFormData,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn

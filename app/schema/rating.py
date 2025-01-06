@@ -6,7 +6,7 @@ from config import config
 CFG = config()
 
 
-class RatingCriterion(enum.Enum):
+class RatingCriterion(str, enum.Enum):
     BASIC = "basic"
     VISUAL_EFFECTS = "visual_effects"
     SCARE_FACTOR = "scare_factor"

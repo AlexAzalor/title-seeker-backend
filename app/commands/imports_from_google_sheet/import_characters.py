@@ -1,4 +1,5 @@
 import json
+
 from googleapiclient.discovery import build
 
 from app import schema as s
@@ -11,11 +12,16 @@ from ..utility import authorized_user_in_google_spreadsheets
 CFG = config()
 
 
-def import_characters_to_google_spreadsheets(new_chars_count: int = 1):
+def import_characters_to_google_spreadsheets(
+    new_chars_count: int = 1, characters_data: s.CharactersJSONFile | None = None
+):
     """Import characters to google spreadsheets"""
 
-    with open("data/characters.json", "r") as file:
-        file_data = s.CharactersJSONFile.model_validate(json.load(file))
+    if not characters_data:
+        with open("data/characters.json", "r") as file:
+            file_data = s.CharactersJSONFile.model_validate(json.load(file))
+    else:
+        file_data = characters_data
 
     characters = file_data.characters
     assert characters, "Characters are empty!"
@@ -53,7 +59,15 @@ def import_characters_to_google_spreadsheets(new_chars_count: int = 1):
         sheets.values().append(
             spreadsheetId=CFG.SPREADSHEET_ID, range=CHARS_RANGE_NAME, valueInputOption="RAW", body=body
         ).execute()
+
+        log(log.INFO, "Characters data imported to google spreadsheets")
     except Exception as e:
-        log(log.ERROR, "Error occurred while appending data to google spreadsheets - [%s]", e)
+        log(
+            log.ERROR,
+            "Error occurred while appending data to google spreadsheets - [%s]",
+            e,
+        )
         log(log.INFO, "===== Perhaps you need update [VALUES] fields =====")
+        message = "Error importing [CHARACTERS] data to Google spreadsheets OR Perhaps you need update [VALUES] fields."
+        e.args = (*e.args, message)
         raise e

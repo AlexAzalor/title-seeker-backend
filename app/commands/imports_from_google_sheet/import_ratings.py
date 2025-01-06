@@ -13,11 +13,14 @@ CFG = config()
 # [['ID', 'movie_id', 'user_id', 'acting', 'plot_storyline', 'music', 're_watchability', 'emotional_impact', 'dialogue', 'production_design', 'duration', 'visual_effects', 'scare_factor', 'rating', 'comment', 'ID-2']]
 
 
-def import_ratings_to_google_spreadsheets():
+def import_ratings_to_google_spreadsheets(rate_data: s.RatingsJSONFile | None = None):
     """Import ratings to google spreadsheets"""
 
-    with open("data/ratings.json", "r") as file:
-        file_data = s.RatingsJSONFile.model_validate(json.load(file))
+    if not rate_data:
+        with open("data/ratings.json", "r") as file:
+            file_data = s.RatingsJSONFile.model_validate(json.load(file))
+    else:
+        file_data = rate_data
 
     ratings = file_data.ratings
 
@@ -60,7 +63,15 @@ def import_ratings_to_google_spreadsheets():
         sheets.values().append(
             spreadsheetId=CFG.SPREADSHEET_ID, range=RATING_RANGE_NAME, valueInputOption="RAW", body=body
         ).execute()
+
+        log(log.INFO, "Ratings data imported to google spreadsheets")
     except Exception as e:
-        log(log.ERROR, "Error occurred while appending data to google spreadsheets - [%s]", e)
-        log(log.INFO, "===== Perhaps you need update [VALUES] data =====")
+        log(
+            log.ERROR,
+            "Error occurred while appending data to google spreadsheets - [%s]",
+            e,
+        )
+        log(log.INFO, "===== Perhaps you need update [VALUES] fields =====")
+        message = "Error importing [RATINGS] data to Google spreadsheets"
+        e.args = (*e.args, message)
         raise e
