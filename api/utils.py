@@ -2,6 +2,7 @@ from datetime import datetime
 import filetype
 from fastapi import UploadFile, HTTPException, status
 from fastapi.routing import APIRoute
+from app import schema as s
 
 from app.logger import log
 
@@ -24,3 +25,7 @@ def mark_as_deleted():
     current_timestamp = datetime.now().strftime("%y-%m-%d_%H:%M:%S:%f")
 
     return f"deleted-{current_timestamp}"
+
+
+def get_error_message(lang: s.Language, text_uk: str, text_en: str) -> str:
+    return text_uk if lang == s.Language.UK else text_en

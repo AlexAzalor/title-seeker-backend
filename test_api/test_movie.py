@@ -209,7 +209,7 @@ def test_create_movie(client: TestClient, db: Session):
             "/api/movies",
             data={"form_data": form_data.model_dump_json()},
             files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
-            params={"lang": s.Language.EN.value, "save_to_json_and_google_sheet": False},
+            params={"lang": s.Language.EN.value, "import_to_google_sheet": False},
         )
         # delete file
         # os.remove("./uploads/movie-posters/27_1_The Shawshank Redemption.png")
