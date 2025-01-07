@@ -226,8 +226,20 @@ class MoviePreviewOut(BaseModel):
     )
 
 
+class TempMovie(BaseModel):
+    key: str
+    title_en: str
+    rating: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MoviePreviewOutList(BaseModel):
     movies: list[MoviePreviewOut]
+    # Temporary new movies
+    temporary_movies: list[TempMovie]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -333,6 +345,18 @@ class MovieIn(BaseModel):
     )
 
 
+class QuickMovieFormData(BaseModel):
+    key: str
+    title_en: str
+    rating_criterion_type: RatingCriterion
+    rating_criteria: UserRatingCriteria
+    rating: float
+
+
+class QuickMovieJSON(BaseModel):
+    movies: list[QuickMovieFormData]
+
+
 class MoviePreCreateData(BaseModel):
     next_movie_id: int
     actors: list[ActorOut]
@@ -341,6 +365,7 @@ class MoviePreCreateData(BaseModel):
     specifications: list[SpecificationOut]
     keywords: list[KeywordOut]
     action_times: list[ActionTimeOut]
+    temporary_movie: QuickMovieFormData | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

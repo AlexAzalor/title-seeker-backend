@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Annotated
 
@@ -13,6 +14,7 @@ from api.controllers.create_movie import (
     add_new_movie_rating,
     create_new_movie,
     import_new_movie_to_google_sheet,
+    remove_temp_movie,
     set_percentage_match,
 )
 from api.utils import get_error_message
@@ -71,7 +73,23 @@ def get_movies(
             )
         )
 
-    return s.MoviePreviewOutList(movies=movies_out)
+    temporary_movies = []
+
+    if os.path.exists("data/quick_add_movies.json"):
+        with open("data/quick_add_movies.json", "r") as file:
+            file_data = s.QuickMovieJSON.model_validate(json.load(file))
+
+        if file_data.movies:
+            for temp_movie in file_data.movies:
+                temporary_movies.append(
+                    s.TempMovie(
+                        key=temp_movie.key,
+                        title_en=temp_movie.title_en,
+                        rating=temp_movie.rating,
+                    )
+                )
+
+    return s.MoviePreviewOutList(movies=movies_out, temporary_movies=temporary_movies)
 
 
 @movie_router.get(
@@ -580,6 +598,7 @@ def create_movie(
     lang: s.Language = s.Language.UK,
     # This flag determines whether the data is imported into a Google Sheet. False - for testing.
     import_to_google_sheet: bool = Query(default=True),
+    temp_movie: bool = Query(default=False),
     db: Session = Depends(get_db),
 ):
     """Create a new movie"""
@@ -608,6 +627,9 @@ def create_movie(
         if import_to_google_sheet:
             import_new_movie_to_google_sheet(db)
 
+        if temp_movie:
+            remove_temp_movie(form_data)
+
         db.commit()
         log(log.INFO, "Movie [%s] successfully created", form_data.key)
     except Exception as e:
@@ -625,6 +647,7 @@ def create_movie(
 )
 def get_pre_create_data(
     # movie_in: s.MovieIn,
+    temp_movie_key: str | None = None,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -742,6 +765,24 @@ def get_pre_create_data(
             )
         )
 
+    temporary_movie = None
+
+    if temp_movie_key:
+        if os.path.exists("data/quick_add_movies.json"):
+            with open("data/quick_add_movies.json", "r") as file:
+                file_data = s.QuickMovieJSON.model_validate(json.load(file))
+
+            if file_data.movies:
+                for movie in file_data.movies:
+                    if movie.key == temp_movie_key:
+                        temporary_movie = s.QuickMovieFormData(
+                            key=movie.key,
+                            title_en=movie.title_en,
+                            rating=movie.rating,
+                            rating_criterion_type=movie.rating_criterion_type,
+                            rating_criteria=movie.rating_criteria,
+                        )
+
     return s.MoviePreCreateData(
         next_movie_id=next_movie_id,
         actors=actors_out,
@@ -750,4 +791,52 @@ def get_pre_create_data(
         genres=genres_out,
         keywords=keywords_out,
         action_times=action_times_out,
+        temporary_movie=temporary_movie,
     )
+
+
+@movie_router.post(
+    "/quick-add/",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Error with type VALIDATION"},
+    },
+)
+def quick_add_movie(
+    form_data: s.QuickMovieFormData,
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """For quick and temporary adding of new movies in a JSON file.
+    Then these data will be used to fully add the movie to the database."""
+
+    if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
+        message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
+        raise HTTPException(status_code=400, detail=message)
+
+    try:
+        with open("data/quick_add_movies.json", "r") as file:
+            file_data = s.QuickMovieJSON.model_validate(json.load(file))
+
+        data = [form_data]
+
+        if file_data.movies:
+            keys = [movie.key for movie in file_data.movies]
+
+            if form_data.key in keys:
+                message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
+                log(log.ERROR, "Movie [%s] already exists", form_data.key)
+                raise Exception(message)
+
+            data += file_data.movies
+
+        with open("data/quick_add_movies.json", "w") as file:
+            json.dump(s.QuickMovieJSON(movies=data).model_dump(mode="json"), file, indent=4)
+
+        log(log.INFO, "Movie [%s] successfully created", form_data.key)
+
+    except Exception as e:
+        log(log.ERROR, "Error adding movie to JSON [%s]: %s", form_data.key, e)
+        error_message = get_error_message(lang, "Помилка додавання фільму до JSON", "Error adding movie to JSON")
+        raise HTTPException(status_code=400, detail=f"{error_message} - {e}")

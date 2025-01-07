@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+import os
 import sqlalchemy as sa
 from fastapi import UploadFile
 
@@ -465,3 +467,25 @@ def import_new_movie_to_google_sheet(db: Session):
         log(log.ERROR, "%s: %s", movie_error_message, e)
         e.args = (*e.args, movie_error_message)
         raise e
+
+
+def remove_temp_movie(form_data: s.MovieFormData):
+    """Remove movie from quick_add_movies.json file"""
+
+    if os.path.exists("data/quick_add_movies.json"):
+        try:
+            with open("data/quick_add_movies.json", "r") as file:
+                file_data = s.QuickMovieJSON.model_validate(json.load(file))
+
+            data = file_data.movies
+
+            if file_data.movies:
+                keys = [movie.key for movie in file_data.movies]
+
+                if form_data.key in keys:
+                    data = [movie for movie in file_data.movies if movie.key != form_data.key]
+
+                with open("data/quick_add_movies.json", "w") as file:
+                    json.dump(s.QuickMovieJSON(movies=data).model_dump(mode="json"), file, indent=4)
+        except Exception as e:
+            log(log.ERROR, "Error adding movie [%s] data/quick_add_movies.json file: %s", form_data.key, e)

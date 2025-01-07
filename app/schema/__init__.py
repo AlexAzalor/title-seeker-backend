@@ -49,6 +49,9 @@ from .movie import (
     MovieFilterField,
     MoviePersonFilterField,
     MovieFormData,
+    QuickMovieFormData,
+    QuickMovieJSON,
+    TempMovie,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
