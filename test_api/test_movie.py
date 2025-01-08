@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from api.controllers.create_movie import get_movies_data_from_file, remove_temp_movie
 from app import models as m
 from app import schema as s
 from config import config
@@ -200,10 +201,9 @@ def test_create_movie(client: TestClient, db: Session):
             duration=5,
             visual_effects=5,
             scare_factor=5,
-            # comment="Test comment",
         ),
     )
-    # 1_The Shawshank Redemption.png
+
     with open("./uploads/movie-posters/1_The Shawshank Redemption.png", "rb") as image:
         response = client.post(
             "/api/movies",
@@ -211,17 +211,54 @@ def test_create_movie(client: TestClient, db: Session):
             files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
             params={"lang": s.Language.EN.value, "import_to_google_sheet": False},
         )
-        # delete file
-        # os.remove("./uploads/movie-posters/27_1_The Shawshank Redemption.png")
+
     assert response.status_code == status.HTTP_201_CREATED
-    # data = s.MovieOut.model_validate(response.json())
-    # assert data
+
+    # Test create with existing key
+    response = client.post(
+        "/api/movies",
+        data={"form_data": form_data.model_dump_json()},
+    )
+    assert response.status_code == status.HTTP_409_CONFLICT
+
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
     assert movie
     os.remove(f"./uploads/movie-posters/{movie.id}_1_The Shawshank Redemption.png")
 
 
-# b'{"detail":[{"type":"missing","loc":["body","form_data"],"msg":"Field required","input":null,"url":"https://errors.pydantic.dev/2.9/v/missing"}]}'
-# # content=s.JobStatusIn.model_validate({"status": s.JobStatus.COMPLETED}).model_dump_json(),
-# b'{"detail":[{"type":"value_error","loc":["body","file"],"msg":"Value error, Expected UploadFile, received: <class \'str\'>","input":"image/png","ctx":{"error":{}},"url":"https://errors.pydantic.dev/2.9/v/value_error"}]}'
-# "file": ("1_The Shawshank Redemption.png", image, "image/png")
+def test_quick_movies(client: TestClient):
+    form_data = s.QuickMovieFormData(
+        key="test-quick-add-key",
+        title_en="Test quick EN",
+        rating=5,
+        rating_criterion_type=s.RatingCriterion.BASIC,
+        rating_criteria=s.UserRatingCriteria(
+            acting=5,
+            plot_storyline=5,
+            music=5,
+            re_watchability=5,
+            emotional_impact=5,
+            dialogue=5,
+            production_design=5,
+            duration=5,
+            visual_effects=5,
+            scare_factor=5,
+        ),
+    )
+
+    initial_movie_data = get_movies_data_from_file()
+
+    response = client.post("/api/movies/quick-add/", json=form_data.model_dump())
+    assert response.status_code == status.HTTP_201_CREATED
+
+    updated_movie_data = get_movies_data_from_file()
+    assert len(initial_movie_data) + 1 == len(updated_movie_data)
+
+    # Test quick add with existing (in file) key
+    response = client.post("/api/movies/quick-add/", json=form_data.model_dump())
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    remove_temp_movie(form_data.key)
+
+    current_movies = get_movies_data_from_file()
+    assert len(initial_movie_data) == len(current_movies)

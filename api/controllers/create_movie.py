@@ -7,9 +7,9 @@ from fastapi import UploadFile
 import app.schema as s
 import app.models as m
 from app.logger import log
-
-
 from sqlalchemy.orm import Session
+
+QUICK_MOVIES_FILE = "data/quick_add_movies.json"
 
 
 def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
@@ -469,23 +469,30 @@ def import_new_movie_to_google_sheet(db: Session):
         raise e
 
 
-def remove_temp_movie(form_data: s.MovieFormData):
-    """Remove movie from quick_add_movies.json file"""
+def get_movies_data_from_file():
+    """Get movies data from json file"""
 
-    if os.path.exists("data/quick_add_movies.json"):
+    with open(QUICK_MOVIES_FILE, "r") as file:
+        file_data = s.QuickMovieJSON.model_validate(json.load(file))
+
+    return file_data.movies
+
+
+def remove_temp_movie(movie_key: str):
+    """Remove movie from json file"""
+
+    if os.path.exists(QUICK_MOVIES_FILE):
         try:
-            with open("data/quick_add_movies.json", "r") as file:
-                file_data = s.QuickMovieJSON.model_validate(json.load(file))
+            movies = get_movies_data_from_file()
 
-            data = file_data.movies
+            if movies:
+                keys = [movie.key for movie in movies]
+                movies_to_file = movies
 
-            if file_data.movies:
-                keys = [movie.key for movie in file_data.movies]
+                if movie_key in keys:
+                    movies_to_file = [movie for movie in movies if movie.key != movie_key]
 
-                if form_data.key in keys:
-                    data = [movie for movie in file_data.movies if movie.key != form_data.key]
-
-                with open("data/quick_add_movies.json", "w") as file:
-                    json.dump(s.QuickMovieJSON(movies=data).model_dump(mode="json"), file, indent=4)
+                with open(QUICK_MOVIES_FILE, "w") as file:
+                    json.dump(s.QuickMovieJSON(movies=movies_to_file).model_dump(mode="json"), file, indent=4)
         except Exception as e:
-            log(log.ERROR, "Error adding movie [%s] data/quick_add_movies.json file: %s", form_data.key, e)
+            log(log.ERROR, "Error adding movie [%s] to file: %s", movie_key, e)
