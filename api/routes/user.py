@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, HTTPException, Depends, status
 import app.models as m
 import sqlalchemy as sa
@@ -7,6 +6,9 @@ import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session
 from app.database import get_db
+from config import config
+
+CFG = config()
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -23,7 +25,7 @@ def update_rate_movie(
     # current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    current_user = 1
+    current_user = CFG.CURRENT_USER
     """Update rating for a movie"""
 
     movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
@@ -36,20 +38,22 @@ def update_rate_movie(
         log(log.ERROR, "User [%s] not found")
         raise HTTPException(status_code=404, detail="User not found")
 
+    rating_data = data.rating_criteria
+
     if user.ratings:
         for rating in user.ratings:
             if rating.movie_id == movie.id:
                 rating.rating = data.rating
-                rating.acting = data.acting
-                rating.plot_storyline = data.plot_storyline
-                rating.music = data.music
-                rating.re_watchability = data.re_watchability
-                rating.emotional_impact = data.emotional_impact
-                rating.dialogue = data.dialogue
-                rating.production_design = data.production_design
-                rating.duration = data.duration
-                rating.visual_effects = data.visual_effects if data.visual_effects else None
-                rating.scare_factor = data.scare_factor if data.scare_factor else None
+                rating.acting = rating_data.acting
+                rating.plot_storyline = rating_data.plot_storyline
+                rating.music = rating_data.music
+                rating.re_watchability = rating_data.re_watchability
+                rating.emotional_impact = rating_data.emotional_impact
+                rating.dialogue = rating_data.dialogue
+                rating.production_design = rating_data.production_design
+                rating.duration = rating_data.duration
+                rating.visual_effects = rating_data.visual_effects if rating_data.visual_effects else None
+                rating.scare_factor = rating_data.scare_factor if rating_data.scare_factor else None
 
     db.commit()
 
@@ -65,35 +69,35 @@ def update_rate_movie(
 
     # backgroud task?
     # https://fastapi.tiangolo.com/tutorial/background-tasks/
-    ratings = db.scalars(sa.select(m.Rating)).all()
-    if not ratings:
-        log(log.ERROR, "Ratings are empty!")
+    # ratings = db.scalars(sa.select(m.Rating)).all()
+    # if not ratings:
+    #     log(log.ERROR, "Ratings are empty!")
 
-    ratings_to_file = []
-    for rating in ratings:
-        ratings_to_file.append(
-            s.RatingExportCreate(
-                id=rating.id,
-                movie_id=rating.movie_id,
-                user_id=rating.user_id,
-                rating=rating.rating,
-                acting=rating.acting,
-                plot_storyline=rating.plot_storyline,
-                music=rating.music,
-                re_watchability=rating.re_watchability,
-                emotional_impact=rating.emotional_impact,
-                dialogue=rating.dialogue,
-                production_design=rating.production_design,
-                duration=rating.duration,
-                visual_effects=rating.visual_effects,
-                scare_factor=rating.scare_factor,
-                comment=rating.comment,
-            )
-        )
+    # ratings_to_file = []
+    # for rating in ratings:
+    #     ratings_to_file.append(
+    #         s.RatingExportCreate(
+    #             id=rating.id,
+    #             movie_id=rating.movie_id,
+    #             user_id=rating.user_id,
+    #             rating=rating.rating,
+    #             acting=rating.acting,
+    #             plot_storyline=rating.plot_storyline,
+    #             music=rating.music,
+    #             re_watchability=rating.re_watchability,
+    #             emotional_impact=rating.emotional_impact,
+    #             dialogue=rating.dialogue,
+    #             production_design=rating.production_design,
+    #             duration=rating.duration,
+    #             visual_effects=rating.visual_effects,
+    #             scare_factor=rating.scare_factor,
+    #             comment=rating.comment,
+    #         )
+    #     )
 
-    with open("data/ratings.json", "w") as file:
-        json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
-        print("Ratings data saved to [data/ratings.json] file")
+    # with open("data/ratings.json", "w") as file:
+    #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
+    #     print("Ratings data saved to [data/ratings.json] file")
 
 
 @user_router.post(
@@ -108,7 +112,7 @@ def rate_movie(
     # current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    current_user = 1
+    current_user = CFG.CURRENT_USER
     """Rate a movie"""
 
     movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
@@ -121,20 +125,29 @@ def rate_movie(
         log(log.ERROR, "User [%s] not found")
         raise HTTPException(status_code=404, detail="User not found")
 
+    user_rating = db.scalar(
+        sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
+    )
+    if user_rating:
+        log(log.ERROR, "Rating for movie [%s] already exists")
+        raise HTTPException(status_code=400, detail="Rating for movie already exists")
+
+    rating_data = data.rating_criteria
+
     new_rating = m.Rating(
         user_id=current_user,
         movie_id=movie.id,
         rating=data.rating,
-        acting=data.acting,
-        plot_storyline=data.plot_storyline,
-        music=data.music,
-        re_watchability=data.re_watchability,
-        emotional_impact=data.emotional_impact,
-        dialogue=data.dialogue,
-        production_design=data.production_design,
-        duration=data.duration,
-        visual_effects=data.visual_effects if data.visual_effects else None,
-        scare_factor=data.scare_factor if data.scare_factor else None,
+        acting=rating_data.acting,
+        plot_storyline=rating_data.plot_storyline,
+        music=rating_data.music,
+        re_watchability=rating_data.re_watchability,
+        emotional_impact=rating_data.emotional_impact,
+        dialogue=rating_data.dialogue,
+        production_design=rating_data.production_design,
+        duration=rating_data.duration,
+        visual_effects=rating_data.visual_effects if rating_data.visual_effects else None,
+        scare_factor=rating_data.scare_factor if rating_data.scare_factor else None,
     )
 
     db.add(new_rating)
@@ -153,32 +166,32 @@ def rate_movie(
 
     # backgroud task?
     # https://fastapi.tiangolo.com/tutorial/background-tasks/
-    ratings = db.scalars(sa.select(m.Rating)).all()
-    if not ratings:
-        log(log.ERROR, "Ratings are empty!")
+    # ratings = db.scalars(sa.select(m.Rating)).all()
+    # if not ratings:
+    #     log(log.ERROR, "Ratings are empty!")
 
-    ratings_to_file = []
-    for rating in ratings:
-        ratings_to_file.append(
-            s.RatingExportCreate(
-                id=rating.id,
-                movie_id=rating.movie_id,
-                user_id=rating.user_id,
-                rating=rating.rating,
-                acting=rating.acting,
-                plot_storyline=rating.plot_storyline,
-                music=rating.music,
-                re_watchability=rating.re_watchability,
-                emotional_impact=rating.emotional_impact,
-                dialogue=rating.dialogue,
-                production_design=rating.production_design,
-                duration=rating.duration,
-                visual_effects=rating.visual_effects,
-                scare_factor=rating.scare_factor,
-                comment=rating.comment,
-            )
-        )
+    # ratings_to_file = []
+    # for rating in ratings:
+    #     ratings_to_file.append(
+    #         s.RatingExportCreate(
+    #             id=rating.id,
+    #             movie_id=rating.movie_id,
+    #             user_id=rating.user_id,
+    #             rating=rating.rating,
+    #             acting=rating.acting,
+    #             plot_storyline=rating.plot_storyline,
+    #             music=rating.music,
+    #             re_watchability=rating.re_watchability,
+    #             emotional_impact=rating.emotional_impact,
+    #             dialogue=rating.dialogue,
+    #             production_design=rating.production_design,
+    #             duration=rating.duration,
+    #             visual_effects=rating.visual_effects,
+    #             scare_factor=rating.scare_factor,
+    #             comment=rating.comment,
+    #         )
+    #     )
 
-    with open("data/ratings.json", "w") as file:
-        json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
-        print("Ratings data saved to [data/ratings.json] file")
+    # with open("data/ratings.json", "w") as file:
+    #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
+    #     print("Ratings data saved to [data/ratings.json] file")

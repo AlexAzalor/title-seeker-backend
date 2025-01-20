@@ -24,11 +24,7 @@ class UsersJSONFile(BaseModel):
     )
 
 
-class UserRateMovieIn(BaseModel):
-    uuid: str
-    movie_key: str
-    rating: float
-
+class RatingCriteria(BaseModel):
     acting: float
     plot_storyline: float
     music: float
@@ -40,6 +36,17 @@ class UserRateMovieIn(BaseModel):
 
     visual_effects: float | None = None
     scare_factor: float | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class UserRateMovieIn(BaseModel):
+    uuid: str
+    movie_key: str
+    rating: float
+    rating_criteria: RatingCriteria
 
     model_config = ConfigDict(
         from_attributes=True,

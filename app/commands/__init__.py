@@ -234,6 +234,14 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def calculate_movie_rating():
+        """Calculate average rating for each movie"""
+        from .calculate_movie_rating import calculate_movie_rating
+
+        calculate_movie_rating()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets

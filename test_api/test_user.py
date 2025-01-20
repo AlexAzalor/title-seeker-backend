@@ -29,14 +29,16 @@ def test_rate_movie(client: TestClient, db: Session):
         uuid=user.uuid,
         movie_key=movie.key,
         rating=7.34,
-        acting=5,
-        plot_storyline=4,
-        music=3,
-        re_watchability=2,
-        emotional_impact=1,
-        dialogue=2,
-        production_design=3,
-        duration=4,
+        rating_criteria=s.RatingCriteria(
+            acting=5,
+            plot_storyline=4,
+            music=3,
+            re_watchability=2,
+            emotional_impact=1,
+            dialogue=2,
+            production_design=3,
+            duration=4,
+        ),
     )
 
     response = client.post(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())

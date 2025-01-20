@@ -1283,6 +1283,42 @@
             "movies_ids": [
                 26
             ]
+        },
+        {
+            "id": 108,
+            "key": "ladybug",
+            "name_uk": "\u0421\u043e\u043d\u0435\u0447\u043a\u043e",
+            "name_en": "Ladybug",
+            "actors_ids": [
+                94
+            ],
+            "movies_ids": [
+                27
+            ]
+        },
+        {
+            "id": 109,
+            "key": "white-death",
+            "name_uk": "\u0411\u0456\u043b\u0430 \u0441\u043c\u0435\u0440\u0442\u044c",
+            "name_en": "White Death",
+            "actors_ids": [
+                98
+            ],
+            "movies_ids": [
+                27
+            ]
+        },
+        {
+            "id": 110,
+            "key": "the-elder",
+            "name_uk": "\u0421\u0442\u0430\u0440\u0456\u0439\u0448\u0438\u043d\u0430",
+            "name_en": "The Elder",
+            "actors_ids": [
+                99
+            ],
+            "movies_ids": [
+                27
+            ]
         }
     ]
 }

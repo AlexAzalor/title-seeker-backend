@@ -33,7 +33,7 @@ def get_directors(
         directors_out.append(
             s.DirectorOut(
                 key=director.key,
-                full_name=director.full_name(lang),
+                name=director.full_name(lang),
             )
         )
     return s.DirectorListOut(directors=directors_out)
@@ -175,5 +175,5 @@ def create_director(
 
     return s.DirectorOut(
         key=new_director.key,
-        full_name=new_director.full_name(lang),
+        name=new_director.full_name(lang),
     )

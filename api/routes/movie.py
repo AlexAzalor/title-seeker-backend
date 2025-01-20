@@ -106,7 +106,7 @@ def get_movie(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
-    current_user = 1
+    current_user = CFG.CURRENT_USER
     movie: m.Movie | None = db.scalar(
         sa.select(m.Movie)
         .where(m.Movie.key == movie_key)
@@ -510,7 +510,7 @@ def get_movie_filters(
         actors_out.append(
             s.ActorOut(
                 key=actor.key,
-                full_name=actor.full_name(lang),
+                name=actor.full_name(lang),
             )
         )
 
@@ -520,7 +520,7 @@ def get_movie_filters(
         directors_out.append(
             s.DirectorOut(
                 key=director.key,
-                full_name=director.full_name(lang),
+                name=director.full_name(lang),
             )
         )
 
@@ -604,7 +604,7 @@ def create_movie(
 ):
     """Create a new movie"""
 
-    current_user = 1
+    current_user = CFG.CURRENT_USER
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
@@ -701,7 +701,7 @@ def get_pre_create_data(
         actors_out.append(
             s.ActorOut(
                 key=actor.key,
-                full_name=actor.full_name(lang),
+                name=actor.full_name(lang),
             )
         )
 
@@ -711,7 +711,7 @@ def get_pre_create_data(
         directors_out.append(
             s.DirectorOut(
                 key=director.key,
-                full_name=director.full_name(lang),
+                name=director.full_name(lang),
             )
         )
 

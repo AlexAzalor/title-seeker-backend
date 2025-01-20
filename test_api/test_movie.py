@@ -174,20 +174,27 @@ def test_create_movie(client: TestClient, db: Session):
         directors_keys=[director.key],
         genres=[
             s.MovieFilterField(
+                name="Test name",
                 key=genre.key,
                 percentage_match=100,
+                subgenre_parent_key="",
             )
         ],
         subgenres=[
             s.MovieFilterField(
+                name="Test name",
                 key=genre.subgenres[0].key,
                 percentage_match=80,
                 subgenre_parent_key=genre.key,
             )
         ],
-        specifications=[s.MovieFilterField(key=specification.key, percentage_match=70)],
-        keywords=[s.MovieFilterField(key=keyword.key, percentage_match=50)],
-        action_times=[s.MovieFilterField(key=action_time.key, percentage_match=100)],
+        specifications=[
+            s.MovieFilterField(key=specification.key, percentage_match=70, name="Test name", subgenre_parent_key="")
+        ],
+        keywords=[s.MovieFilterField(key=keyword.key, percentage_match=50, name="Test name", subgenre_parent_key="")],
+        action_times=[
+            s.MovieFilterField(key=action_time.key, percentage_match=100, name="Test name", subgenre_parent_key="")
+        ],
         rating_criterion_type=s.RatingCriterion.BASIC,
         rating=5,
         rating_criteria=s.UserRatingCriteria(

@@ -36,7 +36,7 @@ class DirectorsJSONFile(BaseModel):
 
 class DirectorOut(BaseModel):
     key: str
-    full_name: str
+    name: str
 
     model_config = ConfigDict(
         from_attributes=True,

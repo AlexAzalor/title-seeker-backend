@@ -33,7 +33,7 @@ def get_actors(
         actors_out.append(
             s.ActorOut(
                 key=actor.key,
-                full_name=actor.full_name(lang),
+                name=actor.full_name(lang),
             )
         )
     return s.ActorListOut(actors=actors_out)
@@ -169,5 +169,5 @@ def create_actor(
 
     return s.ActorOut(
         key=new_actor.key,
-        full_name=new_actor.full_name(lang),
+        name=new_actor.full_name(lang),
     )

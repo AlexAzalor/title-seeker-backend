@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 
 from fastapi import File, UploadFile
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
@@ -299,7 +299,8 @@ class MovieFiltersListOut(BaseModel):
 class MovieFilterField(BaseModel):
     key: str
     percentage_match: float
-    subgenre_parent_key: str | None = None
+    subgenre_parent_key: str = Field(None, alias="subgenre_parent_key")
+    name: str
 
     model_config = ConfigDict(
         from_attributes=True,

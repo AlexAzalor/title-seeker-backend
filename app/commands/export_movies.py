@@ -44,20 +44,6 @@ LAST_SHEET_COLUMN = "W"
 MOVIES_RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
 
-def calculate_average_rating():
-    with db.begin() as session:
-        movies = session.scalars(sa.select(m.Movie)).all()
-
-        for movie in movies:
-            movie_ratings = movie.ratings
-            average_rating = round(sum([rating.rating for rating in movie_ratings]) / len(movie_ratings), 2)
-
-            movie.average_rating = average_rating
-            movie.ratings_count = len(movie_ratings)
-
-        session.commit()
-
-
 def write_movies_in_db(movies: list[s.MovieExportCreate]):
     skipped_movies = 0
     with db.begin() as session:
@@ -289,7 +275,6 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
         session.commit()
 
     log(log.INFO, "Skipped movies: %s", skipped_movies)
-    calculate_average_rating()
 
 
 def convert_string_to_list_of_integers(input_string):

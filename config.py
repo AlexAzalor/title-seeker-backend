@@ -15,6 +15,8 @@ def get_version() -> str:
 class BaseConfig(BaseSettings):
     """Base configuration."""
 
+    CURRENT_USER: int = 1
+
     IS_API: bool = False
 
     ENV: str = "base"

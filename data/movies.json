@@ -1919,6 +1919,79 @@
             "action_times_ids": [
                 6
             ]
+        },
+        {
+            "id": 27,
+            "key": "bullet-train",
+            "title_uk": "\u0428\u0432\u0438\u0434\u043a\u0456\u0441\u043d\u0438\u0439 \u043f\u043e\u0457\u0437\u0434",
+            "title_en": "Bullet Train",
+            "description_uk": "\u041f'\u044f\u0442\u0435\u0440\u043e \u0432\u0431\u0438\u0432\u0446\u044c \u043d\u0430 \u0431\u043e\u0440\u0442\u0443 \u0448\u0432\u0438\u0434\u043a\u0456\u0441\u043d\u043e\u0433\u043e \u043f\u043e\u0457\u0437\u0434\u0430-\u043a\u0443\u043b\u0456 \u0434\u0456\u0437\u043d\u0430\u044e\u0442\u044c\u0441\u044f, \u0449\u043e \u0457\u0445\u043d\u0456 \u043c\u0456\u0441\u0456\u0457 \u043c\u0430\u044e\u0442\u044c \u0449\u043e\u0441\u044c \u0441\u043f\u0456\u043b\u044c\u043d\u0435.",
+            "description_en": "Five assassins aboard a swiftly-moving bullet train find out that their missions have something in common.",
+            "release_date": "2022-08-05T00:00:00",
+            "duration": 126,
+            "budget": 85900000,
+            "domestic_gross": 103368602,
+            "worldwide_gross": 239268602,
+            "poster": "27_Bullet Train.png",
+            "actors_ids": [
+                94,
+                98,
+                99
+            ],
+            "directors_ids": [
+                26
+            ],
+            "location_uk": "\u0421\u0428\u0410, \u042f\u043f\u043e\u043d\u0456\u044f",
+            "location_en": "US, Japan",
+            "rating_criterion": "basic",
+            "genres_list": [
+                {
+                    "1": 70.0
+                },
+                {
+                    "5": 50.0
+                }
+            ],
+            "genres_ids": [
+                1,
+                5
+            ],
+            "subgenres_list": [
+                {
+                    "6": 50.0
+                }
+            ],
+            "subgenres_ids": [
+                6
+            ],
+            "specifications_list": [
+                {
+                    "23": 30.0
+                }
+            ],
+            "specifications_ids": [
+                23
+            ],
+            "keywords_list": [
+                {
+                    "12": 30.0
+                },
+                {
+                    "15": 20.0
+                }
+            ],
+            "keywords_ids": [
+                12,
+                15
+            ],
+            "action_times_list": [
+                {
+                    "6": 100.0
+                }
+            ],
+            "action_times_ids": [
+                6
+            ]
         }
     ]
 }
