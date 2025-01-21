@@ -200,14 +200,14 @@ def test_create_movie(client: TestClient, db: Session):
         rating_criteria=s.UserRatingCriteria(
             acting=5,
             plot_storyline=5,
+            script_dialogue=5,
             music=5,
-            re_watchability=5,
-            emotional_impact=5,
-            dialogue=5,
+            enjoyment=5,
             production_design=5,
-            duration=5,
             visual_effects=5,
             scare_factor=5,
+            humor=5,
+            animation_cartoon=5,
         ),
     )
 
@@ -242,14 +242,14 @@ def test_quick_movies(client: TestClient):
         rating_criteria=s.UserRatingCriteria(
             acting=5,
             plot_storyline=5,
+            script_dialogue=5,
             music=5,
-            re_watchability=5,
-            emotional_impact=5,
-            dialogue=5,
+            enjoyment=5,
             production_design=5,
-            duration=5,
             visual_effects=5,
             scare_factor=5,
+            humor=5,
+            animation_cartoon=5,
         ),
     )
 

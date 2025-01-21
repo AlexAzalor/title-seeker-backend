@@ -265,15 +265,14 @@ def add_new_movie_rating(
             rating=form_data.rating,
             acting=form_data.rating_criteria.acting,
             plot_storyline=form_data.rating_criteria.plot_storyline,
+            script_dialogue=form_data.rating_criteria.script_dialogue,
             music=form_data.rating_criteria.music,
-            re_watchability=form_data.rating_criteria.re_watchability,
-            emotional_impact=form_data.rating_criteria.emotional_impact,
-            dialogue=form_data.rating_criteria.dialogue,
+            enjoyment=form_data.rating_criteria.enjoyment,
             production_design=form_data.rating_criteria.production_design,
-            duration=form_data.rating_criteria.duration,
             visual_effects=form_data.rating_criteria.visual_effects,
             scare_factor=form_data.rating_criteria.scare_factor,
-            # comment=form_data.rating_criteria.comment,
+            humor=form_data.rating_criteria.humor,
+            animation_cartoon=form_data.rating_criteria.animation_cartoon,
         )
 
         db.add(new_rating)
@@ -306,14 +305,14 @@ def add_new_movie_rating(
                         user_id=current_user,
                         acting=rating.acting,
                         plot_storyline=rating.plot_storyline,
+                        script_dialogue=rating.script_dialogue,
                         music=rating.music,
-                        re_watchability=rating.re_watchability,
-                        emotional_impact=rating.emotional_impact,
-                        dialogue=rating.dialogue,
+                        enjoyment=rating.enjoyment,
                         production_design=rating.production_design,
-                        duration=rating.duration,
                         visual_effects=rating.visual_effects if rating.visual_effects else None,
                         scare_factor=rating.scare_factor if rating.scare_factor else None,
+                        humor=rating.humor if rating.humor else None,
+                        animation_cartoon=rating.animation_cartoon if rating.animation_cartoon else None,
                         comment=rating.comment if rating.comment else None,
                     )
                 )

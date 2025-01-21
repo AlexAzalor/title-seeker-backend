@@ -46,14 +46,14 @@ def update_rate_movie(
                 rating.rating = data.rating
                 rating.acting = rating_data.acting
                 rating.plot_storyline = rating_data.plot_storyline
+                rating.script_dialogue = rating_data.script_dialogue
                 rating.music = rating_data.music
-                rating.re_watchability = rating_data.re_watchability
-                rating.emotional_impact = rating_data.emotional_impact
-                rating.dialogue = rating_data.dialogue
+                rating.enjoyment = rating_data.enjoyment
                 rating.production_design = rating_data.production_design
-                rating.duration = rating_data.duration
                 rating.visual_effects = rating_data.visual_effects if rating_data.visual_effects else None
                 rating.scare_factor = rating_data.scare_factor if rating_data.scare_factor else None
+                rating.humor = rating_data.humor if rating_data.humor else None
+                rating.animation_cartoon = rating_data.animation_cartoon if rating_data.animation_cartoon else None
 
     db.commit()
 
@@ -84,11 +84,10 @@ def update_rate_movie(
     #             acting=rating.acting,
     #             plot_storyline=rating.plot_storyline,
     #             music=rating.music,
-    #             re_watchability=rating.re_watchability,
-    #             emotional_impact=rating.emotional_impact,
+
     #             dialogue=rating.dialogue,
     #             production_design=rating.production_design,
-    #             duration=rating.duration,
+
     #             visual_effects=rating.visual_effects,
     #             scare_factor=rating.scare_factor,
     #             comment=rating.comment,
@@ -140,14 +139,14 @@ def rate_movie(
         rating=data.rating,
         acting=rating_data.acting,
         plot_storyline=rating_data.plot_storyline,
+        script_dialogue=rating_data.script_dialogue,
         music=rating_data.music,
-        re_watchability=rating_data.re_watchability,
-        emotional_impact=rating_data.emotional_impact,
-        dialogue=rating_data.dialogue,
+        enjoyment=rating_data.enjoyment,
         production_design=rating_data.production_design,
-        duration=rating_data.duration,
         visual_effects=rating_data.visual_effects if rating_data.visual_effects else None,
         scare_factor=rating_data.scare_factor if rating_data.scare_factor else None,
+        humor=rating_data.humor if rating_data.humor else None,
+        animation_cartoon=rating_data.animation_cartoon if rating_data.animation_cartoon else None,
     )
 
     db.add(new_rating)
@@ -181,11 +180,10 @@ def rate_movie(
     #             acting=rating.acting,
     #             plot_storyline=rating.plot_storyline,
     #             music=rating.music,
-    #             re_watchability=rating.re_watchability,
-    #             emotional_impact=rating.emotional_impact,
+
     #             dialogue=rating.dialogue,
     #             production_design=rating.production_design,
-    #             duration=rating.duration,
+
     #             visual_effects=rating.visual_effects,
     #             scare_factor=rating.scare_factor,
     #             comment=rating.comment,

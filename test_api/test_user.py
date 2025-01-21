@@ -32,12 +32,10 @@ def test_rate_movie(client: TestClient, db: Session):
         rating_criteria=s.RatingCriteria(
             acting=5,
             plot_storyline=4,
+            script_dialogue=2,
             music=3,
-            re_watchability=2,
-            emotional_impact=1,
-            dialogue=2,
+            enjoyment=4,
             production_design=3,
-            duration=4,
         ),
     )
 
@@ -54,11 +52,8 @@ def test_rate_movie(client: TestClient, db: Session):
     #     acting=5,
     #     plot_storyline=4,
     #     music=3,
-    #     re_watchability=2,
-    #     emotional_impact=1,
     #     dialogue=2,
     #     production_design=3,
-    #     duration=4,
     # )
 
     # # Test update rate movie

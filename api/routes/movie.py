@@ -223,17 +223,19 @@ def get_movie(
         user_rating=s.UserRatingCriteria(
             acting=user_rating.acting,
             plot_storyline=user_rating.plot_storyline,
+            script_dialogue=user_rating.script_dialogue,
             music=user_rating.music,
-            re_watchability=user_rating.re_watchability,
-            emotional_impact=user_rating.emotional_impact,
-            dialogue=user_rating.dialogue,
+            enjoyment=user_rating.enjoyment,
             production_design=user_rating.production_design,
-            duration=user_rating.duration,
             visual_effects=user_rating.visual_effects
-            if movie.rating_criterion in [s.RatingCriterion.VISUAL_EFFECTS.value, s.RatingCriterion.FULL.value]
+            if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS.value
             else None,
             scare_factor=user_rating.scare_factor
-            if movie.rating_criterion in [s.RatingCriterion.SCARE_FACTOR.value, s.RatingCriterion.FULL.value]
+            if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR.value
+            else None,
+            humor=user_rating.humor if movie.rating_criterion == s.RatingCriterion.HUMOR.value else None,
+            animation_cartoon=user_rating.animation_cartoon
+            if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON.value
             else None,
         )
         if user_rating

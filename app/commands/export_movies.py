@@ -149,14 +149,12 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             min_rating = 0.08
             default_user_id = 1
 
-            ve_rate = (
-                min_rate
-                if movie.rating_criterion in [s.RatingCriterion.VISUAL_EFFECTS, s.RatingCriterion.FULL]
-                else None
-            )
-            sf_rate = (
-                min_rate if movie.rating_criterion in [s.RatingCriterion.SCARE_FACTOR, s.RatingCriterion.FULL] else None
-            )
+            ve_rate = min_rate if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS else None
+            sf_rate = min_rate if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR else None
+
+            humor_rate = min_rate if movie.rating_criterion == s.RatingCriterion.HUMOR else None
+
+            ac_rate = min_rate if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON else None
 
             if ve_rate:
                 min_rating += ve_rate
@@ -164,20 +162,26 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             if sf_rate:
                 min_rating += sf_rate
 
+            if humor_rate:
+                min_rating += humor_rate
+
+            if ac_rate:
+                min_rating += ac_rate
+
             new_rating = m.Rating(
                 user_id=default_user_id,
                 movie_id=new_movie.id,
                 rating=min_rating,
                 acting=min_rate,
                 plot_storyline=min_rate,
+                script_dialogue=min_rate,
                 music=min_rate,
-                re_watchability=min_rate,
-                emotional_impact=min_rate,
-                dialogue=min_rate,
+                enjoyment=min_rate,
                 production_design=min_rate,
-                duration=min_rate,
                 visual_effects=ve_rate,
                 scare_factor=sf_rate,
+                humor=humor_rate,
+                animation_cartoon=ac_rate,
             )
 
             session.add(new_rating)

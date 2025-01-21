@@ -18,14 +18,14 @@ MOVIE_ID = "movie_id"
 USER_ID = "user_id"
 ACTING = "acting"
 PLOT_STORYLINE = "plot_storyline"
+SCRIPT_DIALOGUE = "script_dialogue"
 MUSIC = "music"
-RE_WATCHABILITY = "re_watchability"
-EMOTIONAL_IMPACT = "emotional_impact"
-DIALOGUE = "dialogue"
+ENJOYMENT = "enjoyment"
 PRODUCTION_DESIGN = "production_design"
-DURATION = "duration"
 VISUAL_EFFECTS = "visual_effects"
 SCARE_FACTOR = "scare_factor"
+HUMOR = "humor"
+ANIMATION_CARTOON = "animation_cartoon"
 RATING = "rating"
 COMMENT = "comment"
 
@@ -49,14 +49,14 @@ def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
                         rating=rating.rating,
                         acting=rating.acting,
                         plot_storyline=rating.plot_storyline,
+                        script_dialogue=rating.script_dialogue,
                         music=rating.music,
-                        re_watchability=rating.re_watchability,
-                        emotional_impact=rating.emotional_impact,
-                        dialogue=rating.dialogue,
+                        enjoyment=rating.enjoyment,
                         production_design=rating.production_design,
-                        duration=rating.duration,
                         visual_effects=rating.visual_effects,
                         scare_factor=rating.scare_factor,
+                        humor=rating.humor,
+                        animation_cartoon=rating.animation_cartoon,
                         comment=rating.comment if rating.comment else "",
                     )
                 )
@@ -70,14 +70,14 @@ def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
                 rating=rating.rating,
                 acting=rating.acting,
                 plot_storyline=rating.plot_storyline,
+                script_dialogue=rating.script_dialogue,
                 music=rating.music,
-                re_watchability=rating.re_watchability,
-                emotional_impact=rating.emotional_impact,
-                dialogue=rating.dialogue,
+                enjoyment=rating.enjoyment,
                 production_design=rating.production_design,
-                duration=rating.duration,
                 visual_effects=rating.visual_effects,
                 scare_factor=rating.scare_factor,
+                humor=rating.humor,
+                animation_cartoon=rating.animation_cartoon,
                 comment=rating.comment,
             )
 
@@ -117,14 +117,14 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
     INDEX_USER_ID = values[0].index(USER_ID)
     INDEX_ACTING = values[0].index(ACTING)
     INDEX_PLOT_STORYLINE = values[0].index(PLOT_STORYLINE)
+    INDEX_SCRIPT_DIALOGUE = values[0].index(SCRIPT_DIALOGUE)
     INDEX_MUSIC = values[0].index(MUSIC)
-    INDEX_RE_WATCHABILITY = values[0].index(RE_WATCHABILITY)
-    INDEX_EMOTIONAL_IMPACT = values[0].index(EMOTIONAL_IMPACT)
-    INDEX_DIALOGUE = values[0].index(DIALOGUE)
+    INDEX_ENJOYMENT = values[0].index(ENJOYMENT)
     INDEX_PRODUCTION_DESIGN = values[0].index(PRODUCTION_DESIGN)
-    INDEX_DURATION = values[0].index(DURATION)
     INDEX_VISUAL_EFFECTS = values[0].index(VISUAL_EFFECTS)
     INDEX_SCARE_FACTOR = values[0].index(SCARE_FACTOR)
+    INDEX_HUMOR = values[0].index(HUMOR)
+    INDEX_ANIMATION_CARTOON = values[0].index(ANIMATION_CARTOON)
     INDEX_RATING = values[0].index(RATING)
     INDEX_COMMENT = values[0].index(COMMENT)
 
@@ -152,29 +152,21 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
         assert plot_storyline, f"The plot_storyline {plot_storyline} is missing"
         plot_storyline = float(plot_storyline.replace(",", "."))
 
+        script_dialogue = row[INDEX_SCRIPT_DIALOGUE]
+        assert script_dialogue, f"The script_dialogue {script_dialogue} is missing"
+        script_dialogue = float(script_dialogue.replace(",", "."))
+
         music = row[INDEX_MUSIC]
         assert music, f"The music {music} is missing"
         music = float(music.replace(",", "."))
 
-        re_watchability = row[INDEX_RE_WATCHABILITY]
-        assert re_watchability, f"The re_watchability {re_watchability} is missing"
-        re_watchability = float(re_watchability.replace(",", "."))
-
-        emotional_impact = row[INDEX_EMOTIONAL_IMPACT]
-        assert emotional_impact, f"The emotional_impact {emotional_impact} is missing"
-        emotional_impact = float(emotional_impact.replace(",", "."))
-
-        dialogue = row[INDEX_DIALOGUE]
-        assert dialogue, f"The dialogue {dialogue} is missing"
-        dialogue = float(dialogue.replace(",", "."))
+        enjoyment = row[INDEX_ENJOYMENT]
+        assert enjoyment, f"The enjoyment {enjoyment} is missing"
+        enjoyment = float(enjoyment.replace(",", "."))
 
         production_design = row[INDEX_PRODUCTION_DESIGN]
         assert production_design, f"The production_design {production_design} is missing"
         production_design = float(production_design.replace(",", "."))
-
-        duration = row[INDEX_DURATION]
-        assert duration, f"The duration {duration} is missing"
-        duration = float(duration.replace(",", "."))
 
         visual_effects = row[INDEX_VISUAL_EFFECTS]
         if visual_effects:
@@ -183,6 +175,14 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
         scare_factor = row[INDEX_SCARE_FACTOR]
         if scare_factor:
             scare_factor = float(scare_factor.replace(",", "."))
+
+        humor = row[INDEX_HUMOR]
+        if humor:
+            humor = float(humor.replace(",", "."))
+
+        animation_cartoon = row[INDEX_ANIMATION_CARTOON]
+        if animation_cartoon:
+            animation_cartoon = float(animation_cartoon.replace(",", "."))
 
         rating = row[INDEX_RATING]
         assert rating, f"The rating {rating} is missing"
@@ -198,14 +198,14 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
                 user_id=user_id,
                 acting=acting,
                 plot_storyline=plot_storyline,
+                script_dialogue=script_dialogue,
                 music=music,
-                re_watchability=re_watchability,
-                emotional_impact=emotional_impact,
-                dialogue=dialogue,
+                enjoyment=enjoyment,
                 production_design=production_design,
-                duration=duration,
                 visual_effects=visual_effects if visual_effects else None,
                 scare_factor=scare_factor if scare_factor else None,
+                humor=humor if humor else None,
+                animation_cartoon=animation_cartoon if animation_cartoon else None,
                 comment=comment if comment else None,
             )
         )

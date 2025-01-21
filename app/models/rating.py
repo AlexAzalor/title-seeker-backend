@@ -33,16 +33,19 @@ class Rating(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     # Criteria
     acting: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
     plot_storyline: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
+    script_dialogue: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
     music: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
-    re_watchability: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
-    emotional_impact: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
-    dialogue: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
+    enjoyment: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
     production_design: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
-    duration: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
+    # re_watchability: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
+    # emotional_impact: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
+    # duration: orm.Mapped[float] = orm.mapped_column(sa.Float, nullable=False)
 
     # Additional
     visual_effects: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
     scare_factor: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
+    humor: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
+    animation_cartoon: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
 
     def __repr__(self):
         return f"<Rating [{self.id}] - {self.user.full_name}>"

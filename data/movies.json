@@ -857,7 +857,7 @@
             ],
             "location_uk": "\u0421\u0428\u0410",
             "location_en": "US",
-            "rating_criterion": "basic",
+            "rating_criterion": "animation_cartoon",
             "genres_list": [
                 {
                     "2": 2.22
@@ -1516,7 +1516,7 @@
             ],
             "location_uk": "\u0421\u0428\u0410, \u0412\u0435\u043b\u0438\u043a\u0430 \u0411\u0440\u0438\u0442\u0430\u043d\u0456\u044f",
             "location_en": "US, UK",
-            "rating_criterion": "full",
+            "rating_criterion": "visual_effects",
             "genres_list": [
                 {
                     "13": 3.15

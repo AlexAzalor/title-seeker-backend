@@ -10,8 +10,6 @@ from ..utility import authorized_user_in_google_spreadsheets
 
 CFG = config()
 
-# [['ID', 'movie_id', 'user_id', 'acting', 'plot_storyline', 'music', 're_watchability', 'emotional_impact', 'dialogue', 'production_design', 'duration', 'visual_effects', 'scare_factor', 'rating', 'comment', 'ID-2']]
-
 
 def import_ratings_to_google_spreadsheets(rate_data: s.RatingsJSONFile | None = None):
     """Import ratings to google spreadsheets"""
@@ -36,14 +34,14 @@ def import_ratings_to_google_spreadsheets(rate_data: s.RatingsJSONFile | None = 
             rating.user_id,
             rating.acting,
             rating.plot_storyline,
+            rating.script_dialogue,
             rating.music,
-            rating.re_watchability,
-            rating.emotional_impact,
-            rating.dialogue,
+            rating.enjoyment,
             rating.production_design,
-            rating.duration,
             rating.visual_effects if rating.visual_effects else "",
             rating.scare_factor if rating.scare_factor else "",
+            rating.humor if rating.humor else "",
+            rating.animation_cartoon if rating.animation_cartoon else "",
             rating.rating,
             rating.comment if rating.comment else "",
             rating.id,

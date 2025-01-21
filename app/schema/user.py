@@ -27,15 +27,15 @@ class UsersJSONFile(BaseModel):
 class RatingCriteria(BaseModel):
     acting: float
     plot_storyline: float
+    script_dialogue: float
     music: float
-    re_watchability: float
-    emotional_impact: float
-    dialogue: float
+    enjoyment: float
     production_design: float
-    duration: float
-
+    # Additional
     visual_effects: float | None = None
     scare_factor: float | None = None
+    humor: float | None = None
+    animation_cartoon: float | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
