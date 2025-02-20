@@ -90,7 +90,7 @@ class MovieDirector(BaseModel):
 class MovieGenre(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
     percentage_match: float
 
     model_config = ConfigDict(
@@ -102,7 +102,7 @@ class MovieSubgenre(BaseModel):
     key: str
     parent_genre: MovieGenre
     name: str
-    description: str | None = None
+    description: str
     percentage_match: float
 
     model_config = ConfigDict(
@@ -149,7 +149,7 @@ class UserRatingCriteria(BaseModel):
 class MovieSpecification(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
     percentage_match: float
 
     model_config = ConfigDict(
@@ -160,7 +160,7 @@ class MovieSpecification(BaseModel):
 class MovieKeyword(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
     percentage_match: float
 
     model_config = ConfigDict(
@@ -171,7 +171,7 @@ class MovieKeyword(BaseModel):
 class MovieActionTime(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
     percentage_match: float
 
     model_config = ConfigDict(
@@ -183,14 +183,15 @@ class MovieOut(BaseModel):
     key: str
     title: str
     description: str
+    location: str
     release_date: datetime | None = None
     duration: str
     budget: str
-    domestic_gross: str | None = None
-    worldwide_gross: str | None = None
-    actors: list[MovieActor] = []
-    poster: str | None = None
-    directors: list[MovieDirector] = []
+    domestic_gross: str
+    worldwide_gross: str
+    actors: list[MovieActor]
+    poster: str
+    directors: list[MovieDirector]
     genres: list[MovieGenre] = []
     subgenres: list[MovieSubgenre] = []
     ratings: list[MovieRating]
@@ -198,9 +199,9 @@ class MovieOut(BaseModel):
     ratings_count: int
     user_rating: UserRatingCriteria | None = None
     rating_criterion: RatingCriterion
-    specifications: list[MovieSpecification] = []
-    keywords: list[MovieKeyword] = []
-    action_times: list[MovieActionTime] = []
+    specifications: list[MovieSpecification]
+    keywords: list[MovieKeyword]
+    action_times: list[MovieActionTime]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -220,6 +221,8 @@ class MoviePreviewOut(BaseModel):
     title: str
     poster: str | None = None
     release_date: datetime | None = None
+    duration: str
+    main_genre: str
 
     model_config = ConfigDict(
         from_attributes=True,

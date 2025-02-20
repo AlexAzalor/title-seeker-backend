@@ -16,7 +16,7 @@ class ActionTimeTranslation(db.Model, ModelMixin):
     language: orm.Mapped[str] = orm.mapped_column(sa.String(5), default=Language.UK.value)
 
     name: orm.Mapped[str] = orm.mapped_column(sa.String(64), nullable=False)
-    description: orm.Mapped[str | None] = orm.mapped_column(sa.Text(), nullable=True)
+    description: orm.Mapped[str] = orm.mapped_column(sa.Text(), nullable=False)
 
     def __repr__(self):
         return f"<ActionTimeTranslation [{self.id}]>"

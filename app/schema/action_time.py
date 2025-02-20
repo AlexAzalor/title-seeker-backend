@@ -29,7 +29,7 @@ class ActionTimesJSONFile(BaseModel):
 class ActionTimeOut(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
 
     model_config = ConfigDict(
         from_attributes=True,

@@ -66,12 +66,32 @@ def get_movies(
 
     movies_out = []
     for movie in db_movies:
+        biggest_genre = db.scalar(
+            sa.select(m.Genre)
+            .join(m.movie_genres)
+            .where(m.movie_genres.c.movie_id == movie.id)
+            .order_by(m.movie_genres.c.percentage_match.desc())
+            .limit(1)
+        )
+        main_genre = "No genre"
+        if biggest_genre:
+            genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
+            percentage_match = next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
+                ),
+                0.0,
+            )
+            main_genre = f"{genre_name} ({percentage_match}%)"
         movies_out.append(
             s.MoviePreviewOut(
                 key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
                 release_date=movie.release_date,
+                duration=movie.formatted_duration(lang.value),
+                main_genre=main_genre,
             )
         )
 
@@ -134,6 +154,7 @@ def get_movie(
         key=movie.key,
         title=next((t.title for t in movie.translations if t.language == lang.value)),
         description=next((t.description for t in movie.translations if t.language == lang.value)),
+        location=next((t.location for t in movie.translations if t.language == lang.value)),
         poster=movie.poster,
         budget=movie.formatted_budget,
         duration=movie.formatted_duration(lang.value),
