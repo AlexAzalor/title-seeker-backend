@@ -13,22 +13,32 @@ services:
       PGUSER: ${POSTGRES_USER:-postgres}
 
   app:
-    # image: simple2b/kraftjar:0.1
+    image: azalor/title-hunter-backend:latest
     restart: always
     command: sh ./start_web.sh
     environment:
       APP_ENV: production
       ALCHEMICAL_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-passwd}@db:5432/db
-    volumes:
-      - ./credentials.json:/home/app/credentials.json
-      - ./admin_key.json:/home/app/admin_key.json
     env_file:
       - .env
+    volumes:
+      - ./admin_key.json:/home/app/admin_key.json
     depends_on:
       - db
+      - traefik
+    ports:
+      - "8001:8001"
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.app.rule=Host(`admin.titleseeker.com`)'
+      - "traefik.http.routers.app.entrypoints=websecure" # HTTPS
+      - "traefik.http.routers.app.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.static-files.stripPrefix.prefixes=/static/"
+        #- "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.services.app.loadbalancer.server.port=8001"
 
   api:
-    # image: simple2b/kraftjar:0.1
+    image: azalor/title-hunter-backend:latest
     restart: always
     command: sh ./start_api.sh
     environment:
@@ -38,11 +48,60 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     env_file:
       - .env
-    volumes:
-      - ./credentials.json:/home/app/credentials.json
-      - ./admin_key.json:/home/app/admin_key.json
     depends_on:
       - db
+      - traefik
+    volumes:
+      - ./admin_key.json:/home/app/admin_key.json
+    ports:
+      - "8002:8002"
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.api.rule=Host(`api.titleseeker.com`)'
+      - "traefik.http.routers.api.entrypoints=websecure" # HTTPS
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
+        #- "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.services.api.loadbalancer.server.port=8002"
+
+  frontend:
+    image: azalor/title-hunter-frontend:latest  # Replace with your Docker Hub image
+    restart: always
+    build: ./title-hunt  # Make sure you have a Dockerfile inside the Next.js project
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.frontend.rule=Host(`titleseeker.com`)'
+      - "traefik.http.routers.frontend.entrypoints=websecure" # HTTPS
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+        # - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+  traefik:
+    image: "traefik:v3.3.3"
+    restart: always
+    command:
+      - "--api.insecure=false"  # Disable insecure API
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"    # HTTP
+      - "--entrypoints.websecure.address=:443"  # HTTPS
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=xy55xy.azalor@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "letsencrypt:/letsencrypt"
 
 volumes:
   db_data:
+  letsencrypt:

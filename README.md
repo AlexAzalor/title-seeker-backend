@@ -130,3 +130,57 @@ Export from Google sheets (Excel)
     (if no token.json)
 11. Go to URL, select account with TEST User (6)
 12. In last page "Make sure you trust App Name" copy Authorization code - 4/...id...
+
+free -h # Check RAM usage
+lscpu # Check CPU details
+df -h # Check disk space
+
+https://www.youtube.com/watch?v=Zem1H7Rr9yM&t=1271s
+https://www.youtube.com/watch?v=mZbLvGQqEvY&t=158s
+
+at first when come:
+sudo apt-get update
+
+chmod 0400 test-two-key.pem
+ssh -i test-two-key.pem ubuntu@13.49.57.228
+
+1 and 2
+https://docs.docker.com/engine/install/ubuntu/#:~:text=Set%20up%20Docker%27s,repository.
+
+(only work from ssh localy)
+docker login -u
+docker pull azalor/title-hunter-backend:latest
+
+touch docker-compose.yml
+touch .env
+
+docker compose up -d
+
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+
+sudo apt install zsh -y
+zsh --version
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+vi ~/.zshrc
+plugins=(git docker docker-compose)
+(exit and enter)
+
+monitor network activity
+iftop
+
+BUILD PUSH AND PULL
+docker build -t azalor/title-hunter-backend .
+docker push azalor/title-hunter-backend
+docker pull azalor/title-hunter-backend
+
+first build and push
+docker build -t title-hunter-frontend:latest .
+docker tag title-hunter-frontend:latest azalor/title-hunter-frontend:latest
+docker push azalor/title-hunter-frontend:latest
+
+Help in frontend to BUILD AND PUSH Docker
+docker build -t azalor/title-hunter-frontend:latest .
+docker push azalor/title-hunter-frontend:latest
+docker pull azalor/title-hunter-frontend:latest
