@@ -131,6 +131,8 @@ Export from Google sheets (Excel)
 11. Go to URL, select account with TEST User (6)
 12. In last page "Make sure you trust App Name" copy Authorization code - 4/...id...
 
+---
+
 free -h # Check RAM usage
 lscpu # Check CPU details
 df -h # Check disk space
@@ -138,28 +140,23 @@ df -h # Check disk space
 https://www.youtube.com/watch?v=Zem1H7Rr9yM&t=1271s
 https://www.youtube.com/watch?v=mZbLvGQqEvY&t=158s
 
-at first when come:
-sudo apt-get update
+---
 
+Add permission
 chmod 0400 test-two-key.pem
 ssh -i test-two-key.pem ubuntu@13.49.57.228
 
-1 and 2
-https://docs.docker.com/engine/install/ubuntu/#:~:text=Set%20up%20Docker%27s,repository.
+1. sudo apt-get update
 
-(only work from ssh localy)
-docker login -u
-docker pull azalor/title-hunter-backend:latest
+2. 1 and 2
+   https://docs.docker.com/engine/install/ubuntu/#:~:text=Set%20up%20Docker%27s,repository.
 
-touch docker-compose.yml
-touch .env
-
-docker compose up -d
-
-sudo groupadd docker
+Remove sudo:
+(sudo groupadd docker - if no)
 sudo usermod -aG docker $USER
 newgrp docker
 
+Add ZSH and docker alias (dcps)
 sudo apt install zsh -y
 zsh --version
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -167,18 +164,30 @@ vi ~/.zshrc
 plugins=(git docker docker-compose)
 (exit and enter)
 
-monitor network activity
-iftop
+(only work from ssh localy)
+docker login -u
+docker pull azalor/title-hunter-backend:latest
+docker pull azalor/title-hunter-frontend:latest
 
-BUILD PUSH AND PULL
-docker build -t azalor/title-hunter-backend .
-docker push azalor/title-hunter-backend
-docker pull azalor/title-hunter-backend
+touch docker-compose.yml
+touch .env
 
+Run commands to fill DB
+dce app poetry run flask shell
+dce app poetry run flask create-admin
+dce app poetry run flask execute-all
+dce app poetry run flask calculate-movie-rating
+
+If codebase changed:
 first build and push
 docker build -t title-hunter-frontend:latest .
 docker tag title-hunter-frontend:latest azalor/title-hunter-frontend:latest
 docker push azalor/title-hunter-frontend:latest
+
+BUILD PUSH AND PULL - try with lates?
+docker build -t azalor/title-hunter-backend .
+docker push azalor/title-hunter-backend
+docker pull azalor/title-hunter-backend
 
 Help in frontend to BUILD AND PUSH Docker
 docker build -t azalor/title-hunter-frontend:latest .

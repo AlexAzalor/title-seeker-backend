@@ -33,7 +33,7 @@ services:
       - 'traefik.http.routers.app.rule=Host(`admin.titleseeker.com`)'
       - "traefik.http.routers.app.entrypoints=websecure" # HTTPS
       - "traefik.http.routers.app.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.static-files.stripPrefix.prefixes=/static/"
+      # - "traefik.http.middlewares.static-files.stripPrefix.prefixes=/static/"
         #- "traefik.http.routers.app.entrypoints=web"
       - "traefik.http.services.app.loadbalancer.server.port=8001"
 
@@ -74,11 +74,11 @@ services:
     depends_on:
       - traefik
     labels:
-      - "traefik.enable=true"
-      - 'traefik.http.routers.frontend.rule=Host(`titleseeker.com`)'
+      - "traefik.enable=true" # Explicitly tell Traefik to expose this container
+      - 'traefik.http.routers.frontend.rule=Host(`titleseeker.com`)' # The domain the service will respond to
       - "traefik.http.routers.frontend.entrypoints=websecure" # HTTPS
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-        # - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver" # Uses the Host rule to define which certificate to issue
+        # - "traefik.http.routers.frontend.entrypoints=web" # Allow request only from the predefined entry point named "web"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
   traefik:
@@ -86,22 +86,49 @@ services:
     restart: always
     command:
       - "--api.insecure=false"  # Disable insecure API
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"    # HTTP
-      - "--entrypoints.websecure.address=:443"  # HTTPS
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=xy55xy.azalor@gmail.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--providers.docker=true"       # Enables Docker provider, allowing Traefik to discover containers dynamically.
+      - "--entrypoints.web.address=:80"    # Traefik will listen to incoming request on the port 80 (HTTP)
+      - "--entrypoints.websecure.address=:443"  # Traefik will listen to incoming request on the port 443 (https)
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true" # Enables Docker provider, allowing Traefik to discover containers dynamically. myresolver is the name of the certificate resolver.
+      - "--certificatesresolvers.myresolver.acme.email=xy55xy.azalor@gmail.com" # Required for SSL certificate issuance.
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json" # Tell to store the certificate on a path under our volume
+      # Redirects all HTTP (port 80) traffic to HTTPS (port 443).
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # - "--certificatesresolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"  # <-- STAGING SERVER
     ports:
       - "80:80"
       - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock" # Mounts the Docker socket so Traefik can monitor running containers dynamically.
+      - "letsencrypt:/letsencrypt" # Mounts a persistent volume to store Let's Encrypt certificates.
 
+# A volume is like a USB drive or external hard drive that stores data separately from main system. It helps keep data safe even if the container is deleted or recreated.
 volumes:
   db_data:
   letsencrypt:
+
+
+# ACME (Automated Certificate Management Environment) is a protocol used for automatically obtaining and renewing SSL/TLS certificates. It is the protocol behind Let's Encrypt, allowing services like Traefik to request, validate, and renew certificates without manual intervention.
+# In this configuration:
+# - acme.tlschallenge=true means Traefik uses the TLS Challenge method.
+# - The issued certificates are stored in /letsencrypt/acme.json.
+# - The email is used for Let's Encrypt notifications (expiry alerts, etc.).
+
+# TLS
+# TLS (Transport Layer Security) is a cryptographic protocol that provides secure communication over the internet. It encrypts data between a client (like a web browser) and a server to protect against eavesdropping, tampering, and forgery.
+
+# TLS Key Features:
+# - Encryption: Prevents attackers from reading transmitted data.
+# - Authentication: Ensures the server is legitimate (via SSL/TLS certificates).
+# - Data Integrity: Detects any modifications during transmission.
+# TLS is the successor to SSL (Secure Sockets Layer) and is widely used for HTTPS (secure websites).
+
+# A TLS Challenge is one method used in the ACME (Automated Certificate Management Environment) protocol to verify domain ownership when issuing an SSL/TLS certificate.
+# Ideal for Dockerized environments where Traefik handles HTTPS directly.
+# In this configuration:
+# - This tells Traefik to use the TLS Challenge method for Let's Encrypt validation.
+# - The certificate will be automatically obtained and renewed.
+# - It eliminates the need to open port 80, relying only on port 443.
