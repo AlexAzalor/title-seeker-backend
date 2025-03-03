@@ -211,12 +211,12 @@ def test_create_movie(client: TestClient, db: Session):
         ),
     )
 
-    with open("./uploads/movie-posters/1_The Shawshank Redemption.png", "rb") as image:
+    with open("./uploads/posters/1_The Shawshank Redemption.png", "rb") as image:
         response = client.post(
             "/api/movies",
             data={"form_data": form_data.model_dump_json()},
             files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
-            params={"lang": s.Language.EN.value, "import_to_google_sheet": False},
+            params={"lang": s.Language.EN.value},
         )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -230,7 +230,7 @@ def test_create_movie(client: TestClient, db: Session):
 
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
     assert movie
-    os.remove(f"./uploads/movie-posters/{movie.id}_1_The Shawshank Redemption.png")
+    os.remove(f"./uploads/posters/{movie.id}_1_The Shawshank Redemption.png")
 
 
 def test_quick_movies(client: TestClient):

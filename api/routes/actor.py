@@ -1,8 +1,8 @@
 import os
-import json
 from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Depends, UploadFile, status
+from api.controllers.create_movie import add_image_to_s3_bucket
 from api.routes.avatar import UPLOAD_DIRECTORY
 import app.models as m
 import sqlalchemy as sa
@@ -11,6 +11,9 @@ import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session
 from app.database import get_db
+from config import config
+
+CFG = config()
 
 actor_router = APIRouter(prefix="/actors", tags=["Actors"])
 
@@ -100,72 +103,32 @@ def create_actor(
 
     db.refresh(new_actor)
 
-    try:
-        directory_path = UPLOAD_DIRECTORY + "actors/"
+    file_name = f"{new_actor.id}_{file.filename}"
 
-        if not os.path.exists(directory_path):
-            os.makedirs(directory_path)
-
-        file_name = f"{new_actor.id}_{file.filename}"
-        file_location = f"{directory_path}{file_name}"
-
-        with open(file_location, "wb+") as file_object:
-            file_object.write(file.file.read())
-
+    if CFG.ENV == "production":
+        add_image_to_s3_bucket(file, "actors", file_name)
         new_actor.avatar = file_name
         db.commit()
+        log(log.INFO, "Avatar for actor [%s] successfully uploaded to the S3 Bucket", key)
+    else:
+        try:
+            directory_path = UPLOAD_DIRECTORY + "actors/"
 
-        log(log.INFO, "Avatar for actor [%s] successfully uploaded", key)
-    except Exception as e:
-        log(log.ERROR, "Error uploading avatar for actor [%s]: %s", key, e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for actor")
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
 
-    try:
-        actors = db.scalars(sa.select(m.Actor)).all()
+            file_location = f"{directory_path}{file_name}"
 
-        actors_to_file = []
+            with open(file_location, "wb+") as file_object:
+                file_object.write(file.file.read())
 
-        for actor in actors:
-            actors_to_file.append(
-                s.ActorExportCreate(
-                    id=actor.id,
-                    key=actor.key,
-                    first_name_uk=next((t.first_name for t in actor.translations if t.language == s.Language.UK.value)),
-                    last_name_uk=next((t.last_name for t in actor.translations if t.language == s.Language.UK.value)),
-                    first_name_en=next((t.first_name for t in actor.translations if t.language == s.Language.EN.value)),
-                    last_name_en=next((t.last_name for t in actor.translations if t.language == s.Language.EN.value)),
-                    # born=datetime.strptime(actor.born, "%d.%m.%Y"),
-                    born=actor.born,
-                    # died=datetime.strptime(actor.died, "%d.%m.%Y") if died else None,
-                    died=actor.died if actor.died else None,
-                    born_in_uk=next((t.born_in for t in actor.translations if t.language == s.Language.UK.value)),
-                    born_in_en=next((t.born_in for t in actor.translations if t.language == s.Language.EN.value)),
-                    avatar=actor.avatar,
-                )
-            )
+            new_actor.avatar = file_name
+            db.commit()
 
-        print("Actors COUNT: ", len(actors))
-
-        with open("data/actors.json", "w") as filejson:
-            json.dump(s.ActorsJSONFile(actors=actors_to_file).model_dump(mode="json"), filejson, indent=4)
-            print("Actors data saved to [data/actors.json] file")
-    except Exception as e:
-        log(log.ERROR, "Error saving actors data to [data/actors.json] file: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error saving actors data to [data/actors.json] file"
-        )
-
-    from app.commands.imports_from_google_sheet.import_actors import import_actors_to_google_spreadsheets
-
-    try:
-        import_actors_to_google_spreadsheets()
-
-        log(log.INFO, "Actors data imported to google spreadsheets")
-    except Exception as e:
-        log(log.ERROR, "Error importing actors data to google spreadsheets: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error importing actors data to google spreadsheets"
-        )
+            log(log.INFO, "Avatar for actor [%s] successfully uploaded", key)
+        except Exception as e:
+            log(log.ERROR, "Error uploading avatar for actor [%s]: %s", key, e)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for actor")
 
     return s.ActorOut(
         key=new_actor.key,

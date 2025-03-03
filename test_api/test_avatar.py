@@ -17,7 +17,7 @@ def test_get_actors(client: TestClient, db: Session):
     actor: m.Actor | None = db.scalar(sa.select(m.Actor).where(m.Actor.id == 1))
     assert actor
 
-    UPLOAD_DIRECTORY = "./uploads/avatars/actors/"
+    UPLOAD_DIRECTORY = "./uploads/actors/"
     test_file = "1_Morgan Freeman.png"
     avatar_name = "Morgan Freeman.png"
 
@@ -36,7 +36,7 @@ def test_get_director_avatar(client: TestClient, db: Session):
     director: m.Director | None = db.scalar(sa.select(m.Director).where(m.Director.id == 1))
     assert director
 
-    UPLOAD_DIRECTORY = "./uploads/avatars/directors/"
+    UPLOAD_DIRECTORY = "./uploads/directors/"
     test_file = "1_Frank Darabont.png"
     avatar_name = "Frank Darabont.png"
 

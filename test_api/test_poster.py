@@ -17,7 +17,7 @@ def test_get_poster(client: TestClient, db: Session):
     movie: m.Movie | None = db.scalar(sa.select(m.Movie).where(m.Movie.id == 1))
     assert movie
 
-    UPLOAD_DIRECTORY = "./uploads/movie-posters/"
+    UPLOAD_DIRECTORY = "./uploads/posters/"
     test_file = "1_The Shawshank Redemption.png"
     poster_name = "The Shawshank Redemption.png"
 

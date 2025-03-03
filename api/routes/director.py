@@ -1,8 +1,8 @@
 from datetime import datetime
-import json
 import os
 from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Depends, UploadFile, status
+from api.controllers.create_movie import add_image_to_s3_bucket
 from api.routes.avatar import UPLOAD_DIRECTORY
 import app.models as m
 import sqlalchemy as sa
@@ -11,6 +11,10 @@ import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session
 from app.database import get_db
+
+from config import config
+
+CFG = config()
 
 director_router = APIRouter(prefix="/directorrs", tags=["Directors"])
 
@@ -100,78 +104,31 @@ def create_director(
 
     db.refresh(new_director)
 
-    try:
-        directory_path = UPLOAD_DIRECTORY + "directors/"
+    file_name = f"{new_director.id}_{file.filename}"
 
-        if not os.path.exists(directory_path):
-            os.makedirs(directory_path)
-
-        file_name = f"{new_director.id}_{file.filename}"
-        file_location = f"{directory_path}{file_name}"
-
-        with open(file_location, "wb+") as file_object:
-            file_object.write(file.file.read())
-
+    if CFG.ENV == "production":
+        add_image_to_s3_bucket(file, "directors", file_name)
         new_director.avatar = file_name
         db.commit()
+    else:
+        try:
+            directory_path = UPLOAD_DIRECTORY + "directors/"
 
-        log(log.INFO, "Avatar for director [%s] successfully uploaded", key)
-    except Exception as e:
-        log(log.ERROR, "Error uploading avatar for director [%s]: %s", key, e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for director")
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
 
-    try:
-        directors = db.scalars(sa.select(m.Director)).all()
+            file_location = f"{directory_path}{file_name}"
 
-        directors_to_file = []
+            with open(file_location, "wb+") as file_object:
+                file_object.write(file.file.read())
 
-        for director in directors:
-            directors_to_file.append(
-                s.DirectorExportCreate(
-                    id=director.id,
-                    key=director.key,
-                    first_name_uk=next(
-                        (t.first_name for t in director.translations if t.language == s.Language.UK.value)
-                    ),
-                    last_name_uk=next(
-                        (t.last_name for t in director.translations if t.language == s.Language.UK.value)
-                    ),
-                    first_name_en=next(
-                        (t.first_name for t in director.translations if t.language == s.Language.EN.value)
-                    ),
-                    last_name_en=next(
-                        (t.last_name for t in director.translations if t.language == s.Language.EN.value)
-                    ),
-                    born=director.born,
-                    died=director.died if director.died else None,
-                    born_in_uk=next((t.born_in for t in director.translations if t.language == s.Language.UK.value)),
-                    born_in_en=next((t.born_in for t in director.translations if t.language == s.Language.EN.value)),
-                    avatar=director.avatar,
-                )
-            )
+            new_director.avatar = file_name
+            db.commit()
 
-        print("Directors COUNT: ", len(directors))
-
-        with open("data/directors.json", "w") as filejson:
-            json.dump(s.DirectorsJSONFile(directors=directors_to_file).model_dump(mode="json"), filejson, indent=4)
-            print("Directors data saved to [data/directors.json] file")
-    except Exception as e:
-        log(log.ERROR, "Error saving directors data to [data/directors.json] file: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error saving directors data to [data/directors.json] file"
-        )
-
-    from app.commands.imports_from_google_sheet.import_directors import import_directors_to_google_spreadsheets
-
-    try:
-        import_directors_to_google_spreadsheets()
-
-        log(log.INFO, "Directors data imported to google spreadsheets")
-    except Exception as e:
-        log(log.ERROR, "Error importing directors data to google spreadsheets: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error importing directors data to google spreadsheets"
-        )
+            log(log.INFO, "Avatar for director [%s] successfully uploaded", key)
+        except Exception as e:
+            log(log.ERROR, "Error uploading avatar for director [%s]: %s", key, e)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for director")
 
     return s.DirectorOut(
         key=new_director.key,
