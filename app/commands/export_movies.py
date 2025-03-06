@@ -78,8 +78,15 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             if subgenres:
                 for subgenre in subgenres:
                     if subgenre.genre_id not in movie.genres_ids:
-                        log(log.ERROR, "Subgenre [%s] has not parent genre, see MOVIE [%s] table column!", subgenre.key, movie.title_en)
-                        raise Exception(f"Subgenre [{subgenre.key}] has not parent genre, see MOVIE [{movie.title_en}] table column!")
+                        log(
+                            log.ERROR,
+                            "Subgenre [%s] has not parent genre, see MOVIE [%s] table column!",
+                            subgenre.key,
+                            movie.title_en,
+                        )
+                        raise Exception(
+                            f"Subgenre [{subgenre.key}] has not parent genre, see MOVIE [{movie.title_en}] table column!"
+                        )
 
             new_movie: m.Movie = m.Movie(
                 key=movie.key,

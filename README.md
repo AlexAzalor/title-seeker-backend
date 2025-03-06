@@ -193,3 +193,35 @@ Help in frontend to BUILD AND PUSH Docker
 docker build -t azalor/title-hunter-frontend:latest .
 docker push azalor/title-hunter-frontend:latest
 docker pull azalor/title-hunter-frontend:latest
+
+S3
+
+Create access and secret keys
+https://www.youtube.com/watch?v=lntWTStctIE
+
+1. create s3
+2. create IAM user with permissions
+3. create access and secret keys
+4.
+
+https://www.youtube.com/watch?v=99H96S-Neq0
+https://www.youtube.com/watch?v=GUfAQUjA3a0
+
+Backup
+create:
+sh backup_db.sh
+
+rename:
+mv name.tgz dump.tgz
+
+check container name:
+docker ps --format "table {{.Names}}\t{{.Image}}" | grep postgres
+
+use backup:
+dce -T db pg_restore -U postgres -d db < backups/db_backup_20250303_184530.sql
+
+download backup file from server:
+scp -i test-five-key.pem ubuntu@13.51.73.255:/home/ubuntu/backups/db_backup_20250303_190240.sql ./backups/
+
+unarchive:
+tar xvzf backups/db_backup_20250303_191329.tgz

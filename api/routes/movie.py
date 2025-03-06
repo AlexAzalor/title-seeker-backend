@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from api.controllers.create_movie import (
     QUICK_MOVIES_FILE,
+    add_image_to_s3_bucket,
     add_poster_to_new_movie,
     add_new_characters,
     add_new_movie_rating,
     create_new_movie,
     get_movies_data_from_file,
-    import_new_movie_to_google_sheet,
     remove_temp_movie,
     set_percentage_match,
 )
@@ -30,7 +30,7 @@ CFG = config()
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 
-UPLOAD_DIRECTORY = "./uploads/movie-posters/"
+UPLOAD_DIRECTORY = "./uploads/posters/"
 
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
@@ -335,7 +335,7 @@ async def upload_poster(movie_id: int, file: UploadFile = File(...), db: Session
     return {"info": "Poster uploaded successfully"}
 
 
-@movie_router.get("/poster/{filename}", status_code=status.HTTP_200_OK)
+@movie_router.get("/posters/{filename}", status_code=status.HTTP_200_OK)
 async def get_poster(filename: str):
     """Check if file exists and return it (for testing purposes)"""
 
@@ -620,8 +620,6 @@ def create_movie(
     form_data: Annotated[s.MovieFormData, Body(...)],
     file: UploadFile = File(None),
     lang: s.Language = s.Language.UK,
-    # This flag determines whether the data is imported into a Google Sheet. False - for testing.
-    import_to_google_sheet: bool = Query(default=True),
     temp_movie: bool = Query(default=False),
     db: Session = Depends(get_db),
 ):
@@ -639,17 +637,18 @@ def create_movie(
         # Flush need to get new_movie ID but not commit new data to DB, for rollback
         db.flush()
 
-        if file:
+        if CFG.ENV == "production":
+            file_name = f"{new_movie.id}_{file.filename}"
+            new_movie.poster = file_name
+            add_image_to_s3_bucket(file, "posters", file_name)
+        else:
             add_poster_to_new_movie(new_movie, file, UPLOAD_DIRECTORY)
 
         set_percentage_match(new_movie.id, db, form_data)
 
-        add_new_characters(new_movie.id, db, form_data.actors_keys, import_to_google_sheet)
+        add_new_characters(new_movie.id, db, form_data.actors_keys)
 
-        add_new_movie_rating(new_movie, db, current_user, form_data, import_to_google_sheet)
-
-        if import_to_google_sheet:
-            import_new_movie_to_google_sheet(db)
+        add_new_movie_rating(new_movie, db, current_user, form_data)
 
         if temp_movie:
             remove_temp_movie(form_data.key)

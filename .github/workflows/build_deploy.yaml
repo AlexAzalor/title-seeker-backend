@@ -19,7 +19,7 @@ env:
 
 jobs:
   on-develop-branch-check:
-    runs-on: Linux
+    runs-on: title-seeker
     outputs:
       on_develop: ${{ steps.contains_tag.outputs.retval }}
     steps:
@@ -34,7 +34,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: Linux
+    runs-on: title-seeker
     steps:
       - uses: actions/checkout@v4
         with:

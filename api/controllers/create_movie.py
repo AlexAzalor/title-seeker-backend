@@ -4,10 +4,15 @@ import os
 import sqlalchemy as sa
 from fastapi import UploadFile
 
+from api.dependency.s3_client import get_s3_connect
 import app.schema as s
 import app.models as m
 from app.logger import log
 from sqlalchemy.orm import Session
+
+from config import config
+
+CFG = config()
 
 QUICK_MOVIES_FILE = "data/quick_add_movies.json"
 
@@ -66,6 +71,8 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
 
 
 def add_poster_to_new_movie(new_movie: m.Movie, file: UploadFile, UPLOAD_DIRECTORY: str):
+    """For working localy only"""
+
     try:
         file_name = f"{new_movie.id}_{file.filename}"
         file_location = f"{UPLOAD_DIRECTORY}{file_name}"
@@ -77,6 +84,21 @@ def add_poster_to_new_movie(new_movie: m.Movie, file: UploadFile, UPLOAD_DIRECTO
     except Exception as e:
         log(log.ERROR, "Error uploading poster [%s]: %s", new_movie.key, e)
         e.args = (*e.args, "Error uploading poster")
+        raise e
+
+
+def add_image_to_s3_bucket(file: UploadFile, upload_directory: str, file_name: str):
+    try:
+        s3_object_key = f"{upload_directory}/{file_name}"
+
+        s3_client = get_s3_connect()
+
+        s3_client.upload_fileobj(
+            file.file, CFG.AWS_S3_BUCKET_NAME, s3_object_key, ExtraArgs={"ContentType": file.content_type}
+        )
+    except Exception as e:
+        log(log.ERROR, "Error uploading image to S3 Bucket [%s]: %s", file_name, e)
+        e.args = (*e.args, "Error uploading image to S3 Bucket")
         raise e
 
 
@@ -185,9 +207,7 @@ def set_percentage_match(movie_id: int, db: Session, form_data: s.MovieFormData)
         raise e
 
 
-def add_new_characters(
-    new_movie_id: int, db: Session, actors_keys: list[s.MoviePersonFilterField], import_to_google_sheet: bool
-):
+def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.MoviePersonFilterField]):
     # # Create characters
     try:
         for character in actors_keys:
@@ -214,48 +234,8 @@ def add_new_characters(
         e.args = (*e.args, "Error creating character")
         raise e
 
-    if import_to_google_sheet:
-        # Save characters to json file
-        try:
-            character_error_message = "Error saving characters data to [data/characters.json] file"
-            characters = db.scalars(sa.select(m.Character)).all()
 
-            if not characters:
-                character_error_message = "Characters not found"
-
-            characters_to_file = []
-            for char in characters:
-                characters_to_file.append(
-                    s.CharacterExportCreate(
-                        id=char.id,
-                        key=char.key,
-                        name_uk=next((t.name for t in char.translations if t.language == s.Language.UK.value)),
-                        name_en=next((t.name for t in char.translations if t.language == s.Language.EN.value)),
-                        actors_ids=[actor.id for actor in char.actors],
-                        movies_ids=[movie.id for movie in char.movies],
-                    )
-                )
-
-            # with open("data/characters.json", "w") as file_json:
-            #     json.dump(
-            #         s.CharactersJSONFile(characters=characters_to_file).model_dump(mode="json"), file_json, indent=4
-            #     )
-            characters_data = s.CharactersJSONFile(characters=characters_to_file)
-            from app.commands.imports_from_google_sheet.import_characters import (
-                import_characters_to_google_spreadsheets,
-            )
-
-            import_characters_to_google_spreadsheets(len(actors_keys), characters_data)
-
-        except Exception as e:
-            log(log.ERROR, "%s: %s", character_error_message, e)
-            e.args = (*e.args, character_error_message)
-            raise e
-
-
-def add_new_movie_rating(
-    new_movie: m.Movie, db: Session, current_user: int, form_data: s.MovieFormData, import_to_google_sheet: bool
-):
+def add_new_movie_rating(new_movie: m.Movie, db: Session, current_user: int, form_data: s.MovieFormData):
     # Add rating
     try:
         new_rating = m.Rating(
@@ -283,52 +263,6 @@ def add_new_movie_rating(
         log(log.ERROR, "Error creating rating for movie [%s]: %s", new_movie.key, e)
         e.args = (*e.args, "Error creating rating")
         raise e
-
-    if import_to_google_sheet:
-        # Save ratings to json file
-        try:
-            rating_error_message = "Error saving ratings data to [data/ratings.json] file"
-            ratings = db.scalars(sa.select(m.Rating).order_by(m.Rating.id)).all()
-            if not ratings:
-                log(log.ERROR, "Ratings not found")
-                rating_error_message = "Ratings not found"
-                raise Exception
-
-            ratings_to_file = []
-
-            for rating in ratings:
-                ratings_to_file.append(
-                    s.RatingExportCreate(
-                        id=rating.id,
-                        rating=rating.rating,
-                        movie_id=rating.movie_id,
-                        user_id=current_user,
-                        acting=rating.acting,
-                        plot_storyline=rating.plot_storyline,
-                        script_dialogue=rating.script_dialogue,
-                        music=rating.music,
-                        enjoyment=rating.enjoyment,
-                        production_design=rating.production_design,
-                        visual_effects=rating.visual_effects if rating.visual_effects else None,
-                        scare_factor=rating.scare_factor if rating.scare_factor else None,
-                        humor=rating.humor if rating.humor else None,
-                        animation_cartoon=rating.animation_cartoon if rating.animation_cartoon else None,
-                        comment=rating.comment if rating.comment else None,
-                    )
-                )
-
-            # with open("data/ratings.json", "w") as file_json:
-            #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file_json, indent=4)
-            rate_data = s.RatingsJSONFile(ratings=ratings_to_file)
-            from app.commands.imports_from_google_sheet.import_ratings import import_ratings_to_google_spreadsheets
-
-            import_ratings_to_google_spreadsheets(rate_data)
-
-        except Exception as e:
-            db.rollback()
-            log(log.ERROR, "%s: %s", rating_error_message, e)
-            e.args = (*e.args, rating_error_message)
-            raise e
 
 
 def import_new_movie_to_google_sheet(db: Session):

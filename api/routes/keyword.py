@@ -1,4 +1,3 @@
-import json
 from typing import Annotated
 from fastapi import APIRouter, Form, HTTPException, Depends, status
 
@@ -65,59 +64,8 @@ def create_keyword(
 
     db.refresh(new_keyword)
 
-    try:
-        keywords = db.scalars(sa.select(m.Keyword)).all()
-
-        keywords_to_file = []
-
-        for keyword in keywords:
-            keywords_to_file.append(
-                s.KeywordExportCreate(
-                    id=keyword.id,
-                    key=keyword.key,
-                    name_uk=next((t.name for t in keyword.translations if t.language == s.Language.UK.value)),
-                    name_en=next((t.name for t in keyword.translations if t.language == s.Language.EN.value)),
-                    description_uk=next(
-                        (t.description for t in keyword.translations if t.language == s.Language.UK.value)
-                    ),
-                    description_en=next(
-                        (t.description for t in keyword.translations if t.language == s.Language.EN.value)
-                    ),
-                )
-            )
-
-        print("Keywords COUNT: ", len(keywords))
-
-        with open("data/keywords.json", "w") as filejson:
-            json.dump(
-                s.KeywordsJSONFile(keywords=keywords_to_file).model_dump(mode="json"),
-                filejson,
-                indent=4,
-            )
-            print("Keywords data saved to [data/keywords.json] file")
-    except Exception as e:
-        log(log.ERROR, "Error saving keywords data to [data/keywords.json] file: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Error saving keywords data to [data/keywords.json] file",
-        )
-
-    from app.commands.imports_from_google_sheet.import_keywords import (
-        import_keywords_to_google_spreadsheets,
-    )
-
-    try:
-        import_keywords_to_google_spreadsheets()
-
-        log(log.INFO, "Keywords data imported to google spreadsheets")
-    except Exception as e:
-        log(log.ERROR, "Error importing Keywords data to google spreadsheets: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error importing Keywords data to google spreadsheets"
-        )
-
     return s.KeywordOut(
-        key=keyword.key,
-        name=next((t.name for t in keyword.translations if t.language == lang.value)),
-        description=next((t.description for t in keyword.translations if t.language == lang.value)),
+        key=new_keyword.key,
+        name=next((t.name for t in new_keyword.translations if t.language == lang.value)),
+        description=next((t.description for t in new_keyword.translations if t.language == lang.value)),
     )
