@@ -40,8 +40,8 @@ class SubgenreOut(BaseModel):
 class GenreOut(BaseModel):
     key: str
     name: str
-    description: str | None = None
-    subgenres: list[SubgenreOut] | None = None
+    description: str
+    subgenres: list[SubgenreOut]
 
     model_config = ConfigDict(
         from_attributes=True,

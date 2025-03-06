@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
-from app.schema.genre import GenreOut
+from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.specifications import SpecificationOut
 from app.schema.keyword import KeywordOut
@@ -254,6 +254,8 @@ class MovieSearchOut(BaseModel):
     title: str
     poster: str | None = None
     release_date: datetime | None = None
+    duration: str
+    main_genre: str
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -288,6 +290,7 @@ class MovieByActorsList(BaseModel):
 
 class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
+    subgenres: list[SubgenreOut]
     actors: list[ActorOut]
     directors: list[DirectorOut]
     specifications: list[SpecificationOut]

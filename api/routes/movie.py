@@ -32,8 +32,9 @@ movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 
 UPLOAD_DIRECTORY = "./uploads/posters/"
 
-if not os.path.exists(UPLOAD_DIRECTORY):
-    os.makedirs(UPLOAD_DIRECTORY)
+# fix
+# if not os.path.exists(UPLOAD_DIRECTORY):
+#     os.makedirs(UPLOAD_DIRECTORY)
 
 
 @movie_router.get(
@@ -368,6 +369,7 @@ def search_movies(
     specification_name: Annotated[list[str], Query()] = [],
     keyword_name: Annotated[list[str], Query()] = [],
     action_time_name: Annotated[list[str], Query()] = [],
+    exact_match: Annotated[bool, Query()] = False,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -380,8 +382,10 @@ def search_movies(
     # Each call to query.where() appends additional conditions, effectively adding AND logic to the query.
     # Both genre and subgenre conditions are combined, meaning that the final query will only return movies that satisfy both filters (if both are provided).
 
+    logical_op = sa.and_ if exact_match else sa.or_
+
     if actor_name:
-        query = query.where(sa.and_(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor_name]))
+        query = query.where(logical_op(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor_name]))
 
     if director_name:
         query = query.where(m.Movie.directors.any(m.Director.key.in_(director_name)))
@@ -390,17 +394,17 @@ def search_movies(
         # )
 
     if genre_name:
-        query = query.where(sa.and_(*[m.Movie.genres.any(m.Genre.key == genre_key) for genre_key in genre_name]))
+        query = query.where(logical_op(*[m.Movie.genres.any(m.Genre.key == genre_key) for genre_key in genre_name]))
 
     # Filter only by subgenre
     if subgenre_name:
         query = query.where(
-            sa.and_(*[m.Movie.subgenres.any(m.Subgenre.key == subgenre_key) for subgenre_key in subgenre_name])
+            logical_op(*[m.Movie.subgenres.any(m.Subgenre.key == subgenre_key) for subgenre_key in subgenre_name])
         )
 
     if specification_name:
         query = query.where(
-            sa.and_(
+            logical_op(
                 *[
                     m.Movie.specifications.any(m.Specification.key == specification_key)
                     for specification_key in specification_name
@@ -410,12 +414,12 @@ def search_movies(
 
     if keyword_name:
         query = query.where(
-            sa.and_(*[m.Movie.keywords.any(m.Keyword.key == keyword_key) for keyword_key in keyword_name])
+            logical_op(*[m.Movie.keywords.any(m.Keyword.key == keyword_key) for keyword_key in keyword_name])
         )
 
     if action_time_name:
         query = query.where(
-            sa.and_(
+            logical_op(
                 *[m.Movie.action_times.any(m.ActionTime.key == action_time_key) for action_time_key in action_time_name]
             )
         )
@@ -424,69 +428,38 @@ def search_movies(
 
     movies_out = []
     for movie in movies_db:
+        biggest_genre = db.scalar(
+            sa.select(m.Genre)
+            .join(m.movie_genres)
+            .where(m.movie_genres.c.movie_id == movie.id)
+            .order_by(m.movie_genres.c.percentage_match.desc())
+            .limit(1)
+        )
+
+        main_genre = "No genre"
+        if biggest_genre:
+            main_genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
+            percentage_match = next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
+                ),
+                0.0,
+            )
+            main_genre = f"{main_genre_name} ({percentage_match}%)"
         movies_out.append(
             s.MovieSearchOut(
                 key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
                 release_date=movie.release_date,
+                duration=movie.formatted_duration(lang.value),
+                main_genre=main_genre,
             )
         )
 
     return s.MovieSearchResult(
         movies=movies_out,
-    )
-
-
-@movie_router.get(
-    "/by-actor/",
-    status_code=status.HTTP_200_OK,
-    response_model=s.MovieByActorsList,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
-)
-def get_movies_by_actor(
-    actor_name: Annotated[list[str], Query()] = [],
-    lang: s.Language = s.Language.UK,
-    db: Session = Depends(get_db),
-):
-    """Get actors by query params"""
-
-    actors = (
-        db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(actor_name)).options(joinedload(m.Actor.movies)))
-        .unique()
-        .all()
-    )
-
-    if not actors:
-        log(log.ERROR, "Actor not found")
-        return s.MovieByActorsList(movies=[], actor=None)
-
-    movies = []
-    for actor in actors:
-        movies += actor.movies
-
-    movies = list({movie.id: movie for movie in movies}.values())
-
-    movies_out = []
-    for movie in movies:
-        movies_out.append(
-            s.MovieSearchOut(
-                key=movie.key,
-                title=next((t.title for t in movie.translations if t.language == lang.value)),
-                poster=movie.poster,
-                release_date=movie.release_date,
-            )
-        )
-
-    return s.MovieByActorsList(
-        movies=movies_out,
-        actor=[
-            s.ActorShort(
-                key=actor.key,
-                name=actor.full_name(lang),
-            )
-            for actor in actors
-        ],
     )
 
 
@@ -548,6 +521,7 @@ def get_movie_filters(
         )
 
     genres_out = []
+    subgenres_out = []
 
     for genre in genres:
         genres_out.append(
@@ -566,6 +540,16 @@ def get_movie_filters(
                 ],
             )
         )
+        if genre.subgenres:
+            for subgenre in genre.subgenres:
+                subgenres_out.append(
+                    s.SubgenreOut(
+                        key=subgenre.key,
+                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                        parent_genre_key=subgenre.genre.key,
+                    )
+                )
 
     specifications_out = []
 
@@ -600,6 +584,7 @@ def get_movie_filters(
 
     return s.MovieFiltersListOut(
         genres=genres_out,
+        subgenres=subgenres_out,
         actors=actors_out,
         directors=directors_out,
         specifications=specifications_out,
