@@ -184,7 +184,7 @@ class MovieOut(BaseModel):
     title: str
     description: str
     location: str
-    release_date: datetime | None = None
+    release_date: datetime
     duration: str
     budget: str
     domestic_gross: str
@@ -220,7 +220,7 @@ class MoviePreviewOut(BaseModel):
     key: str
     title: str
     poster: str | None = None
-    release_date: datetime | None = None
+    release_date: datetime
     duration: str
     main_genre: str
 
@@ -251,9 +251,10 @@ class MoviePreviewOutList(BaseModel):
 
 class MovieSearchOut(BaseModel):
     key: str
-    title: str
+    title_en: str
+    title_uk: str
     poster: str | None = None
-    release_date: datetime | None = None
+    release_date: datetime
     duration: str
     main_genre: str
 
@@ -265,6 +266,14 @@ class MovieSearchOut(BaseModel):
 class ActorShort(BaseModel):
     key: str
     name: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieSuperSearchResult(BaseModel):
+    movies: list[MoviePreviewOut]
 
     model_config = ConfigDict(
         from_attributes=True,

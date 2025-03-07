@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 from typing import Annotated
@@ -90,7 +91,8 @@ def get_movies(
                 key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
-                release_date=movie.release_date,
+                # TODO: fix none release date
+                release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
                 main_genre=main_genre,
             )
@@ -161,7 +163,7 @@ def get_movie(
         duration=movie.formatted_duration(lang.value),
         domestic_gross=movie.formatted_domestic_gross,
         worldwide_gross=movie.formatted_worldwide_gross,
-        release_date=movie.release_date,
+        release_date=movie.release_date if movie.release_date else datetime.now(),
         actors=[
             s.MovieActor(
                 key=actor.key,
@@ -349,12 +351,12 @@ async def get_poster(filename: str):
 
 
 @movie_router.get(
-    "/search/",
+    "/super-search/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieSearchResult,
+    response_model=s.MovieSuperSearchResult,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
-def search_movies(
+def super_search_movies(
     # query: str = Query(default="", max_length=128),
     # lang: Language = Language.UK,
     # selected_locations: Annotated[Union[List[str], None], Query()] = None,
@@ -448,15 +450,84 @@ def search_movies(
             )
             main_genre = f"{main_genre_name} ({percentage_match}%)"
         movies_out.append(
-            s.MovieSearchOut(
+            s.MoviePreviewOut(
                 key=movie.key,
                 title=next((t.title for t in movie.translations if t.language == lang.value)),
                 poster=movie.poster,
-                release_date=movie.release_date,
+                release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
                 main_genre=main_genre,
             )
         )
+
+    return s.MovieSuperSearchResult(
+        movies=movies_out,
+    )
+
+
+@movie_router.get(
+    "/search/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieSearchResult,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def search(
+    query: str = Query(default="", max_length=128),
+    title_type: s.TitleType = s.TitleType.MOVIES,
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Search titles by query"""
+
+    if title_type != s.TitleType.MOVIES:
+        log(log.ERROR, "Title type [%s] not supported", title_type)
+        raise HTTPException(status_code=404, detail="Title type not supported")
+
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .where(m.Movie.translations.any(m.MovieTranslation.title.ilike(f"%{query}%")))
+            .limit(5)
+            .options(joinedload(m.Movie.translations))
+        )
+        .unique()
+        .all()
+    )
+
+    movies_out = []
+    if movies_db:
+        for movie in movies_db:
+            biggest_genre = db.scalar(
+                sa.select(m.Genre)
+                .join(m.movie_genres)
+                .where(m.movie_genres.c.movie_id == movie.id)
+                .order_by(m.movie_genres.c.percentage_match.desc())
+                .limit(1)
+            )
+
+            main_genre = "No genre"
+            if biggest_genre:
+                genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
+                percentage_match = next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
+                    ),
+                    0.0,
+                )
+                main_genre = f"{genre_name} ({percentage_match}%)"
+            movies_out.append(
+                s.MovieSearchOut(
+                    key=movie.key,
+                    title_en=next((t.title for t in movie.translations if t.language == s.Language.EN.value)),
+                    title_uk=next((t.title for t in movie.translations if t.language == s.Language.UK.value)),
+                    poster=movie.poster,
+                    release_date=movie.release_date if movie.release_date else datetime.now(),
+                    duration=movie.formatted_duration(lang.value),
+                    main_genre=main_genre,
+                )
+            )
 
     return s.MovieSearchResult(
         movies=movies_out,

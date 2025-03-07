@@ -1,6 +1,8 @@
 # ruff: noqa: F401
 from .admin import Admin
 
+from .general import TitleType
+
 from .token import Token, TokenData
 from .whoami import WhoAmI
 
@@ -32,6 +34,7 @@ from .movie import (
     MovieGenres,
     MovieGenre,
     MovieSubgenre,
+    MovieSuperSearchResult,
     MovieSearchResult,
     MovieSearchOut,
     MovieByActorsList,
