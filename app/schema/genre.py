@@ -29,7 +29,7 @@ class GenresJSONFile(BaseModel):
 class SubgenreOut(BaseModel):
     key: str
     name: str
-    description: str | None = None
+    description: str
     parent_genre_key: str
 
     model_config = ConfigDict(

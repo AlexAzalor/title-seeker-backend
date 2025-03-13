@@ -1,4 +1,6 @@
 from datetime import datetime
+import re
+from typing import List
 import filetype
 from fastapi import UploadFile, HTTPException, status
 from fastapi.routing import APIRoute
@@ -29,3 +31,32 @@ def mark_as_deleted():
 
 def get_error_message(lang: s.Language, text_uk: str, text_en: str) -> str:
     return text_uk if lang == s.Language.UK else text_en
+
+
+def extract_values(input_string: List[str]) -> List[List[int]]:
+    values_list: List[List[int]] = []
+
+    for value in input_string:
+        pattern = re.compile(r".*?\(([\d,]+)\)")
+        match = pattern.match(value)
+
+        if match:
+            numbers_str = match.group(1)
+            numbers_list = [int(num) for num in numbers_str.split(",")]
+            values_list.append(numbers_list)
+    return values_list
+
+
+def extract_word(input_string: List[str]) -> List[str]:
+    words_list: List[str] = []
+
+    for word in input_string:
+        pattern = re.compile(r"(.*?)\([\d,]+\)")
+        match = pattern.match(word)
+
+        if match:
+            word = match.group(1).strip()
+            words_list.append(word)
+        else:
+            words_list.append(word.strip())
+    return words_list
