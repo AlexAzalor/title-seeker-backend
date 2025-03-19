@@ -7,7 +7,7 @@ from app.database import get_db
 
 avatar_router = APIRouter(prefix="/avatars", tags=["Avatars"])
 
-UPLOAD_DIRECTORY = "./uploads/avatars/"
+UPLOAD_DIRECTORY = "./uploads/"
 
 
 @avatar_router.post("/upload-actor-avatar/{actor_id}", status_code=status.HTTP_200_OK)

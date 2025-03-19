@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from random import randint
 from typing import Annotated
 
 import sqlalchemy as sa
@@ -1044,3 +1045,96 @@ def quick_add_movie(
         log(log.ERROR, "Error adding movie to JSON [%s]: %s", form_data.key, e)
         error_message = get_error_message(lang, "Помилка додавання фільму до JSON", "Error adding movie to JSON")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{error_message} - {e}")
+
+
+@movie_router.get(
+    "/random/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=s.MovieCarouselList,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Error with type VALIDATION"},
+    },
+)
+def get_random_list(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get 10 random movies"""
+
+    # Get the total number of movies
+    total_movies = db.scalar(sa.select(sa.func.count()).select_from(m.Movie))
+
+    if not total_movies:
+        log(log.ERROR, "Movies not found")
+        raise HTTPException(status_code=404, detail="Movies not found")
+
+    # Generate a random offset
+    random_offset = randint(0, max(0, total_movies - 10))
+
+    # Select 10 random movies using the random offset
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .offset(random_offset)
+            .limit(10)
+            .options(
+                joinedload(m.Movie.translations),
+                joinedload(m.Movie.genres),
+                joinedload(m.Movie.actors),
+                joinedload(m.Movie.directors),
+            )
+        )
+        .unique()
+        .all()
+    )
+
+    movies_out = []
+    for movie in movies_db:
+        movies_out.append(
+            s.MovieCarousel(
+                key=movie.key,
+                title=next((t.title for t in movie.translations if t.language == lang.value)),
+                poster=movie.poster,
+                release_date=movie.release_date if movie.release_date else datetime.now(),
+                duration=movie.formatted_duration(lang.value),
+                # main_genre=main_genre,
+                location=next((t.location for t in movie.translations if t.language == lang.value)),
+                description=next((t.description for t in movie.translations if t.language == lang.value)),
+                genres=[
+                    s.MovieGenre(
+                        key=genre.key,
+                        name=next((t.name for t in genre.translations if t.language == lang.value)),
+                        description=next((t.description for t in genre.translations if t.language == lang.value)),
+                        percentage_match=next(
+                            (
+                                mg.percentage_match
+                                for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=genre.id)
+                            ),
+                            0.0,
+                        ),
+                    )
+                    for genre in movie.genres
+                ],
+                actors=[
+                    s.ActorSimple(
+                        key=actor.key,
+                        full_name=actor.full_name(lang),
+                        avatar_url=actor.avatar,
+                    )
+                    for actor in movie.actors
+                ],
+                directors=[
+                    s.DirectorSimple(
+                        key=director.key,
+                        full_name=director.full_name(lang),
+                        avatar_url=director.avatar if director.avatar else "",
+                    )
+                    for director in movie.directors
+                ],
+            ),
+        )
+
+    return s.MovieCarouselList(
+        movies=movies_out,
+    )

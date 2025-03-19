@@ -419,3 +419,49 @@ class MovieFormData(BaseModel):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
+
+
+class ActorSimple(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class DirectorSimple(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieCarousel(BaseModel):
+    key: str
+    title: str
+    poster: str
+    release_date: datetime
+    duration: str
+    location: str
+    description: str
+
+    genres: list[MovieGenre]
+    actors: list[ActorSimple]
+    directors: list[DirectorSimple]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieCarouselList(BaseModel):
+    movies: list[MovieCarousel]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

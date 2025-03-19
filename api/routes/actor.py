@@ -134,3 +134,38 @@ def create_actor(
         key=new_actor.key,
         name=new_actor.full_name(lang),
     )
+
+
+@actor_router.get("/top-movies-count", status_code=status.HTTP_200_OK, response_model=s.ActorsList)
+def get_top_movies_count_actors(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get actors with the most movies"""
+
+    # Subquery to count the number of movies for each actor
+    subquery = (
+        sa.select(m.Actor.id, sa.func.count(m.Movie.id).label("movie_count"))
+        .join(m.Movie.actors)
+        .group_by(m.Actor.id)
+        .subquery()
+    )
+
+    # Main query to select actors ordered by the movie count
+    actors = db.execute(
+        sa.select(m.Actor, subquery.c.movie_count)
+        .join(subquery, m.Actor.id == subquery.c.id)
+        .order_by(subquery.c.movie_count.desc())
+        .limit(20)
+    ).all()
+    if not actors:
+        log(log.ERROR, "Actors [%s] not found")
+        raise HTTPException(status_code=404, detail="Actors not found")
+
+    actors_out = []
+
+    for actor, movie_count in actors:
+        actors_out.append(
+            s.Actor(key=actor.key, name=actor.full_name(lang), avatar_url=actor.avatar, movie_count=movie_count)
+        )
+    return s.ActorsList(actors=actors_out)

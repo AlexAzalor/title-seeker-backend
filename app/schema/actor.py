@@ -68,3 +68,22 @@ class ActorIn(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class Actor(BaseModel):
+    key: str
+    name: str
+    avatar_url: str
+    movie_count: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class ActorsList(BaseModel):
+    actors: list[Actor]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

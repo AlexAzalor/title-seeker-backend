@@ -55,8 +55,12 @@ from .movie import (
     QuickMovieFormData,
     QuickMovieJSON,
     TempMovie,
+    MovieCarousel,
+    MovieCarouselList,
+    ActorSimple,
+    DirectorSimple,
 )
-from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
+from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
