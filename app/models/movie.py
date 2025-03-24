@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import cached_property
 
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -106,27 +107,26 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         "Character", secondary=movie_characters, back_populates="movies"
     )
 
-    # rating - relationship? or just a column? There will be very advanced rating system.
-    # related_movies - relationship
-    # similar_movies - relationship or property?
+    collection_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)  # Order in collection
 
-    # Not for MVP
-    # reviews - relationship
-    # screenshots - relationship
-    # pegi_rating - enum?
+    relation_type: orm.Mapped[str | None] = orm.mapped_column(sa.String(36), nullable=True)
 
-    # created_at: orm.Mapped[datetime] = orm.mapped_column(
-    #     sa.DateTime,
-    #     default=datetime.now(UTC),
-    # )
+    # Collection ID (self-referential)
+    collection_base_movie_id: orm.Mapped[int | None] = orm.mapped_column(sa.ForeignKey("movies.id"), nullable=True)
+    # Relationship to get all movies in the same collection
+    collection_base_movie: orm.Mapped["Movie"] = orm.relationship(
+        "Movie",
+        remote_side=[id],
+        # Except the base movie
+        backref="collection_members",
+    )
 
-    # updated_at: orm.Mapped[sa.DateTime] = orm.mapped_column(
-    #     sa.DateTime,
-    #     default=sa.func.now(),
-    #     onupdate=sa.func.now(),
-    # )
+    # similar_movies - relationship or property? Dynamic or static? For static run script to fill it.
 
     is_deleted: orm.Mapped[bool] = orm.mapped_column(sa.Boolean, default=False)
+
+    def __repr__(self):
+        return f"<Movie [{self.id}]: {self.translations[0].title}>"
 
     @property
     def formatted_budget(self):
@@ -150,8 +150,11 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         else:
             raise ValueError("Unsupported language")
 
-    def __repr__(self):
-        return f"<Movie [{self.id}]: {self.translations[0].title}>"
-
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
+    @cached_property
+    def related_movies_collection(self) -> list["Movie"]:
+        """Return all movies in the collection, ordered by collection_order."""
+        base_movie = self.collection_base_movie or self  # Get the base movie
+        return sorted(
+            [base_movie] + base_movie.collection_members,
+            key=lambda movie: (movie.collection_order if movie.collection_order is not None else float("inf")),
+        )

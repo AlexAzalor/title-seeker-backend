@@ -59,6 +59,8 @@ from .movie import (
     MovieCarouselList,
     ActorSimple,
     DirectorSimple,
+    RelatedMovie,
+    RelatedMovieOut,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn

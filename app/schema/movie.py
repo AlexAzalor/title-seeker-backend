@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 import json
 
 from fastapi import File, UploadFile
@@ -14,6 +15,26 @@ from app.schema.action_time import ActionTimeOut
 from config import config
 
 CFG = config()
+
+
+class RelatedMovie(Enum):
+    BASE = "base"
+    # A direct continuation of the story. (e.g., The Lord of the Rings: The Two Towers after The Fellowship of the Ring).
+    SEQUEL = "sequel"
+    # A story set before the original movie. (e.g., Rogue One before Star Wars: A New Hope).
+    PREQUEL = "prequel"
+    # A movie focusing on a secondary character or element from the original film. (e.g., Logan from X-Men).
+    SPIN_OFF = "spin_off"
+    # A new version of a movie with updated visuals, cast, and sometimes story changes. (e.g., The Lion King (2019) after The Lion King (1994)).
+    REMAKE = "remake"
+    # A fresh start for a franchise, often ignoring previous installments. (e.g., The Amazing Spider-Man (2012) rebooting Spider-Man (2002)).
+    REBOOT = "reboot"
+    # A movie combining characters or elements from different franchises. (e.g., Freddy vs. Jason or Avengers: Endgame).
+    CROSSOVER = "crossover"
+    # A movie that diverges from an established timeline. (e.g., X-Men: Days of Future Past creates a new timeline).
+    ALTERNATIVE_TIMELINE = "alternative_timeline"
+    # A Shared Universe refers to a collection of movies that exist within the same fictional world, often featuring overlapping characters, events, and storylines. (e.g., the Marvel Cinematic Universe).
+    SHARED_UNIVERSE = "shared_universe"
 
 
 class MovieExportCreate(BaseModel):
@@ -50,6 +71,10 @@ class MovieExportCreate(BaseModel):
     # Action times
     action_times_list: list[dict[int, float]]
     action_times_ids: list[int]
+
+    relation_type: RelatedMovie | None = None
+    base_movie_id: int | None = None
+    collection_order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -179,6 +204,13 @@ class MovieActionTime(BaseModel):
     )
 
 
+class RelatedMovieOut(BaseModel):
+    key: str
+    title: str
+    relation_type: RelatedMovie
+    poster: str
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -202,6 +234,8 @@ class MovieOut(BaseModel):
     specifications: list[MovieSpecification]
     keywords: list[MovieKeyword]
     action_times: list[MovieActionTime]
+
+    related_movies: list[RelatedMovieOut] | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -412,6 +446,10 @@ class MovieFormData(BaseModel):
     poster: str | None = None
     location_uk: str | None = None
     location_en: str | None = None
+
+    collection_order: int | None = None
+    relation_type: RelatedMovie | None = None
+    base_movie_key: str | None = None
 
     @model_validator(mode="before")
     @classmethod

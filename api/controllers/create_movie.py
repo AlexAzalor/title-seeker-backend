@@ -33,6 +33,28 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         ),
     ]
 
+    collection_order = form_data.collection_order
+    relation_type = form_data.relation_type.value if form_data.relation_type else None
+    base_movie_key = form_data.base_movie_key
+
+    base_movie_id = None
+    if base_movie_key:
+        try:
+            base_movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == base_movie_key))
+
+            if not base_movie:
+                log(log.ERROR, "Base movie [%s] not found", base_movie_key)
+                raise Exception
+
+            if base_movie:
+                base_movie_id = base_movie.id
+                base_movie.collection_order = 1
+                base_movie.relation_type = s.RelatedMovie.BASE.value
+        except Exception as e:
+            log(log.ERROR, "Base movie [%s] not found: %s", base_movie_key, e)
+            e.args = (*e.args, "Base movie not found")
+            raise e
+
     return m.Movie(
         key=form_data.key,
         release_date=datetime.fromisoformat(form_data.release_date),
@@ -42,6 +64,9 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         worldwide_gross=form_data.worldwide_gross,
         rating_criterion=form_data.rating_criterion_type.value,
         translations=translations,
+        relation_type=relation_type,
+        collection_base_movie_id=base_movie_id,
+        collection_order=collection_order,
         actors=[
             db.scalar(sa.select(m.Actor).where(m.Actor.key == actor_key))
             for actor_key in [actor_key.key for actor_key in form_data.actors_keys]
@@ -211,24 +236,32 @@ def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.Movie
     # # Create characters
     try:
         for character in actors_keys:
-            new_character = m.Character(
-                key=character.character_key,
-                translations=[
-                    m.CharacterTranslation(
-                        language=s.Language.UK.value,
-                        name=character.character_name_uk,
-                    ),
-                    m.CharacterTranslation(
-                        language=s.Language.EN.value,
-                        name=character.character_name_en,
-                    ),
-                ],
-                actors=[db.scalar(sa.select(m.Actor).where(m.Actor.key == character.key))],
-                movies=[db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))],
-            )
+            character_db = db.scalar(sa.select(m.Character).where(m.Character.key == character.character_key))
+            if character_db:
+                movie = db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))
+                if movie:
+                    character_db.movies.append(movie)
+                    db.add(character_db)
+                    log(log.INFO, "Character [%s] successfully updated", character_db.key)
+            else:
+                new_character = m.Character(
+                    key=character.character_key,
+                    translations=[
+                        m.CharacterTranslation(
+                            language=s.Language.UK.value,
+                            name=character.character_name_uk,
+                        ),
+                        m.CharacterTranslation(
+                            language=s.Language.EN.value,
+                            name=character.character_name_en,
+                        ),
+                    ],
+                    actors=[db.scalar(sa.select(m.Actor).where(m.Actor.key == character.key))],
+                    movies=[db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))],
+                )
 
-            db.add(new_character)
-            log(log.INFO, "Character [%s] successfully created", character.character_key)
+                db.add(new_character)
+                log(log.INFO, "Character [%s] successfully created", character.character_key)
     except Exception as e:
         log(log.ERROR, "Error creating character [%s]: %s", character.character_key, e)
         e.args = (*e.args, "Error creating character")

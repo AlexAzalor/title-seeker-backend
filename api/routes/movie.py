@@ -165,6 +165,17 @@ def get_movie(
         domestic_gross=movie.formatted_domestic_gross,
         worldwide_gross=movie.formatted_worldwide_gross,
         release_date=movie.release_date if movie.release_date else datetime.now(),
+        related_movies=[
+            s.RelatedMovieOut(
+                key=related_movie.key,
+                poster=related_movie.poster,
+                title=next((t.title for t in related_movie.translations if t.language == lang.value)),
+                relation_type=s.RelatedMovie(related_movie.relation_type),
+            )
+            for related_movie in movie.related_movies_collection
+        ]
+        if movie.relation_type
+        else None,
         actors=[
             s.MovieActor(
                 key=actor.key,
