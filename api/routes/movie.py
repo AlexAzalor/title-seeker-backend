@@ -135,6 +135,7 @@ def get_movie(
         sa.select(m.Movie)
         .where(m.Movie.key == movie_key)
         .options(
+            # add rest?
             joinedload(m.Movie.translations),
             joinedload(m.Movie.actors),
             joinedload(m.Movie.directors),
@@ -142,6 +143,7 @@ def get_movie(
             joinedload(m.Movie.subgenres),
             joinedload(m.Movie.ratings),
             joinedload(m.Movie.characters),
+            joinedload(m.Movie.shared_universe),
         )
     )
     if not movie:
@@ -175,6 +177,22 @@ def get_movie(
             for related_movie in movie.related_movies_collection
         ]
         if movie.relation_type
+        else None,
+        shared_universe=s.SharedUniverseOut(
+            key=movie.shared_universe.key,
+            name=movie.shared_universe.get_name(lang),
+            description=movie.shared_universe.get_description(lang),
+            movies=[
+                s.SharedUniverseMovies(
+                    key=shared_movie.key,
+                    title=next((t.title for t in shared_movie.translations if t.language == lang.value)),
+                    poster=shared_movie.poster,
+                    order=shared_movie.shared_universe_order,
+                )
+                for shared_movie in movie.shared_universe.movies
+            ],
+        )
+        if movie.shared_universe
         else None,
         actors=[
             s.MovieActor(
@@ -383,6 +401,7 @@ def super_search_movies(
     specification_name: Annotated[list[str], Query()] = [],
     keyword_name: Annotated[list[str], Query()] = [],
     action_time_name: Annotated[list[str], Query()] = [],
+    universe: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
@@ -438,6 +457,12 @@ def super_search_movies(
         if len(db_at_keys) != len(action_times_keys):
             log(log.ERROR, "Action times [%s] not found", action_times_keys)
             raise HTTPException(status_code=404, detail="Action times not found")
+
+    if universe:
+        db_su_keys = db.scalars(sa.select(m.SharedUniverse.key).where(m.SharedUniverse.key.in_(universe))).all()
+        if not db_su_keys:
+            log(log.ERROR, "Shared Universe(s) [%s] not found", universe)
+            raise HTTPException(status_code=404, detail="Shared Universe(s) not found")
 
     # What Happens to the Query at Each Filter Step?
     # It is augmented, not replaced.
@@ -563,6 +588,11 @@ def super_search_movies(
         # query = query.where(
         #     sa.and_(*[m.Movie.directors.any(m.Director.key == director_key) for director_key in director_name])
         # )
+
+    if universe:
+        query = query.where(
+            logical_op(*[m.Movie.shared_universe.has(m.SharedUniverse.key == su_key) for su_key in universe])
+        )
 
     movies_db = db.scalars(query).unique().all()
 
@@ -875,8 +905,6 @@ def get_pre_create_data(
         log(log.ERROR, "Last movie ID not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
 
-    next_movie_id = last_movie_id + 1
-
     actors = db.scalars(sa.select(m.Actor)).all()
     if not actors:
         log(log.ERROR, "Actors [%s] not found")
@@ -910,6 +938,11 @@ def get_pre_create_data(
     if not action_times:
         log(log.ERROR, "Action times [%s] not found")
         raise HTTPException(status_code=404, detail="Action times not found")
+
+    shared_universes = db.scalars(sa.select(m.SharedUniverse)).all()
+    if not shared_universes:
+        log(log.ERROR, "Shared universes [%s] not found")
+        raise HTTPException(status_code=404, detail="Shared universes not found")
 
     actors_out = []
 
@@ -999,8 +1032,18 @@ def get_pre_create_data(
                             rating_criteria=movie.rating_criteria,
                         )
 
+    shared_universes_out = []
+
+    for universe in shared_universes:
+        shared_universes_out.append(
+            s.SharedUniversePreCreateOut(
+                key=universe.key,
+                name=universe.get_name(lang),
+                description=universe.get_description(lang),
+            )
+        )
+
     return s.MoviePreCreateData(
-        next_movie_id=next_movie_id,
         actors=actors_out,
         directors=directors_out,
         specifications=specifications_out,
@@ -1008,6 +1051,7 @@ def get_pre_create_data(
         keywords=keywords_out,
         action_times=action_times_out,
         temporary_movie=temporary_movie,
+        shared_universes=shared_universes_out,
     )
 
 

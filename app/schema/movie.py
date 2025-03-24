@@ -9,6 +9,7 @@ from app.schema.actor import ActorOut
 from app.schema.director import DirectorOut
 from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
+from app.schema.shared_universe import SharedUniversePreCreateOut
 from app.schema.specifications import SpecificationOut
 from app.schema.keyword import KeywordOut
 from app.schema.action_time import ActionTimeOut
@@ -75,6 +76,9 @@ class MovieExportCreate(BaseModel):
     relation_type: RelatedMovie | None = None
     base_movie_id: int | None = None
     collection_order: int | None = None
+
+    shared_universe_id: int | None = None
+    shared_universe_order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -211,6 +215,24 @@ class RelatedMovieOut(BaseModel):
     poster: str
 
 
+class SharedUniverseMovies(BaseModel):
+    key: str
+    title: str
+    poster: str
+    order: int | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class SharedUniverseOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    movies: list[SharedUniverseMovies]
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -236,6 +258,7 @@ class MovieOut(BaseModel):
     action_times: list[MovieActionTime]
 
     related_movies: list[RelatedMovieOut] | None = None
+    shared_universe: SharedUniverseOut | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -408,7 +431,6 @@ class QuickMovieJSON(BaseModel):
 
 
 class MoviePreCreateData(BaseModel):
-    next_movie_id: int
     actors: list[ActorOut]
     directors: list[DirectorOut]
     genres: list[GenreOut]
@@ -416,6 +438,7 @@ class MoviePreCreateData(BaseModel):
     keywords: list[KeywordOut]
     action_times: list[ActionTimeOut]
     temporary_movie: QuickMovieFormData | None = None
+    shared_universes: list[SharedUniversePreCreateOut]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -450,6 +473,9 @@ class MovieFormData(BaseModel):
     collection_order: int | None = None
     relation_type: RelatedMovie | None = None
     base_movie_key: str | None = None
+
+    shared_universe_key: str | None = None
+    shared_universe_order: int | None = None
 
     @model_validator(mode="before")
     @classmethod

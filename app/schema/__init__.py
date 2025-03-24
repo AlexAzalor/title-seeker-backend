@@ -61,6 +61,8 @@ from .movie import (
     DirectorSimple,
     RelatedMovie,
     RelatedMovieOut,
+    SharedUniverseMovies,
+    SharedUniverseOut,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
@@ -72,3 +74,4 @@ from .characters import CharacterExportCreate, CharactersJSONFile
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut
 from .keyword import KeywordExportCreate, KeywordsJSONFile, KeywordOut
 from .action_time import ActionTimeExportCreate, ActionTimesJSONFile, ActionTimeOut
+from .shared_universe import SharedUniverseExportCreate, SharedUniversesJSONFile, SharedUniversePreCreateOut

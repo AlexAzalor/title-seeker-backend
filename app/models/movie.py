@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from .movie_filters.specification import Specification
     from .movie_filters.keyword import Keyword
     from .movie_filters.action_time import ActionTime
+    from .shared_universe import SharedUniverse
 
 
 # Questions/Ideas:
@@ -120,6 +121,11 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         # Except the base movie
         backref="collection_members",
     )
+
+    # Universe: A larger group of movies
+    shared_universe_id: orm.Mapped[int | None] = orm.mapped_column(sa.ForeignKey("shared_universes.id"), nullable=True)
+    shared_universe: orm.Mapped["SharedUniverse"] = orm.relationship("SharedUniverse", back_populates="movies")
+    shared_universe_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
 
     # similar_movies - relationship or property? Dynamic or static? For static run script to fill it.
 

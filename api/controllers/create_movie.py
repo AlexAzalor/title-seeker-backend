@@ -33,6 +33,21 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         ),
     ]
 
+    shared_universe = None
+    if form_data.shared_universe_key:
+        try:
+            shared_universe = db.scalar(
+                sa.select(m.SharedUniverse).where(m.SharedUniverse.key == form_data.shared_universe_key)
+            )
+
+            if not shared_universe:
+                log(log.ERROR, "Shared Universe [%s] not found", form_data.shared_universe_key)
+                raise Exception
+        except Exception as e:
+            log(log.ERROR, "Shared Universe [%s] not found: %s", form_data.shared_universe_key, e)
+            e.args = (*e.args, "Shared Universe not found")
+            raise e
+
     collection_order = form_data.collection_order
     relation_type = form_data.relation_type.value if form_data.relation_type else None
     base_movie_key = form_data.base_movie_key
@@ -67,6 +82,8 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         relation_type=relation_type,
         collection_base_movie_id=base_movie_id,
         collection_order=collection_order,
+        shared_universe_id=shared_universe.id if shared_universe else None,
+        shared_universe_order=form_data.shared_universe_order,
         actors=[
             db.scalar(sa.select(m.Actor).where(m.Actor.key == actor_key))
             for actor_key in [actor_key.key for actor_key in form_data.actors_keys]
