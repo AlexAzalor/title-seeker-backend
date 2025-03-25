@@ -63,6 +63,7 @@ from .movie import (
     RelatedMovieOut,
     SharedUniverseMovies,
     SharedUniverseOut,
+    MovieOutShort,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn

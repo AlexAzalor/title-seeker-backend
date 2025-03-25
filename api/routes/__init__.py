@@ -11,6 +11,7 @@ from .subgenre import subgenre_router
 from .specification import specification_router
 from .keyword import keyword_router
 from .action_time import action_time_router
+from .shared_universe import shared_universe_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
@@ -25,6 +26,7 @@ router.include_router(subgenre_router)
 router.include_router(specification_router)
 router.include_router(keyword_router)
 router.include_router(action_time_router)
+router.include_router(shared_universe_router)
 
 
 @router.get("/list-endpoints/")

@@ -430,6 +430,11 @@ class QuickMovieJSON(BaseModel):
     movies: list[QuickMovieFormData]
 
 
+class MovieOutShort(BaseModel):
+    key: str
+    name: str
+
+
 class MoviePreCreateData(BaseModel):
     actors: list[ActorOut]
     directors: list[DirectorOut]
@@ -439,6 +444,7 @@ class MoviePreCreateData(BaseModel):
     action_times: list[ActionTimeOut]
     temporary_movie: QuickMovieFormData | None = None
     shared_universes: list[SharedUniversePreCreateOut]
+    base_movies: list[MovieOutShort]
 
     model_config = ConfigDict(
         from_attributes=True,

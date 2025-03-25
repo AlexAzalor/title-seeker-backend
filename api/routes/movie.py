@@ -905,6 +905,11 @@ def get_pre_create_data(
         log(log.ERROR, "Last movie ID not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
 
+    base_movies = db.scalars(sa.select(m.Movie).where(m.Movie.relation_type == s.RelatedMovie.BASE.value)).all()
+    if not base_movies:
+        log(log.ERROR, "Base movies not found")
+        raise HTTPException(status_code=404, detail="Base movies not found")
+
     actors = db.scalars(sa.select(m.Actor)).all()
     if not actors:
         log(log.ERROR, "Actors [%s] not found")
@@ -943,6 +948,15 @@ def get_pre_create_data(
     if not shared_universes:
         log(log.ERROR, "Shared universes [%s] not found")
         raise HTTPException(status_code=404, detail="Shared universes not found")
+
+    base_movies_out = []
+    for base_movie in base_movies:
+        base_movies_out.append(
+            s.MovieOutShort(
+                key=base_movie.key,
+                name=base_movie.get_title(lang),
+            )
+        )
 
     actors_out = []
 
@@ -1044,6 +1058,7 @@ def get_pre_create_data(
         )
 
     return s.MoviePreCreateData(
+        base_movies=base_movies_out,
         actors=actors_out,
         directors=directors_out,
         specifications=specifications_out,

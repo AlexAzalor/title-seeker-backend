@@ -61,6 +61,7 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
                 log(log.ERROR, "Base movie [%s] not found", base_movie_key)
                 raise Exception
 
+            # Set base movie only for new collection
             if base_movie:
                 base_movie_id = base_movie.id
                 base_movie.collection_order = 1

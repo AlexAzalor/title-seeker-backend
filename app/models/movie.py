@@ -164,3 +164,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
             [base_movie] + base_movie.collection_members,
             key=lambda movie: (movie.collection_order if movie.collection_order is not None else float("inf")),
         )
+
+    def get_title(self, language: s.Language = s.Language.UK) -> str:
+        return next((t.title for t in self.translations if t.language == language.value), self.translations[0].title)
