@@ -9,7 +9,6 @@ from .movie_actors import movie_actors
 from .movie_directors import movie_directors
 from .genres.movie_genres import movie_genres
 from .genres.movie_subgenres import movie_subgenres
-from .movie_characters import movie_characters
 from .movie_filters.movie_specifications import movie_specifications
 from .movie_filters.movie_keywords import movie_keywords
 from .movie_filters.movie_action_times import movie_action_times
@@ -32,6 +31,7 @@ if TYPE_CHECKING:
     from .movie_filters.keyword import Keyword
     from .movie_filters.action_time import ActionTime
     from .shared_universe import SharedUniverse
+    from .movie_actor_character import MovieActorCharacter
 
 
 # Questions/Ideas:
@@ -62,6 +62,10 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         "Actor",
         secondary=movie_actors,
         back_populates="movies",
+    )
+
+    characters: orm.Mapped[list["MovieActorCharacter"]] = orm.relationship(
+        "MovieActorCharacter", back_populates="movie"
     )
 
     directors: orm.Mapped[list["Director"]] = orm.relationship(
@@ -103,10 +107,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     average_rating: orm.Mapped[float] = orm.mapped_column(sa.Float, default=0.00)
     ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
     rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
-
-    characters: orm.Mapped[list["Character"]] = orm.relationship(
-        "Character", secondary=movie_characters, back_populates="movies"
-    )
 
     collection_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)  # Order in collection
 
@@ -165,5 +165,18 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
             key=lambda movie: (movie.collection_order if movie.collection_order is not None else float("inf")),
         )
 
+    # float("inf") - positive infinity
+    # Used here to ensure movies without a collection_order appear at the end of the sorted list.
+
     def get_title(self, language: s.Language = s.Language.UK) -> str:
         return next((t.title for t in self.translations if t.language == language.value), self.translations[0].title)
+
+    def get_character(self, actor_id: int, lang: s.Language) -> str:
+        """Get the character name for the actor in the specified language."""
+
+        character: Character | None = next((c.character for c in self.characters if c.actor_id == actor_id), None)
+
+        if not character:
+            raise ValueError(f"Character not found for actor_id: {actor_id}")
+
+        return character.get_name(lang)

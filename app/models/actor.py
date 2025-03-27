@@ -7,7 +7,6 @@ from app.database import db
 from app.models.mixins import CreatableMixin, UpdatableMixin
 from app.schema.language import Language
 from .movie_actors import movie_actors
-from .actor_characters import actor_characters
 
 from .utils import ModelMixin
 from typing import TYPE_CHECKING
@@ -15,7 +14,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .movie import Movie
     from .actor_translation import ActorTranslation
-    from .character import Character
+    from .movie_actor_character import MovieActorCharacter
 
 
 class Actor(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
@@ -37,8 +36,8 @@ class Actor(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         back_populates="actors",
     )
 
-    characters: orm.Mapped[list["Character"]] = orm.relationship(
-        "Character", secondary=actor_characters, back_populates="actors"
+    characters: orm.Mapped[list["MovieActorCharacter"]] = orm.relationship(
+        "MovieActorCharacter", back_populates="actor"
     )
 
     def full_name(self, lang: Language = Language.UK) -> str:

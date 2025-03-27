@@ -24,3 +24,8 @@ class CharactersJSONFile(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class CharacterOut(BaseModel):
+    key: str
+    name: str

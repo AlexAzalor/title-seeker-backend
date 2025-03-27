@@ -250,39 +250,30 @@ def set_percentage_match(movie_id: int, db: Session, form_data: s.MovieFormData)
         raise e
 
 
-def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.MoviePersonFilterField]):
-    # # Create characters
+def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.ActorCharacterKey]):
     try:
-        for character in actors_keys:
-            character_db = db.scalar(sa.select(m.Character).where(m.Character.key == character.character_key))
-            if character_db:
-                movie = db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))
-                if movie:
-                    character_db.movies.append(movie)
-                    db.add(character_db)
-                    log(log.INFO, "Character [%s] successfully updated", character_db.key)
-            else:
-                new_character = m.Character(
-                    key=character.character_key,
-                    translations=[
-                        m.CharacterTranslation(
-                            language=s.Language.UK.value,
-                            name=character.character_name_uk,
-                        ),
-                        m.CharacterTranslation(
-                            language=s.Language.EN.value,
-                            name=character.character_name_en,
-                        ),
-                    ],
-                    actors=[db.scalar(sa.select(m.Actor).where(m.Actor.key == character.key))],
-                    movies=[db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))],
-                )
+        for actor in actors_keys:
+            actor_db = db.scalar(sa.select(m.Actor).where(m.Actor.key == actor.key))
+            if not actor_db:
+                log(log.ERROR, "Actor [%s] not found", actor.key)
+                raise Exception
 
-                db.add(new_character)
-                log(log.INFO, "Character [%s] successfully created", character.character_key)
+            character_db = db.scalar(sa.select(m.Character).where(m.Character.key == actor.character_key))
+            if not character_db:
+                log(log.ERROR, "Character [%s] not found", actor.character_key)
+                raise Exception
+
+            new_character = m.MovieActorCharacter(
+                actor_id=actor_db.id,
+                movie_id=new_movie_id,
+                character_id=character_db.id,
+            )
+
+            db.add(new_character)
+            log(log.INFO, "Relation [Movie - Actor - Character] [%s] successfully created")
     except Exception as e:
-        log(log.ERROR, "Error creating character [%s]: %s", character.character_key, e)
-        e.args = (*e.args, "Error creating character")
+        log(log.ERROR, "Error creating relation (actor: [%s]): %s", actor.key, e)
+        e.args = (*e.args, "Error creating relation")
         raise e
 
 

@@ -6,6 +6,7 @@ from fastapi import File, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schema.actor import ActorOut
+from app.schema.characters import CharacterOut
 from app.schema.director import DirectorOut
 from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
@@ -219,7 +220,6 @@ class SharedUniverseMovies(BaseModel):
     key: str
     title: str
     poster: str
-    order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -379,11 +379,9 @@ class MovieFilterField(BaseModel):
     )
 
 
-class MoviePersonFilterField(BaseModel):
+class ActorCharacterKey(BaseModel):
     key: str
     character_key: str
-    character_name_uk: str
-    character_name_en: str
 
 
 class MovieIn(BaseModel):
@@ -401,7 +399,7 @@ class MovieIn(BaseModel):
     poster: str
     location_uk: str
     location_en: str
-    actors_keys: list[MoviePersonFilterField]
+    actors_keys: list[ActorCharacterKey]
     directors_keys: list[str]
     genres: list[MovieFilterField]
     subgenres: list[MovieFilterField]
@@ -445,6 +443,7 @@ class MoviePreCreateData(BaseModel):
     temporary_movie: QuickMovieFormData | None = None
     shared_universes: list[SharedUniversePreCreateOut]
     base_movies: list[MovieOutShort]
+    characters: list[CharacterOut]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -460,7 +459,7 @@ class MovieFormData(BaseModel):
     release_date: str
     duration: int
     budget: int
-    actors_keys: list[MoviePersonFilterField]
+    actors_keys: list[ActorCharacterKey]
     directors_keys: list[str]
     genres: list[MovieFilterField]
     subgenres: list[MovieFilterField]

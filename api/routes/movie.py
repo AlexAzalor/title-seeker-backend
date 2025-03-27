@@ -142,7 +142,7 @@ def get_movie(
             joinedload(m.Movie.genres),
             joinedload(m.Movie.subgenres),
             joinedload(m.Movie.ratings),
-            joinedload(m.Movie.characters),
+            # joinedload(m.Movie.characters),
             joinedload(m.Movie.shared_universe),
         )
     )
@@ -155,6 +155,8 @@ def get_movie(
         user_rating = db.scalar(
             sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
         )
+
+    # CHECK ALL "c" !!!!!!!!!!!!!!!!!!!!!!! NOT ENGLISH!
 
     return s.MovieOut(
         key=movie.key,
@@ -187,9 +189,8 @@ def get_movie(
                     key=shared_movie.key,
                     title=next((t.title for t in shared_movie.translations if t.language == lang.value)),
                     poster=shared_movie.poster,
-                    order=shared_movie.shared_universe_order,
                 )
-                for shared_movie in movie.shared_universe.movies
+                for shared_movie in movie.shared_universe.get_sorted_movies()
             ],
         )
         if movie.shared_universe
@@ -199,16 +200,7 @@ def get_movie(
                 key=actor.key,
                 first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
                 last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
-                # character_name=next((t.character_name for t in actor.translations if t.language == lang.value)),
-                character_name=next(
-                    (
-                        t.name
-                        for t in next(
-                            (с for с in movie.characters if actor.id in [a.id for a in с.actors])
-                        ).translations
-                        if t.language == lang.value
-                    )
-                ),
+                character_name=movie.get_character(actor.id, lang),
                 avatar_url=actor.avatar,
             )
             for actor in movie.actors
@@ -905,7 +897,8 @@ def get_pre_create_data(
         log(log.ERROR, "Last movie ID not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
 
-    base_movies = db.scalars(sa.select(m.Movie).where(m.Movie.relation_type == s.RelatedMovie.BASE.value)).all()
+    # Order by natural order of RelatedMovie
+    base_movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.relation_type)).all()
     if not base_movies:
         log(log.ERROR, "Base movies not found")
         raise HTTPException(status_code=404, detail="Base movies not found")
@@ -948,6 +941,11 @@ def get_pre_create_data(
     if not shared_universes:
         log(log.ERROR, "Shared universes [%s] not found")
         raise HTTPException(status_code=404, detail="Shared universes not found")
+
+    characters = db.scalars(sa.select(m.Character)).all()
+    if not characters:
+        log(log.ERROR, "Characters [%s] not found")
+        raise HTTPException(status_code=404, detail="Characters not found")
 
     base_movies_out = []
     for base_movie in base_movies:
@@ -1057,6 +1055,15 @@ def get_pre_create_data(
             )
         )
 
+    characters_out = []
+    for character in characters:
+        characters_out.append(
+            s.CharacterOut(
+                key=character.key,
+                name=character.get_name(lang),
+            )
+        )
+
     return s.MoviePreCreateData(
         base_movies=base_movies_out,
         actors=actors_out,
@@ -1067,6 +1074,7 @@ def get_pre_create_data(
         action_times=action_times_out,
         temporary_movie=temporary_movie,
         shared_universes=shared_universes_out,
+        characters=characters_out,
     )
 
 

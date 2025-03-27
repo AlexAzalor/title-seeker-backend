@@ -50,7 +50,7 @@ from .movie import (
     MovieIn,
     MoviePreCreateData,
     MovieFilterField,
-    MoviePersonFilterField,
+    ActorCharacterKey,
     MovieFormData,
     QuickMovieFormData,
     QuickMovieJSON,
@@ -71,7 +71,7 @@ from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, Su
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn, RatingCriteria
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
-from .characters import CharacterExportCreate, CharactersJSONFile
+from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut
 from .keyword import KeywordExportCreate, KeywordsJSONFile, KeywordOut
 from .action_time import ActionTimeExportCreate, ActionTimesJSONFile, ActionTimeOut

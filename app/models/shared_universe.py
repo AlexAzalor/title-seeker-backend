@@ -33,3 +33,11 @@ class SharedUniverse(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         return next(
             (t.description for t in self.translations if t.language == language.value), self.translations[0].description
         )
+
+    def get_sorted_movies(self) -> List["Movie"]:
+        return sorted(
+            self.movies,
+            key=lambda movie: (
+                movie.shared_universe_order if movie.shared_universe_order is not None else float("inf")
+            ),
+        )
