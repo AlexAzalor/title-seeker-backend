@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
 from fastapi.responses import FileResponse
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, aliased, joinedload
 
 from api.controllers.create_movie import (
     QUICK_MOVIES_FILE,
@@ -60,7 +60,10 @@ def get_movies(
 
     db_movies = (
         db.scalars(
-            sa.select(m.Movie).where(m.Movie.is_deleted.is_(False)).options(joinedload(m.Movie.translations))
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(m.Movie.id.desc())
+            .options(joinedload(m.Movie.translations))
             # .order_by(m.Movie.release_date.desc())
         )
         .unique()
@@ -150,6 +153,7 @@ def get_movie(
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
+    # separate route?
     user_rating = None
     if current_user:
         user_rating = db.scalar(
@@ -180,6 +184,7 @@ def get_movie(
         ]
         if movie.relation_type
         else None,
+        shared_universe_order=movie.shared_universe_order,
         shared_universe=s.SharedUniverseOut(
             key=movie.shared_universe.key,
             name=movie.shared_universe.get_name(lang),
@@ -189,6 +194,7 @@ def get_movie(
                     key=shared_movie.key,
                     title=next((t.title for t in shared_movie.translations if t.language == lang.value)),
                     poster=shared_movie.poster,
+                    order=shared_movie.shared_universe_order,
                 )
                 for shared_movie in movie.shared_universe.get_sorted_movies()
             ],
@@ -1215,4 +1221,330 @@ def get_random_list(
 
     return s.MovieCarouselList(
         movies=movies_out,
+    )
+
+
+@movie_router.get(
+    "/similar/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.SimilarMovieOutList,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def get_similar_movies(
+    movie_key: str,
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get similar movies by movie key"""
+
+    # TODO: Update and improve db query when adding more movies (100-200)
+
+    movie: m.Movie | None = db.scalar(
+        sa.select(m.Movie)
+        .where(m.Movie.key == movie_key)
+        .options(
+            joinedload(m.Movie.translations),
+            joinedload(m.Movie.genres),
+            joinedload(m.Movie.subgenres),
+        )
+    )
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    genres_list = [
+        s.MovieGenre(
+            key=genre.key,
+            name=next((t.name for t in genre.translations if t.language == lang.value)),
+            description=next((t.description for t in genre.translations if t.language == lang.value)),
+            percentage_match=next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=genre.id)
+                ),
+                0.0,
+            ),
+        )
+        for genre in movie.genres
+    ]
+
+    subgenres_list = [
+        s.MovieSubgenre(
+            key=subgenre.key,
+            parent_genre=s.MovieGenre(
+                key=subgenre.genre.key,
+                name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
+                description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
+                percentage_match=next(
+                    (
+                        mg.percentage_match
+                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=subgenre.genre.id)
+                    ),
+                    0.0,
+                ),
+            ),
+            name=next((t.name for t in subgenre.translations if t.language == lang.value)),
+            description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+            percentage_match=next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_subgenres).filter_by(movie_id=movie.id, subgenre_id=subgenre.id)
+                ),
+                0.0,
+            ),
+        )
+        for subgenre in movie.subgenres
+    ]
+
+    specifications_list = [
+        s.MovieSpecification(
+            key=specification.key,
+            name=next((t.name for t in specification.translations if t.language == lang.value)),
+            description=next((t.description for t in specification.translations if t.language == lang.value)),
+            percentage_match=next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_specifications).filter_by(
+                        movie_id=movie.id, specification_id=specification.id
+                    )
+                ),
+                0.0,
+            ),
+        )
+        for specification in movie.specifications
+    ]
+
+    keywords_list = [
+        s.MovieKeyword(
+            key=keyword.key,
+            name=next((t.name for t in keyword.translations if t.language == lang.value)),
+            description=next((t.description for t in keyword.translations if t.language == lang.value)),
+            percentage_match=next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_keywords).filter_by(movie_id=movie.id, keyword_id=keyword.id)
+                ),
+                0.0,
+            ),
+        )
+        for keyword in movie.keywords
+    ]
+
+    # action_times_list = [
+    #         s.MovieActionTime(
+    #             key=action_time.key,
+    #             name=next((t.name for t in action_time.translations if t.language == lang.value)),
+    #             description=next((t.description for t in action_time.translations if t.language == lang.value)),
+    #             percentage_match=next(
+    #                 (
+    #                     mg.percentage_match
+    #                     for mg in db.query(m.movie_action_times).filter_by(
+    #                         movie_id=movie.id, action_time_id=action_time.id
+    #                     )
+    #                 ),
+    #                 0.0,
+    #             ),
+    #         )
+    #         for action_time in movie.action_times
+    #     ]
+
+    biggest_genres = db.scalars(
+        sa.select(m.Genre)
+        .join(m.movie_genres)
+        .where(m.movie_genres.c.movie_id == movie.id)
+        .order_by(m.movie_genres.c.percentage_match.desc())
+    ).all()
+    # biggest_subgenres = db.scalars(
+    #         sa.select(m.Subgenre)
+    #         .join(m.movie_subgenres)
+    #         .where(m.movie_subgenres.c.movie_id == movie.id)
+    #         .order_by(m.movie_subgenres.c.percentage_match.desc())
+    #     ).all()
+
+    max_genre_percentage_match = 0
+
+    for item in biggest_genres:
+        percentage_match = next(
+            (mg.percentage_match for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=item.id)),
+            0.0,
+        )
+        if percentage_match == 100:
+            max_genre_percentage_match += 1
+
+    min_range = 10
+    max_range = 10
+
+    if len(biggest_genres) > 1:
+        max_range = 20
+        min_range = 20
+
+    if max_genre_percentage_match == 1:
+        max_range = 0
+        min_range = 15
+
+    if max_genre_percentage_match == 2:
+        max_range = 0
+        min_range = 20
+
+    if max_genre_percentage_match >= 3:
+        max_range = 0
+        min_range = 25
+
+    mg = aliased(m.movie_genres)
+    ms = aliased(m.movie_subgenres)
+    mspec = aliased(m.movie_specifications)
+    mkw = aliased(m.movie_keywords)
+    # mact = aliased(m.movie_action_times)
+    g = aliased(m.Genre)
+    sg = aliased(m.Subgenre)
+    spec = aliased(m.Specification)
+    kw = aliased(m.Keyword)
+    # act = aliased(m.ActionTime)
+
+    genre_conditions = []
+    subgenre_conditions = []
+    spec_conditions = []
+    keyword_conditions = []
+    # action_time_conditions = []
+
+    # Dynamically add genre conditions
+    for genre in genres_list:
+        genre_conditions.append(
+            sa.exists().where(
+                sa.and_(
+                    mg.c.movie_id == m.Movie.id,
+                    mg.c.genre_id == g.id,
+                    g.key == genre.key,
+                    # movie >= 50 (current movie)
+                    mg.c.percentage_match >= genre.percentage_match - min_range,
+                    # movie <= 100 (current movie)
+                    mg.c.percentage_match <= genre.percentage_match + max_range,
+                )
+            )
+        )
+
+    # Dynamically add subgenre conditions
+    for subgenre in subgenres_list:
+        subgenre_conditions.append(
+            sa.exists().where(
+                sa.and_(
+                    ms.c.movie_id == m.Movie.id,
+                    ms.c.subgenre_id == sg.id,
+                    sg.key == subgenre.key,
+                    ms.c.percentage_match >= subgenre.percentage_match - 10,
+                    ms.c.percentage_match <= subgenre.percentage_match + 10,
+                )
+            )
+        )
+
+    # Ensure at least one genre and one subgenre match
+    stmt = sa.select(m.Movie).where(
+        m.Movie.id != movie.id,  # Exclude the current movie
+        m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),  # Exclude specific movies
+        sa.and_(
+            sa.or_(*genre_conditions)
+            if genre_conditions
+            else sa.literal(True),  # If genres are provided, at least one must match
+            sa.or_(*subgenre_conditions)
+            if subgenre_conditions
+            else sa.literal(True),  # If subgenres are provided, at least one must match
+        ),
+    )
+
+    similar_movies = db.execute(stmt).scalars().all()
+
+    if len(similar_movies) == 0:
+        for spec_item in specifications_list:
+            spec_conditions.append(
+                sa.exists().where(
+                    sa.and_(
+                        mspec.c.movie_id == m.Movie.id,
+                        mspec.c.specification_id == spec.id,
+                        spec.key == spec_item.key,
+                        mspec.c.percentage_match >= spec_item.percentage_match - 10,
+                        mspec.c.percentage_match <= spec_item.percentage_match + 10,
+                    )
+                )
+            )
+
+        for k in keywords_list:
+            keyword_conditions.append(
+                sa.exists().where(
+                    sa.and_(
+                        mkw.c.movie_id == m.Movie.id,
+                        mkw.c.keyword_id == kw.id,
+                        kw.key == k.key,
+                        mkw.c.percentage_match >= k.percentage_match - 10,
+                        mkw.c.percentage_match <= k.percentage_match + 10,
+                    )
+                )
+            )
+
+        # for a in action_times_list:
+        #     action_time_conditions.append(
+        #         sa.exists().where(
+        #             sa.and_(
+        #                 mact.c.movie_id == m.Movie.id,
+        #                 mact.c.action_time_id == act.id,
+        #                 act.key == a.key,
+        #                 mact.c.percentage_match >= a.percentage_match - 10,
+        #                 mact.c.percentage_match <= a.percentage_match + 10,
+        #             )
+        #         )
+        #     )
+
+        stmt = sa.select(m.Movie).where(
+            m.Movie.id != movie.id,
+            m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),
+            sa.and_(
+                sa.or_(*genre_conditions) if genre_conditions else sa.literal(True),
+                # sa.or_(*subgenre_conditions)
+                # if subgenre_conditions
+                # else sa.literal(True),
+                # sa.or_(*spec_conditions)
+                # if spec_conditions
+                # else sa.literal(True),
+                # sa.or_(*keyword_conditions)
+                # if keyword_conditions
+                # else sa.literal(True),
+            ),
+            sa.or_(
+                sa.or_(*spec_conditions) if spec_conditions else sa.literal(True),
+                sa.or_(*keyword_conditions) if keyword_conditions else sa.literal(True),
+                # sa.or_(*action_time_conditions)
+                # if action_time_conditions
+                # else sa.literal(True),
+            ),
+        )
+
+        similar_movies = db.execute(stmt).scalars().all()
+
+    # if len(similar_movies) > 10:
+    #     stmt = (
+    #     sa.select(m.Movie)
+    #     .where(
+    #         m.Movie.id != movie.id,
+    #         m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),
+    #         sa.and_(
+    #             sa.and_(*genre_conditions)
+    #             if genre_conditions
+    #             else sa.literal(True),
+    #             sa.or_(*subgenre_conditions)
+    #             if subgenre_conditions
+    #             else sa.literal(True),
+    #         ),
+    #     )
+    # )
+    #     similar_movies = db.execute(stmt).scalars().all()
+
+    return s.SimilarMovieOutList(
+        similar_movies=[
+            s.SimilarMovieOut(
+                key=movie.key,
+                title=movie.get_title(lang),
+                poster=movie.poster,
+            )
+            for movie in similar_movies
+        ],
     )

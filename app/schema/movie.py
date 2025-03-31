@@ -220,6 +220,7 @@ class SharedUniverseMovies(BaseModel):
     key: str
     title: str
     poster: str
+    order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -231,6 +232,16 @@ class SharedUniverseOut(BaseModel):
     name: str
     description: str
     movies: list[SharedUniverseMovies]
+
+
+class SimilarMovieOut(BaseModel):
+    key: str
+    title: str
+    poster: str
+
+
+class SimilarMovieOutList(BaseModel):
+    similar_movies: list[SimilarMovieOut]
 
 
 class MovieOut(BaseModel):
@@ -259,6 +270,7 @@ class MovieOut(BaseModel):
 
     related_movies: list[RelatedMovieOut] | None = None
     shared_universe: SharedUniverseOut | None = None
+    shared_universe_order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
