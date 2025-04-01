@@ -171,6 +171,16 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     def get_title(self, language: s.Language = s.Language.UK) -> str:
         return next((t.title for t in self.translations if t.language == language.value), self.translations[0].title)
 
+    def get_description(self, language: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.description for t in self.translations if t.language == language.value), self.translations[0].description
+        )
+
+    def get_location(self, language: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.location for t in self.translations if t.language == language.value), self.translations[0].location
+        )
+
     def get_character(self, actor_id: int, lang: s.Language) -> str:
         """Get the character name for the actor in the specified language."""
 

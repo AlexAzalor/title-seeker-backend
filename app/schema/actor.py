@@ -37,6 +37,7 @@ class ActorsJSONFile(BaseModel):
 class ActorOut(BaseModel):
     key: str
     name: str
+    name_uk: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

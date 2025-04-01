@@ -133,7 +133,10 @@ def get_movie(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
+    """Get movie by key"""
+
     current_user = CFG.CURRENT_USER
+
     movie: m.Movie | None = db.scalar(
         sa.select(m.Movie)
         .where(m.Movie.key == movie_key)
@@ -144,11 +147,14 @@ def get_movie(
             joinedload(m.Movie.directors),
             joinedload(m.Movie.genres),
             joinedload(m.Movie.subgenres),
+            joinedload(m.Movie.specifications),
+            joinedload(m.Movie.keywords),
+            joinedload(m.Movie.action_times),
             joinedload(m.Movie.ratings),
-            # joinedload(m.Movie.characters),
             joinedload(m.Movie.shared_universe),
         )
     )
+
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
@@ -160,13 +166,11 @@ def get_movie(
             sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
         )
 
-    # CHECK ALL "c" !!!!!!!!!!!!!!!!!!!!!!! NOT ENGLISH!
-
     return s.MovieOut(
         key=movie.key,
-        title=next((t.title for t in movie.translations if t.language == lang.value)),
-        description=next((t.description for t in movie.translations if t.language == lang.value)),
-        location=next((t.location for t in movie.translations if t.language == lang.value)),
+        title=movie.get_title(lang),
+        description=movie.get_description(lang),
+        location=movie.get_location(lang),
         poster=movie.poster,
         budget=movie.formatted_budget,
         duration=movie.formatted_duration(lang.value),
@@ -177,7 +181,7 @@ def get_movie(
             s.RelatedMovieOut(
                 key=related_movie.key,
                 poster=related_movie.poster,
-                title=next((t.title for t in related_movie.translations if t.language == lang.value)),
+                title=related_movie.get_title(lang),
                 relation_type=s.RelatedMovie(related_movie.relation_type),
             )
             for related_movie in movie.related_movies_collection
@@ -192,7 +196,7 @@ def get_movie(
             movies=[
                 s.SharedUniverseMovies(
                     key=shared_movie.key,
-                    title=next((t.title for t in shared_movie.translations if t.language == lang.value)),
+                    title=shared_movie.get_title(lang),
                     poster=shared_movie.poster,
                     order=shared_movie.shared_universe_order,
                 )
@@ -909,12 +913,24 @@ def get_pre_create_data(
         log(log.ERROR, "Base movies not found")
         raise HTTPException(status_code=404, detail="Base movies not found")
 
-    actors = db.scalars(sa.select(m.Actor)).all()
+    # TODO: add full_name as hybrid_property?
+    actors = db.scalars(
+        sa.select(m.Actor)
+        .join(m.Actor.translations)
+        .where(m.ActorTranslation.language == lang.value)
+        .order_by(sa.func.concat(m.ActorTranslation.first_name, " ", m.ActorTranslation.last_name))
+    ).all()
+
     if not actors:
         log(log.ERROR, "Actors [%s] not found")
         raise HTTPException(status_code=404, detail="Actors not found")
 
-    directors = db.scalars(sa.select(m.Director)).all()
+    directors = db.scalars(
+        sa.select(m.Director)
+        .join(m.Director.translations)
+        .where(m.DirectorTranslation.language == lang.value)
+        .order_by(sa.func.concat(m.DirectorTranslation.first_name, " ", m.DirectorTranslation.last_name))
+    ).all()
     if not directors:
         log(log.ERROR, "Director [%s] not found")
         raise HTTPException(status_code=404, detail="Director not found")
@@ -969,6 +985,7 @@ def get_pre_create_data(
             s.ActorOut(
                 key=actor.key,
                 name=actor.full_name(lang),
+                name_uk=actor.full_name(s.Language.UK),
             )
         )
 
@@ -979,6 +996,7 @@ def get_pre_create_data(
             s.DirectorOut(
                 key=director.key,
                 name=director.full_name(lang),
+                name_uk=director.full_name(s.Language.UK),
             )
         )
 
