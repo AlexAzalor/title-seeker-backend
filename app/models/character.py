@@ -1,16 +1,14 @@
 from app.database import db
 import sqlalchemy as sa
+from app import schema as s
 from sqlalchemy import orm
 from app.models.mixins import CreatableMixin, UpdatableMixin
-from .movie_characters import movie_characters
-from .actor_characters import actor_characters
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .character_translation import CharacterTranslation
-    from .movie import Movie
-    from .actor import Actor
+    from .movie_actor_character import MovieActorCharacter
 
 
 class Character(db.Model, CreatableMixin, UpdatableMixin):
@@ -21,15 +19,12 @@ class Character(db.Model, CreatableMixin, UpdatableMixin):
 
     translations: orm.Mapped[list["CharacterTranslation"]] = orm.relationship()
 
-    movies: orm.Mapped[list["Movie"]] = orm.relationship(
-        "Movie",
-        secondary=movie_characters,
-        back_populates="characters",
-    )
-
-    actors: orm.Mapped[list["Actor"]] = orm.relationship(
-        "Actor", secondary=actor_characters, back_populates="characters"
+    characters: orm.Mapped[list["MovieActorCharacter"]] = orm.relationship(
+        "MovieActorCharacter", back_populates="character"
     )
 
     def __repr__(self):
         return f"<Character [{self.id}]: {self.key}>"
+
+    def get_name(self, language: s.Language) -> str:
+        return next((t.name for t in self.translations if t.language == language.value), self.translations[0].name)

@@ -1,19 +1,42 @@
 from datetime import datetime
+from enum import Enum
 import json
 
 from fastapi import File, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schema.actor import ActorOut
+from app.schema.characters import CharacterOut
 from app.schema.director import DirectorOut
 from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
+from app.schema.shared_universe import SharedUniversePreCreateOut
 from app.schema.specifications import SpecificationOut
 from app.schema.keyword import KeywordOut
 from app.schema.action_time import ActionTimeOut
 from config import config
 
 CFG = config()
+
+
+class RelatedMovie(Enum):
+    BASE = "base"
+    # A direct continuation of the story. (e.g., The Lord of the Rings: The Two Towers after The Fellowship of the Ring).
+    SEQUEL = "sequel"
+    # A story set before the original movie. (e.g., Rogue One before Star Wars: A New Hope).
+    PREQUEL = "prequel"
+    # A movie focusing on a secondary character or element from the original film. (e.g., Logan from X-Men).
+    SPIN_OFF = "spin_off"
+    # A new version of a movie with updated visuals, cast, and sometimes story changes. (e.g., The Lion King (2019) after The Lion King (1994)).
+    REMAKE = "remake"
+    # A fresh start for a franchise, often ignoring previous installments. (e.g., The Amazing Spider-Man (2012) rebooting Spider-Man (2002)).
+    REBOOT = "reboot"
+    # A movie combining characters or elements from different franchises. (e.g., Freddy vs. Jason or Avengers: Endgame).
+    CROSSOVER = "crossover"
+    # A movie that diverges from an established timeline. (e.g., X-Men: Days of Future Past creates a new timeline).
+    ALTERNATIVE_TIMELINE = "alternative_timeline"
+    # A Shared Universe refers to a collection of movies that exist within the same fictional world, often featuring overlapping characters, events, and storylines. (e.g., the Marvel Cinematic Universe).
+    SHARED_UNIVERSE = "shared_universe"
 
 
 class MovieExportCreate(BaseModel):
@@ -50,6 +73,13 @@ class MovieExportCreate(BaseModel):
     # Action times
     action_times_list: list[dict[int, float]]
     action_times_ids: list[int]
+
+    relation_type: RelatedMovie | None = None
+    base_movie_id: int | None = None
+    collection_order: int | None = None
+
+    shared_universe_id: int | None = None
+    shared_universe_order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -179,6 +209,41 @@ class MovieActionTime(BaseModel):
     )
 
 
+class RelatedMovieOut(BaseModel):
+    key: str
+    title: str
+    relation_type: RelatedMovie
+    poster: str
+
+
+class SharedUniverseMovies(BaseModel):
+    key: str
+    title: str
+    poster: str
+    order: int | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class SharedUniverseOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    movies: list[SharedUniverseMovies]
+
+
+class SimilarMovieOut(BaseModel):
+    key: str
+    title: str
+    poster: str
+
+
+class SimilarMovieOutList(BaseModel):
+    similar_movies: list[SimilarMovieOut]
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -202,6 +267,10 @@ class MovieOut(BaseModel):
     specifications: list[MovieSpecification]
     keywords: list[MovieKeyword]
     action_times: list[MovieActionTime]
+
+    related_movies: list[RelatedMovieOut] | None = None
+    shared_universe: SharedUniverseOut | None = None
+    shared_universe_order: int | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -322,11 +391,9 @@ class MovieFilterField(BaseModel):
     )
 
 
-class MoviePersonFilterField(BaseModel):
+class ActorCharacterKey(BaseModel):
     key: str
     character_key: str
-    character_name_uk: str
-    character_name_en: str
 
 
 class MovieIn(BaseModel):
@@ -344,7 +411,7 @@ class MovieIn(BaseModel):
     poster: str
     location_uk: str
     location_en: str
-    actors_keys: list[MoviePersonFilterField]
+    actors_keys: list[ActorCharacterKey]
     directors_keys: list[str]
     genres: list[MovieFilterField]
     subgenres: list[MovieFilterField]
@@ -373,8 +440,12 @@ class QuickMovieJSON(BaseModel):
     movies: list[QuickMovieFormData]
 
 
+class MovieOutShort(BaseModel):
+    key: str
+    name: str
+
+
 class MoviePreCreateData(BaseModel):
-    next_movie_id: int
     actors: list[ActorOut]
     directors: list[DirectorOut]
     genres: list[GenreOut]
@@ -382,6 +453,9 @@ class MoviePreCreateData(BaseModel):
     keywords: list[KeywordOut]
     action_times: list[ActionTimeOut]
     temporary_movie: QuickMovieFormData | None = None
+    shared_universes: list[SharedUniversePreCreateOut]
+    base_movies: list[MovieOutShort]
+    characters: list[CharacterOut]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -397,7 +471,7 @@ class MovieFormData(BaseModel):
     release_date: str
     duration: int
     budget: int
-    actors_keys: list[MoviePersonFilterField]
+    actors_keys: list[ActorCharacterKey]
     directors_keys: list[str]
     genres: list[MovieFilterField]
     subgenres: list[MovieFilterField]
@@ -413,9 +487,62 @@ class MovieFormData(BaseModel):
     location_uk: str | None = None
     location_en: str | None = None
 
+    collection_order: int | None = None
+    relation_type: RelatedMovie | None = None
+    base_movie_key: str | None = None
+
+    shared_universe_key: str | None = None
+    shared_universe_order: int | None = None
+
     @model_validator(mode="before")
     @classmethod
     def validate_to_json(cls, value):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
+
+
+class ActorSimple(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class DirectorSimple(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieCarousel(BaseModel):
+    key: str
+    title: str
+    poster: str
+    release_date: datetime
+    duration: str
+    location: str
+    description: str
+
+    genres: list[MovieGenre]
+    actors: list[ActorSimple]
+    directors: list[DirectorSimple]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieCarouselList(BaseModel):
+    movies: list[MovieCarousel]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

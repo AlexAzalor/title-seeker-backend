@@ -82,6 +82,9 @@ dcupd db
 flask db upgrade
 ```
 
+flask db downgrade
+flask db current
+
 ```bash
 flask create-admin
 ```

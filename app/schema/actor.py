@@ -37,6 +37,7 @@ class ActorsJSONFile(BaseModel):
 class ActorOut(BaseModel):
     key: str
     name: str
+    name_uk: str | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -64,6 +65,25 @@ class ActorIn(BaseModel):
     born_in_uk: str
     born_in_en: str
     avatar: UploadFile
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class Actor(BaseModel):
+    key: str
+    name: str
+    avatar_url: str
+    movie_count: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class ActorsList(BaseModel):
+    actors: list[Actor]
 
     model_config = ConfigDict(
         from_attributes=True,

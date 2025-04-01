@@ -33,6 +33,44 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         ),
     ]
 
+    shared_universe = None
+    if form_data.shared_universe_key:
+        try:
+            shared_universe = db.scalar(
+                sa.select(m.SharedUniverse).where(m.SharedUniverse.key == form_data.shared_universe_key)
+            )
+
+            if not shared_universe:
+                log(log.ERROR, "Shared Universe [%s] not found", form_data.shared_universe_key)
+                raise Exception
+        except Exception as e:
+            log(log.ERROR, "Shared Universe [%s] not found: %s", form_data.shared_universe_key, e)
+            e.args = (*e.args, "Shared Universe not found")
+            raise e
+
+    collection_order = form_data.collection_order
+    relation_type = form_data.relation_type.value if form_data.relation_type else None
+    base_movie_key = form_data.base_movie_key
+
+    base_movie_id = None
+    if base_movie_key:
+        try:
+            base_movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == base_movie_key))
+
+            if not base_movie:
+                log(log.ERROR, "Base movie [%s] not found", base_movie_key)
+                raise Exception
+
+            # Set base movie only for new collection
+            if base_movie:
+                base_movie_id = base_movie.id
+                base_movie.collection_order = 1
+                base_movie.relation_type = s.RelatedMovie.BASE.value
+        except Exception as e:
+            log(log.ERROR, "Base movie [%s] not found: %s", base_movie_key, e)
+            e.args = (*e.args, "Base movie not found")
+            raise e
+
     return m.Movie(
         key=form_data.key,
         release_date=datetime.fromisoformat(form_data.release_date),
@@ -42,6 +80,11 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
         worldwide_gross=form_data.worldwide_gross,
         rating_criterion=form_data.rating_criterion_type.value,
         translations=translations,
+        relation_type=relation_type,
+        collection_base_movie_id=base_movie_id,
+        collection_order=collection_order,
+        shared_universe_id=shared_universe.id if shared_universe else None,
+        shared_universe_order=form_data.shared_universe_order,
         actors=[
             db.scalar(sa.select(m.Actor).where(m.Actor.key == actor_key))
             for actor_key in [actor_key.key for actor_key in form_data.actors_keys]
@@ -207,31 +250,30 @@ def set_percentage_match(movie_id: int, db: Session, form_data: s.MovieFormData)
         raise e
 
 
-def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.MoviePersonFilterField]):
-    # # Create characters
+def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.ActorCharacterKey]):
     try:
-        for character in actors_keys:
-            new_character = m.Character(
-                key=character.character_key,
-                translations=[
-                    m.CharacterTranslation(
-                        language=s.Language.UK.value,
-                        name=character.character_name_uk,
-                    ),
-                    m.CharacterTranslation(
-                        language=s.Language.EN.value,
-                        name=character.character_name_en,
-                    ),
-                ],
-                actors=[db.scalar(sa.select(m.Actor).where(m.Actor.key == character.key))],
-                movies=[db.scalar(sa.select(m.Movie).where(m.Movie.id == new_movie_id))],
+        for actor in actors_keys:
+            actor_db = db.scalar(sa.select(m.Actor).where(m.Actor.key == actor.key))
+            if not actor_db:
+                log(log.ERROR, "Actor [%s] not found", actor.key)
+                raise Exception
+
+            character_db = db.scalar(sa.select(m.Character).where(m.Character.key == actor.character_key))
+            if not character_db:
+                log(log.ERROR, "Character [%s] not found", actor.character_key)
+                raise Exception
+
+            new_character = m.MovieActorCharacter(
+                actor_id=actor_db.id,
+                movie_id=new_movie_id,
+                character_id=character_db.id,
             )
 
             db.add(new_character)
-            log(log.INFO, "Character [%s] successfully created", character.character_key)
+            log(log.INFO, "Relation [Movie - Actor - Character] [%s] successfully created")
     except Exception as e:
-        log(log.ERROR, "Error creating character [%s]: %s", character.character_key, e)
-        e.args = (*e.args, "Error creating character")
+        log(log.ERROR, "Error creating relation (actor: [%s]): %s", actor.key, e)
+        e.args = (*e.args, "Error creating relation")
         raise e
 
 

@@ -10,6 +10,7 @@ class CharacterTranslation(db.Model, CreatableMixin, UpdatableMixin):
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
     character_id: orm.Mapped[int] = orm.mapped_column(sa.ForeignKey("characters.id"), nullable=False)
+
     language: orm.Mapped[str] = orm.mapped_column(sa.String(5), nullable=False)
 
     name: orm.Mapped[str] = orm.mapped_column(sa.String(128), nullable=False)

@@ -164,11 +164,11 @@ def test_create_movie(client: TestClient, db: Session):
         location_uk="Location UK",
         location_en="Location EN",
         actors_keys=[
-            s.MoviePersonFilterField(
+            s.ActorCharacterKey(
                 key=actor.key,
                 character_key="Char key",
-                character_name_uk="Char uk name",
-                character_name_en="Char en name",
+                # character_name_uk="Char uk name",
+                # character_name_en="Char en name",
             )
         ],
         directors_keys=[director.key],

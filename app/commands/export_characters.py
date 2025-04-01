@@ -56,21 +56,46 @@ def write_characters_in_db(characters: list[s.CharacterExportCreate]):
                         name=character.name_en,
                     ),
                 ],
-                actors=[
-                    session.scalar(sa.select(m.Actor).where(m.Actor.id == actor_id))
-                    for actor_id in character.actors_ids
-                ],
-                movies=[
-                    session.scalar(sa.select(m.Movie).where(m.Movie.id == movie_id))
-                    for movie_id in character.movies_ids
-                ],
             )
-
             session.add(new_character)
             session.flush()
 
             log(log.DEBUG, "Character [%s] created", new_character.key)
 
+        # This flag for adding item when actors_ids column has 2 values
+        second_movie = False
+        for character in characters:
+            a_ids = character.actors_ids
+            m_ids = character.movies_ids
+
+            for actor_id in character.actors_ids:
+                if second_movie:
+                    second_movie = False
+
+                for movie_id in m_ids:
+                    if second_movie:
+                        second_movie = False
+                        continue
+
+                    character_db = session.scalar(sa.select(m.Character).where(m.Character.key == character.key))
+                    if not character_db:
+                        raise Exception(f"Character with key {character.key} not found")
+                    new_character_relation = m.MovieActorCharacter(
+                        # key=character_db.key,
+                        actor_id=actor_id,
+                        movie_id=movie_id,
+                        character_id=character_db.id,
+                    )
+
+                    session.add(new_character_relation)
+                    session.flush()
+
+                    if len(character.actors_ids) == 2 and second_movie is False:
+                        a_ids = a_ids[1:]
+                        m_ids = m_ids[1:]
+                        second_movie = True
+
+                    log(log.DEBUG, "new_character_relation [%s] created", new_character_relation.id)
         session.commit()
 
 

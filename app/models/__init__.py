@@ -31,3 +31,6 @@ from .movie_filters.keyword import Keyword
 from .movie_filters.action_time_translation import ActionTimeTranslation
 from .movie_filters.action_time import ActionTime
 from .movie_filters.movie_action_times import movie_action_times
+from .shared_universe import SharedUniverse
+from .shared_universe_i18n import SharedUniverseTranslation
+from .movie_actor_character import MovieActorCharacter

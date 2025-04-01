@@ -37,10 +37,16 @@ KEYWORDS = "keywords"
 ACTION_TIMES = "action_times"
 LOCATION_UK = "location_uk"
 LOCATION_EN = "location_en"
-# USERS_RATINGS = "users_ratings"
 RATING_CRITERION = "rating_criterion"
+# Related movies
+RELATION_TYPE = "relation_type"
+BASE_MOVIE_ID = "base_movie_id"
+COLLECTION_ORDER = "collection_order"
+# Shared Universe
+SHARED_UNIVERSE_ID = "shared_universe_id"
+SHARED_UNIVERSE_ORDER = "shared_universe_order"
 
-LAST_SHEET_COLUMN = "W"
+LAST_SHEET_COLUMN = "AB"
 MOVIES_RANGE_NAME = f"Movies!A1:{LAST_SHEET_COLUMN}"
 
 
@@ -97,6 +103,11 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                 domestic_gross=movie.domestic_gross,
                 worldwide_gross=movie.worldwide_gross,
                 rating_criterion=movie.rating_criterion.value,
+                relation_type=movie.relation_type.value if movie.relation_type else None,
+                collection_base_movie_id=movie.base_movie_id,
+                collection_order=movie.collection_order,
+                shared_universe_id=movie.shared_universe_id,
+                shared_universe_order=movie.shared_universe_order,
                 translations=[
                     m.MovieTranslation(
                         language=s.Language.UK.value,
@@ -335,6 +346,11 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
     LOCATION_EN_INDEX = values[0].index(LOCATION_EN)
     # USERS_RATINGS_INDEX = values[0].index(USERS_RATINGS)
     RATING_CRITERION_INDEX = values[0].index(RATING_CRITERION)
+    RELATION_TYPE_INDEX = values[0].index(RELATION_TYPE)
+    BASE_MOVIE_ID_INDEX = values[0].index(BASE_MOVIE_ID)
+    COLLECTION_ORDER_INDEX = values[0].index(COLLECTION_ORDER)
+    SHARED_UNIVERSE_ID_INDEX = values[0].index(SHARED_UNIVERSE_ID)
+    SHARED_UNIVERSE_ORDER_INDEX = values[0].index(SHARED_UNIVERSE_ORDER)
 
     for row in values[1:]:
         # if len(row) < 12:
@@ -446,6 +462,19 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
         rating_criterion = row[RATING_CRITERION_INDEX]
         assert rating_criterion, f"The rating_criterion {rating_criterion} is missing"
 
+        relation_type = row[RELATION_TYPE_INDEX]
+        # assert relation_type, f"The relation_type {relation_type} is missing"
+
+        base_movie_id = row[BASE_MOVIE_ID_INDEX]
+
+        collection_order = row[COLLECTION_ORDER_INDEX]
+
+        shared_universe_id = row[SHARED_UNIVERSE_ID_INDEX]
+        shared_universe_order = row[SHARED_UNIVERSE_ORDER_INDEX]
+
+        # Can be issues with empty values and None
+        # Can be issues with LAST COLUMN letter
+
         movies.append(
             s.MovieExportCreate(
                 id=id,
@@ -482,6 +511,11 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
                 action_times_ids=action_times_ids,
                 action_times_list=action_times_list,
                 # rating_criterion=s.RatingCriterion(rating_criterion),
+                relation_type=relation_type if relation_type else None,
+                base_movie_id=base_movie_id if base_movie_id else None,
+                collection_order=collection_order if collection_order else None,
+                shared_universe_id=shared_universe_id if shared_universe_id else None,
+                shared_universe_order=shared_universe_order if shared_universe_order else None,
             )
         )
 

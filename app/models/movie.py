@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import cached_property
 
 import sqlalchemy as sa
 from sqlalchemy import orm
@@ -8,7 +9,6 @@ from .movie_actors import movie_actors
 from .movie_directors import movie_directors
 from .genres.movie_genres import movie_genres
 from .genres.movie_subgenres import movie_subgenres
-from .movie_characters import movie_characters
 from .movie_filters.movie_specifications import movie_specifications
 from .movie_filters.movie_keywords import movie_keywords
 from .movie_filters.movie_action_times import movie_action_times
@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from .movie_filters.specification import Specification
     from .movie_filters.keyword import Keyword
     from .movie_filters.action_time import ActionTime
+    from .shared_universe import SharedUniverse
+    from .movie_actor_character import MovieActorCharacter
 
 
 # Questions/Ideas:
@@ -60,6 +62,10 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         "Actor",
         secondary=movie_actors,
         back_populates="movies",
+    )
+
+    characters: orm.Mapped[list["MovieActorCharacter"]] = orm.relationship(
+        "MovieActorCharacter", back_populates="movie"
     )
 
     directors: orm.Mapped[list["Director"]] = orm.relationship(
@@ -102,31 +108,31 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
     rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
 
-    characters: orm.Mapped[list["Character"]] = orm.relationship(
-        "Character", secondary=movie_characters, back_populates="movies"
+    collection_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)  # Order in collection
+
+    relation_type: orm.Mapped[str | None] = orm.mapped_column(sa.String(36), nullable=True)
+
+    # Collection ID (self-referential)
+    collection_base_movie_id: orm.Mapped[int | None] = orm.mapped_column(sa.ForeignKey("movies.id"), nullable=True)
+    # Relationship to get all movies in the same collection
+    collection_base_movie: orm.Mapped["Movie"] = orm.relationship(
+        "Movie",
+        remote_side=[id],
+        # Except the base movie
+        backref="collection_members",
     )
 
-    # rating - relationship? or just a column? There will be very advanced rating system.
-    # related_movies - relationship
-    # similar_movies - relationship or property?
+    # Universe: A larger group of movies
+    shared_universe_id: orm.Mapped[int | None] = orm.mapped_column(sa.ForeignKey("shared_universes.id"), nullable=True)
+    shared_universe: orm.Mapped["SharedUniverse"] = orm.relationship("SharedUniverse", back_populates="movies")
+    shared_universe_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
 
-    # Not for MVP
-    # reviews - relationship
-    # screenshots - relationship
-    # pegi_rating - enum?
-
-    # created_at: orm.Mapped[datetime] = orm.mapped_column(
-    #     sa.DateTime,
-    #     default=datetime.now(UTC),
-    # )
-
-    # updated_at: orm.Mapped[sa.DateTime] = orm.mapped_column(
-    #     sa.DateTime,
-    #     default=sa.func.now(),
-    #     onupdate=sa.func.now(),
-    # )
+    # similar_movies - relationship or property? Dynamic or static? For static run script to fill it.
 
     is_deleted: orm.Mapped[bool] = orm.mapped_column(sa.Boolean, default=False)
+
+    def __repr__(self):
+        return f"<Movie [{self.id}]: {self.translations[0].title}>"
 
     @property
     def formatted_budget(self):
@@ -150,8 +156,37 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         else:
             raise ValueError("Unsupported language")
 
-    def __repr__(self):
-        return f"<Movie [{self.id}]: {self.translations[0].title}>"
+    @cached_property
+    def related_movies_collection(self) -> list["Movie"]:
+        """Return all movies in the collection, ordered by collection_order."""
+        base_movie = self.collection_base_movie or self  # Get the base movie
+        return sorted(
+            [base_movie] + base_movie.collection_members,
+            key=lambda movie: (movie.collection_order if movie.collection_order is not None else float("inf")),
+        )
 
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
+    # float("inf") - positive infinity
+    # Used here to ensure movies without a collection_order appear at the end of the sorted list.
+
+    def get_title(self, language: s.Language = s.Language.UK) -> str:
+        return next((t.title for t in self.translations if t.language == language.value), self.translations[0].title)
+
+    def get_description(self, language: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.description for t in self.translations if t.language == language.value), self.translations[0].description
+        )
+
+    def get_location(self, language: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.location for t in self.translations if t.language == language.value), self.translations[0].location
+        )
+
+    def get_character(self, actor_id: int, lang: s.Language) -> str:
+        """Get the character name for the actor in the specified language."""
+
+        character: Character | None = next((c.character for c in self.characters if c.actor_id == actor_id), None)
+
+        if not character:
+            raise ValueError(f"Character not found for actor_id: {actor_id}")
+
+        return character.get_name(lang)

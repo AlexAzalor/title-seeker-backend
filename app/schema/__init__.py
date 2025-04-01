@@ -50,19 +50,31 @@ from .movie import (
     MovieIn,
     MoviePreCreateData,
     MovieFilterField,
-    MoviePersonFilterField,
+    ActorCharacterKey,
     MovieFormData,
     QuickMovieFormData,
     QuickMovieJSON,
     TempMovie,
+    MovieCarousel,
+    MovieCarouselList,
+    ActorSimple,
+    DirectorSimple,
+    RelatedMovie,
+    RelatedMovieOut,
+    SharedUniverseMovies,
+    SharedUniverseOut,
+    MovieOutShort,
+    SimilarMovieOut,
+    SimilarMovieOutList,
 )
-from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn
+from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn, RatingCriteria
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
-from .characters import CharacterExportCreate, CharactersJSONFile
+from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut
 from .keyword import KeywordExportCreate, KeywordsJSONFile, KeywordOut
 from .action_time import ActionTimeExportCreate, ActionTimesJSONFile, ActionTimeOut
+from .shared_universe import SharedUniverseExportCreate, SharedUniversesJSONFile, SharedUniversePreCreateOut

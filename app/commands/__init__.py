@@ -242,6 +242,14 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def fill_db_with_shared_universes():
+        """Fill SharedUniverse table with data from google spreadsheets"""
+        from .export_shared_universe import export_su_from_google_spreadsheets
+
+        export_su_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets
@@ -252,6 +260,7 @@ def init(app: Flask):
         from .export_specifications import export_specifications_from_google_spreadsheets
         from .export_keywords import export_keywords_from_google_spreadsheets
         from .export_action_times import export_action_times_from_google_spreadsheets
+        from .export_shared_universe import export_su_from_google_spreadsheets
         from .export_movies import export_movies_from_google_spreadsheets
         from .export_rating import export_ratings_from_google_spreadsheets
         from .export_characters import export_characters_from_google_spreadsheets
@@ -264,6 +273,7 @@ def init(app: Flask):
         export_specifications_from_google_spreadsheets()
         export_keywords_from_google_spreadsheets()
         export_action_times_from_google_spreadsheets()
+        export_su_from_google_spreadsheets()
         export_movies_from_google_spreadsheets()
         export_ratings_from_google_spreadsheets()
         export_characters_from_google_spreadsheets()
