@@ -96,8 +96,7 @@ class MoviesJSONFile(BaseModel):
 
 class MovieActor(BaseModel):
     key: str
-    first_name: str
-    last_name: str
+    full_name: str
     character_name: str
     avatar_url: str | None = None
 
@@ -108,8 +107,7 @@ class MovieActor(BaseModel):
 
 class MovieDirector(BaseModel):
     key: str
-    first_name: str
-    last_name: str
+    full_name: str
     avatar_url: str | None = None
 
     model_config = ConfigDict(

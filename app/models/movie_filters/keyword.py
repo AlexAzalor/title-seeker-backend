@@ -1,7 +1,7 @@
 from app.database import db
 from sqlalchemy import orm
 import sqlalchemy as sa
-
+import app.schema as s
 from app.models.utils import ModelMixin
 
 from .movie_keywords import movie_keywords
@@ -29,3 +29,11 @@ class Keyword(db.Model, ModelMixin):
 
     def __repr__(self):
         return f"<Keywords [{self.id}]: {self.key}>"
+
+    def get_name(self, lang: s.Language = s.Language.UK) -> str:
+        return next((t.name for t in self.translations if t.language == lang.value), self.translations[0].name)
+
+    def get_description(self, lang: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.description for t in self.translations if t.language == lang.value), self.translations[0].description
+        )

@@ -81,7 +81,7 @@ def get_movies(
         )
         main_genre = "No genre"
         if biggest_genre:
-            genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
+            genre_name = biggest_genre.get_name(lang)
             percentage_match = next(
                 (
                     mg.percentage_match
@@ -93,7 +93,7 @@ def get_movies(
         movies_out.append(
             s.MoviePreviewOut(
                 key=movie.key,
-                title=next((t.title for t in movie.translations if t.language == lang.value)),
+                title=movie.get_title(lang),
                 poster=movie.poster,
                 # TODO: fix none release date
                 release_date=movie.release_date if movie.release_date else datetime.now(),
@@ -208,8 +208,7 @@ def get_movie(
         actors=[
             s.MovieActor(
                 key=actor.key,
-                first_name=next((t.first_name for t in actor.translations if t.language == lang.value)),
-                last_name=next((t.last_name for t in actor.translations if t.language == lang.value)),
+                full_name=actor.full_name(lang),
                 character_name=movie.get_character(actor.id, lang),
                 avatar_url=actor.avatar,
             )
@@ -218,8 +217,7 @@ def get_movie(
         directors=[
             s.MovieDirector(
                 key=director.key,
-                first_name=next((t.first_name for t in director.translations if t.language == lang.value)),
-                last_name=next((t.last_name for t in director.translations if t.language == lang.value)),
+                full_name=director.full_name(lang),
                 avatar_url=director.avatar,
             )
             for director in movie.directors
@@ -227,8 +225,8 @@ def get_movie(
         genres=[
             s.MovieGenre(
                 key=genre.key,
-                name=next((t.name for t in genre.translations if t.language == lang.value)),
-                description=next((t.description for t in genre.translations if t.language == lang.value)),
+                name=genre.get_name(lang),
+                description=genre.get_description(lang),
                 percentage_match=next(
                     (
                         mg.percentage_match
@@ -244,8 +242,8 @@ def get_movie(
                 key=subgenre.key,
                 parent_genre=s.MovieGenre(
                     key=subgenre.genre.key,
-                    name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
-                    description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
+                    name=subgenre.genre.get_name(lang),
+                    description=subgenre.genre.get_description(lang),
                     percentage_match=next(
                         (
                             mg.percentage_match
@@ -254,8 +252,8 @@ def get_movie(
                         0.0,
                     ),
                 ),
-                name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-                description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                name=subgenre.get_name(lang),
+                description=subgenre.get_description(lang),
                 percentage_match=next(
                     (
                         mg.percentage_match
@@ -300,8 +298,8 @@ def get_movie(
         specifications=[
             s.MovieSpecification(
                 key=specification.key,
-                name=next((t.name for t in specification.translations if t.language == lang.value)),
-                description=next((t.description for t in specification.translations if t.language == lang.value)),
+                name=specification.get_name(lang),
+                description=specification.get_description(lang),
                 percentage_match=next(
                     (
                         mg.percentage_match
@@ -317,8 +315,8 @@ def get_movie(
         keywords=[
             s.MovieKeyword(
                 key=keyword.key,
-                name=next((t.name for t in keyword.translations if t.language == lang.value)),
-                description=next((t.description for t in keyword.translations if t.language == lang.value)),
+                name=keyword.get_name(lang),
+                description=keyword.get_description(lang),
                 percentage_match=next(
                     (
                         mg.percentage_match
@@ -332,8 +330,8 @@ def get_movie(
         action_times=[
             s.MovieActionTime(
                 key=action_time.key,
-                name=next((t.name for t in action_time.translations if t.language == lang.value)),
-                description=next((t.description for t in action_time.translations if t.language == lang.value)),
+                name=action_time.get_name(lang),
+                description=action_time.get_description(lang),
                 percentage_match=next(
                     (
                         mg.percentage_match
@@ -902,11 +900,6 @@ def get_pre_create_data(
 ):
     """Get pre-create data for a new movie"""
 
-    last_movie_id = db.scalar(sa.select(m.Movie.id).order_by(sa.desc(m.Movie.id)).limit(1))
-    if not last_movie_id:
-        log(log.ERROR, "Last movie ID not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found")
-
     # Order by natural order of RelatedMovie
     base_movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.relation_type)).all()
     if not base_movies:
@@ -985,7 +978,6 @@ def get_pre_create_data(
             s.ActorOut(
                 key=actor.key,
                 name=actor.full_name(lang),
-                name_uk=actor.full_name(s.Language.UK),
             )
         )
 
@@ -996,7 +988,6 @@ def get_pre_create_data(
             s.DirectorOut(
                 key=director.key,
                 name=director.full_name(lang),
-                name_uk=director.full_name(s.Language.UK),
             )
         )
 
@@ -1006,8 +997,8 @@ def get_pre_create_data(
         specifications_out.append(
             s.SpecificationOut(
                 key=specification.key,
-                name=next((t.name for t in specification.translations if t.language == lang.value)),
-                description=next((t.description for t in specification.translations if t.language == lang.value)),
+                name=specification.get_name(lang),
+                description=specification.get_description(lang),
             )
         )
 
@@ -1017,13 +1008,13 @@ def get_pre_create_data(
         genres_out.append(
             s.GenreOut(
                 key=genre.key,
-                name=next((t.name for t in genre.translations if t.language == lang.value)),
-                description=next((t.description for t in genre.translations if t.language == lang.value)),
+                name=genre.get_name(lang),
+                description=genre.get_description(lang),
                 subgenres=[
                     s.SubgenreOut(
                         key=subgenre.key,
-                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+                        name=subgenre.get_name(lang),
+                        description=subgenre.get_description(lang),
                         parent_genre_key=subgenre.genre.key,
                     )
                     for subgenre in genre.subgenres
@@ -1036,8 +1027,8 @@ def get_pre_create_data(
         keywords_out.append(
             s.KeywordOut(
                 key=keyword.key,
-                name=next((t.name for t in keyword.translations if t.language == lang.value)),
-                description=next((t.description for t in keyword.translations if t.language == lang.value)),
+                name=keyword.get_name(lang),
+                description=keyword.get_description(lang),
             )
         )
 
@@ -1046,8 +1037,8 @@ def get_pre_create_data(
         action_times_out.append(
             s.ActionTimeOut(
                 key=action_time.key,
-                name=next((t.name for t in action_time.translations if t.language == lang.value)),
-                description=next((t.description for t in action_time.translations if t.language == lang.value)),
+                name=action_time.get_name(lang),
+                description=action_time.get_description(lang),
             )
         )
 

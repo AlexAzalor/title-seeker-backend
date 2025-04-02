@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy import orm
-
+import app.schema as s
 from app.database import db
 
 from app.models.mixins import CreatableMixin, UpdatableMixin
@@ -37,3 +37,11 @@ class Subgenre(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
 
     def __repr__(self):
         return f"<Subgenre [{self.id}] - {self.translations[0].name}>"
+
+    def get_name(self, lang: s.Language = s.Language.UK) -> str:
+        return next((t.name for t in self.translations if t.language == lang.value), self.translations[0].name)
+
+    def get_description(self, lang: s.Language = s.Language.UK) -> str:
+        return next(
+            (t.description for t in self.translations if t.language == lang.value), self.translations[0].description
+        )
