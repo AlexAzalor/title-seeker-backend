@@ -22,3 +22,13 @@ add_pagination(app)
 @app.get("/", tags=["root"])
 async def root():
     return RedirectResponse(url="/docs")
+
+
+# TODO: add basic auth to swagger
+# security = HTTPBasic()
+# def swagger_auth(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+#     """Protects Swagger UI with basic auth"""
+#     if credentials.username != CFG.FASTAPI_USERNAME or credentials.password != CFG.FASTAPI_PASSWORD:
+#         raise HTTPException(status_code=401, detail="Unauthorized")
+
+#     return RedirectResponse(url="/docs")

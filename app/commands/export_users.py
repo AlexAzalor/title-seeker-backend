@@ -16,7 +16,8 @@ CFG = config()
 ID = "ID"
 FIRST_NAME = "first_name"
 LAST_NAME = "last_name"
-DESCRIPTION = "description"
+ROLE = "role"
+EMAIL = "email"
 
 
 def write_users_in_db(users: list[s.UserExportCreate]):
@@ -29,7 +30,8 @@ def write_users_in_db(users: list[s.UserExportCreate]):
             new_user = m.User(
                 first_name=user.first_name,
                 last_name=user.last_name,
-                description=user.description,
+                role=user.role.value,
+                email=user.email,
             )
 
             session.add(new_user)
@@ -70,7 +72,8 @@ def export_users_from_google_spreadsheets(with_print: bool = True, in_json: bool
     INDEX_ID = values[0].index(ID)
     INDEX_FIRST_NAME = values[0].index(FIRST_NAME)
     INDEX_LAST_NAME = values[0].index(LAST_NAME)
-    INDEX_DESCRIPTION = values[0].index(DESCRIPTION)
+    INDEX_ROLE = values[0].index(ROLE)
+    INDEX_EMAIL = values[0].index(EMAIL)
 
     print("values: ", values[:1])
     for row in values[1:]:
@@ -86,14 +89,19 @@ def export_users_from_google_spreadsheets(with_print: bool = True, in_json: bool
         last_name = row[INDEX_LAST_NAME]
         assert last_name, f"The last_name {last_name} is missing"
 
-        description = row[INDEX_DESCRIPTION] if INDEX_DESCRIPTION else ""
+        role = row[INDEX_ROLE]
+        assert role, f"The role {role} is missing"
+
+        email = row[INDEX_EMAIL]
+        assert email, f"The email {email} is missing"
 
         users.append(
             s.UserExportCreate(
                 id=id,
                 first_name=first_name,
                 last_name=last_name,
-                description=description,
+                role=role,
+                email=email,
             )
         )
 

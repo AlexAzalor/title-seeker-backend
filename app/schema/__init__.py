@@ -21,6 +21,7 @@ from .auth import (
     AuthAccount,
     AuthAccountOut,
     PasswordAuthIn,
+    GoogleAuthOut,
 )
 
 from .pagination import Pagination
@@ -71,7 +72,7 @@ from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, Ac
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
-from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn, RatingCriteria
+from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn, RatingCriteria, UserRole
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut

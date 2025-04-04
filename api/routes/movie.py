@@ -21,6 +21,8 @@ from api.controllers.create_movie import (
     remove_temp_movie,
     set_percentage_match,
 )
+
+from api.dependency.user import get_current_user
 from api.utils import extract_values, extract_word, get_error_message
 import app.models as m
 import app.schema as s
@@ -131,11 +133,10 @@ def get_movies(
 def get_movie(
     movie_key: str,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get movie by key"""
-
-    current_user = CFG.CURRENT_USER
 
     movie: m.Movie | None = db.scalar(
         sa.select(m.Movie)
@@ -163,7 +164,7 @@ def get_movie(
     user_rating = None
     if current_user:
         user_rating = db.scalar(
-            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
+            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
         )
 
     return s.MovieOut(
@@ -375,7 +376,8 @@ async def get_poster(filename: str):
     file_path = os.path.join(UPLOAD_DIRECTORY, filename)
 
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(os.path.join(UPLOAD_DIRECTORY, "poster-placeholder.jpg"))
+        # raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path)
 
@@ -845,11 +847,14 @@ def create_movie(
     file: UploadFile = File(None),
     lang: s.Language = s.Language.UK,
     temp_movie: bool = Query(default=False),
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Create a new movie"""
 
-    current_user = CFG.CURRENT_USER
+    if current_user.role != s.UserRole.ADMIN.value:
+        log(log.ERROR, "Only admin allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
@@ -872,7 +877,7 @@ def create_movie(
 
         add_new_characters(new_movie.id, db, form_data.actors_keys)
 
-        add_new_movie_rating(new_movie, db, current_user, form_data)
+        add_new_movie_rating(new_movie, db, current_user.id, form_data)
 
         if temp_movie:
             remove_temp_movie(form_data.key)
@@ -893,12 +898,16 @@ def create_movie(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Data not found"}},
 )
 def get_pre_create_data(
-    # movie_in: s.MovieIn,
     temp_movie_key: str | None = None,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get pre-create data for a new movie"""
+
+    if current_user.role != s.UserRole.ADMIN.value:
+        log(log.ERROR, "Only admin allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin allowed to add movie")
 
     # Order by natural order of RelatedMovie
     base_movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.relation_type)).all()
@@ -1104,10 +1113,15 @@ def get_pre_create_data(
 def quick_add_movie(
     form_data: s.QuickMovieFormData,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """For quick and temporary adding of new movies in a JSON file.
     Then these data will be used to fully add the movie to the database."""
+
+    if current_user.role != s.UserRole.ADMIN.value:
+        log(log.ERROR, "Only admin allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")

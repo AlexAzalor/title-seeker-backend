@@ -9,7 +9,17 @@ class Auth(BaseModel):
 
 
 class GoogleAuthIn(BaseModel):
-    id_token: str
+    # id_token: str
+    given_name: str
+    family_name: str
+    email: str
+
+
+class GoogleAuthOut(BaseModel):
+    uuid: str
+    full_name: str
+    email: str
+    role: str
 
 
 class GoogleTokenVerification(BaseModel):

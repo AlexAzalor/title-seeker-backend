@@ -13,6 +13,31 @@ CFG = config()
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
+@user_router.post(
+    "/google-auth",
+    status_code=status.HTTP_200_OK,
+    response_model=s.GoogleAuthOut,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Google account not found"}},
+)
+def google_auth(
+    auth_data: s.GoogleAuthIn,
+    db: Session = Depends(get_db),
+):
+    """Authenticate user with Google account"""
+
+    user = db.scalar(sa.select(m.User).where(m.User.is_deleted.is_(False), m.User.email == auth_data.email))
+
+    if not user:
+        user = m.User(first_name=auth_data.given_name, last_name=auth_data.family_name, email=auth_data.email)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        log(log.DEBUG, "User [%s] created", user.email)
+
+    return s.GoogleAuthOut(uuid=user.uuid, full_name=user.full_name, email=user.email, role=user.role)
+
+
 @user_router.put(
     "/rate-movie/{user_uuid}",
     status_code=status.HTTP_200_OK,
