@@ -60,7 +60,7 @@ class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
             sa.and_(
                 cls.is_deleted.is_(False),
                 sa.func.lower(cls.first_name) == sa.func.lower(username),
-                cls.role == s.UserRole.ADMIN.value,
+                cls.role == s.UserRole.OWNER.value,
             )
         )
         user = session.scalar(query)

@@ -9,6 +9,7 @@ CFG = config()
 class UserRole(Enum):
     USER = "user"
     ADMIN = "admin"
+    OWNER = "owner"
 
 
 class UserExportCreate(BaseModel):

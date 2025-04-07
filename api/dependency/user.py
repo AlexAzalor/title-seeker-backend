@@ -26,7 +26,7 @@ def get_current_user(
     user = db.scalar(
         sa.select(m.User).where(
             m.User.is_deleted.is_(False),
-            m.User.role.in_([s.UserRole.USER.value, s.UserRole.ADMIN.value]),
+            m.User.role.in_([s.UserRole.USER.value, s.UserRole.OWNER.value]),
             m.User.uuid == user_uuid,
         )
     )
