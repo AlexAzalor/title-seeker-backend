@@ -113,6 +113,9 @@ class BaseConfig(BaseSettings):
 
     SERVICES_LIMIT: int = 16
 
+    FASTAPI_USERNAME: str
+    FASTAPI_PASSWORD: str
+
     @staticmethod
     def configure(app):
         # Implement this method to do further configuration on your app.

@@ -245,6 +245,8 @@ class SimilarMovieOutList(BaseModel):
 class MovieOut(BaseModel):
     key: str
     title: str
+
+    # Info
     description: str
     location: str
     release_date: datetime
@@ -252,20 +254,37 @@ class MovieOut(BaseModel):
     budget: str
     domestic_gross: str
     worldwide_gross: str
+
+    # Filters
     actors: list[MovieActor]
     poster: str
     directors: list[MovieDirector]
     genres: list[MovieGenre] = []
     subgenres: list[MovieSubgenre] = []
-    ratings: list[MovieRating]
-    average_rating: float
-    ratings_count: int
-    user_rating: UserRatingCriteria | None = None
-    rating_criterion: RatingCriterion
     specifications: list[MovieSpecification]
     keywords: list[MovieKeyword]
     action_times: list[MovieActionTime]
 
+    # Ratings
+    # All movies ratings
+    ratings: list[MovieRating]
+    ratings_count: int
+
+    # Type
+    rating_criterion: RatingCriterion
+
+    # Owner rating
+    owner_rating: float
+
+    # User rating
+    user_rating: float | None = None
+    user_rating_criteria: UserRatingCriteria | None = None
+
+    # Main AVERAGE rating
+    overall_average_rating: float
+    overall_average_rating_criteria: UserRatingCriteria
+
+    # Relations
     related_movies: list[RelatedMovieOut] | None = None
     shared_universe: SharedUniverseOut | None = None
     shared_universe_order: int | None = None

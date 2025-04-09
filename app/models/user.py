@@ -1,16 +1,18 @@
 from uuid import uuid4
 import sqlalchemy as sa
 from sqlalchemy import orm
+import app.schema as s
 
-# from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database import db
 
 from app.models.mixins import CreatableMixin, UpdatableMixin
 from config import config
+from app.logger import log
 
 from .utils import ModelMixin
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 CFG = config()
 
@@ -24,42 +26,49 @@ class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
     uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()))
 
-    # fullname: orm.Mapped[str] = orm.mapped_column(sa.String(128), default="")  # fill in registration form
-    first_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), default="")
-    last_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), default="")
-    description: orm.Mapped[str] = orm.mapped_column(sa.String(512), default="", server_default="")
+    email: orm.Mapped[str] = orm.mapped_column(sa.String(128), unique=True)  # get from google
+    first_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), default="")  # get from google
+    last_name: orm.Mapped[str] = orm.mapped_column(sa.String(64), default="")  # get from google
+
+    role: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.UserRole.USER.value)
 
     ratings: orm.Mapped[list["Rating"]] = orm.relationship("Rating", back_populates="user")
 
-    # password_hash: orm.Mapped[str | None] = orm.mapped_column(sa.String(256))  # fill in registration form
+    password_hash: orm.Mapped[str | None] = orm.mapped_column(sa.String(256))  # only for admin
 
     is_deleted: orm.Mapped[bool] = orm.mapped_column(default=False)
 
-    # @property
-    # def password(self):
-    #     return self.password_hash
+    @property
+    def password(self):
+        return self.password_hash
 
-    # @password.setter
-    # def password(self, password):
-    #     self.password_hash = generate_password_hash(password)
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    # @classmethod
-    # def authenticate(
-    #     cls,
-    #     username: str,
-    #     password: str,
-    #     session: orm.Session,
-    # ) -> Self | None:
-    #     assert username and password, "username and password must be provided"
-    #     query = cls.select().where(
-    #         sa.and_(cls.is_deleted.is_(False), sa.func.lower(cls.first_name) == sa.func.lower(username))
-    #     )
-    #     user = session.scalar(query)
-    #     if not user:
-    #         log(log.WARNING, "user:[%s] not found", username)
-    #     elif check_password_hash(user.password_hash, password):
-    #         return user
-    #     return None
+    @classmethod
+    def authenticate(
+        cls,
+        username: str,
+        password: str,
+        session: orm.Session,
+    ) -> Self | None:
+        assert username and password, "username and password must be provided"
+
+        # test role user
+        query = cls.select().where(
+            sa.and_(
+                cls.is_deleted.is_(False),
+                sa.func.lower(cls.first_name) == sa.func.lower(username),
+                cls.role == s.UserRole.OWNER.value,
+            )
+        )
+        user = session.scalar(query)
+        if not user:
+            log(log.WARNING, "user:[%s] not found", username)
+        elif check_password_hash(user.password_hash, password):
+            return user
+        return None
 
     @property
     def full_name(self):

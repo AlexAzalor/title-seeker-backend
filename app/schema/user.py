@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 from config import config
@@ -5,11 +6,18 @@ from config import config
 CFG = config()
 
 
+class UserRole(Enum):
+    USER = "user"
+    ADMIN = "admin"
+    OWNER = "owner"
+
+
 class UserExportCreate(BaseModel):
     id: int
     first_name: str
     last_name: str
-    description: str | None = None
+    role: UserRole
+    email: str
 
     model_config = ConfigDict(
         from_attributes=True,

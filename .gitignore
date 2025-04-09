@@ -22,4 +22,4 @@ dump.tgz
 uploads/*
 backups/*
 
- *.pem
+*.pem

@@ -67,7 +67,8 @@ async def get_actor_avatar(filename: str):
     file_path = os.path.join(UPLOAD_DIRECTORY + "actors/", filename)
 
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(os.path.join(UPLOAD_DIRECTORY + "actors/", "avatar-placeholder.jpg"))
+        # raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path)
 
@@ -79,6 +80,7 @@ async def get_director_avatar(filename: str):
     file_path = os.path.join(UPLOAD_DIRECTORY + "directors/", filename)
 
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(os.path.join(UPLOAD_DIRECTORY + "directors/", "avatar-placeholder.jpg"))
+        # raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path)

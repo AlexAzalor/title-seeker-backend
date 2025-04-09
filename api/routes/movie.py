@@ -21,6 +21,8 @@ from api.controllers.create_movie import (
     remove_temp_movie,
     set_percentage_match,
 )
+
+from api.dependency.user import get_current_user
 from api.utils import extract_values, extract_word, get_error_message
 import app.models as m
 import app.schema as s
@@ -131,11 +133,10 @@ def get_movies(
 def get_movie(
     movie_key: str,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get movie by key"""
-
-    current_user = CFG.CURRENT_USER
 
     movie: m.Movie | None = db.scalar(
         sa.select(m.Movie)
@@ -163,8 +164,20 @@ def get_movie(
     user_rating = None
     if current_user:
         user_rating = db.scalar(
-            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user)
+            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
         )
+
+    owner = db.scalar(sa.select(m.User).where(m.User.role == s.UserRole.OWNER.value))
+    if not owner:
+        log(log.ERROR, "Owner not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner not found")
+
+    owner_rating = db.scalar(
+        sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == owner.id)
+    )
+    if not owner_rating:
+        log(log.ERROR, "Owner rating for movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner rating not found")
 
     return s.MovieOut(
         key=movie.key,
@@ -177,33 +190,57 @@ def get_movie(
         domestic_gross=movie.formatted_domestic_gross,
         worldwide_gross=movie.formatted_worldwide_gross,
         release_date=movie.release_date if movie.release_date else datetime.now(),
-        related_movies=[
-            s.RelatedMovieOut(
-                key=related_movie.key,
-                poster=related_movie.poster,
-                title=related_movie.get_title(lang),
-                relation_type=s.RelatedMovie(related_movie.relation_type),
+        # Rating
+        # All movies ratings
+        ratings=[
+            s.MovieRating(
+                uuid=rating.uuid,
+                rating=rating.rating,
+                comment=rating.comment,
             )
-            for related_movie in movie.related_movies_collection
-        ]
-        if movie.relation_type
-        else None,
-        shared_universe_order=movie.shared_universe_order,
-        shared_universe=s.SharedUniverseOut(
-            key=movie.shared_universe.key,
-            name=movie.shared_universe.get_name(lang),
-            description=movie.shared_universe.get_description(lang),
-            movies=[
-                s.SharedUniverseMovies(
-                    key=shared_movie.key,
-                    title=shared_movie.get_title(lang),
-                    poster=shared_movie.poster,
-                    order=shared_movie.shared_universe_order,
-                )
-                for shared_movie in movie.shared_universe.get_sorted_movies()
-            ],
+            for rating in movie.ratings
+        ],
+        ratings_count=movie.ratings_count,
+        # Rating Type
+        rating_criterion=s.RatingCriterion(movie.rating_criterion),
+        # Owner rating
+        # owner_rating=owner_rating.rating,
+        owner_rating=owner_rating.rating,
+        # Main AVERAGE rating
+        overall_average_rating=movie.average_rating,
+        overall_average_rating_criteria=s.UserRatingCriteria(
+            acting=movie.average_by_criteria.get("acting", 0.01),
+            plot_storyline=movie.average_by_criteria.get("plot_storyline", 0.01),
+            script_dialogue=movie.average_by_criteria.get("script_dialogue", 0.01),
+            music=movie.average_by_criteria.get("music", 0.01),
+            enjoyment=movie.average_by_criteria.get("enjoyment", 0.01),
+            production_design=movie.average_by_criteria.get("production_design", 0.01),
+            visual_effects=movie.average_by_criteria.get("visual_effects"),
+            scare_factor=movie.average_by_criteria.get("scare_factor"),
+            humor=movie.average_by_criteria.get("humor"),
+            animation_cartoon=movie.average_by_criteria.get("animation_cartoon"),
+        ),
+        # User rating
+        user_rating=user_rating.rating if user_rating and current_user.id != owner.id else None,
+        user_rating_criteria=s.UserRatingCriteria(
+            acting=user_rating.acting,
+            plot_storyline=user_rating.plot_storyline,
+            script_dialogue=user_rating.script_dialogue,
+            music=user_rating.music,
+            enjoyment=user_rating.enjoyment,
+            production_design=user_rating.production_design,
+            visual_effects=user_rating.visual_effects
+            if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS.value
+            else None,
+            scare_factor=user_rating.scare_factor
+            if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR.value
+            else None,
+            humor=user_rating.humor if movie.rating_criterion == s.RatingCriterion.HUMOR.value else None,
+            animation_cartoon=user_rating.animation_cartoon
+            if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON.value
+            else None,
         )
-        if movie.shared_universe
+        if user_rating
         else None,
         actors=[
             s.MovieActor(
@@ -264,37 +301,6 @@ def get_movie(
             )
             for subgenre in movie.subgenres
         ],
-        ratings=[
-            s.MovieRating(
-                uuid=rating.uuid,
-                rating=rating.rating,
-                comment=rating.comment,
-            )
-            for rating in movie.ratings
-        ],
-        average_rating=movie.average_rating,
-        ratings_count=movie.ratings_count,
-        user_rating=s.UserRatingCriteria(
-            acting=user_rating.acting,
-            plot_storyline=user_rating.plot_storyline,
-            script_dialogue=user_rating.script_dialogue,
-            music=user_rating.music,
-            enjoyment=user_rating.enjoyment,
-            production_design=user_rating.production_design,
-            visual_effects=user_rating.visual_effects
-            if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS.value
-            else None,
-            scare_factor=user_rating.scare_factor
-            if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR.value
-            else None,
-            humor=user_rating.humor if movie.rating_criterion == s.RatingCriterion.HUMOR.value else None,
-            animation_cartoon=user_rating.animation_cartoon
-            if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON.value
-            else None,
-        )
-        if user_rating
-        else None,
-        rating_criterion=s.RatingCriterion(movie.rating_criterion),
         specifications=[
             s.MovieSpecification(
                 key=specification.key,
@@ -344,6 +350,34 @@ def get_movie(
             )
             for action_time in movie.action_times
         ],
+        related_movies=[
+            s.RelatedMovieOut(
+                key=related_movie.key,
+                poster=related_movie.poster,
+                title=related_movie.get_title(lang),
+                relation_type=s.RelatedMovie(related_movie.relation_type),
+            )
+            for related_movie in movie.related_movies_collection
+        ]
+        if movie.relation_type
+        else None,
+        shared_universe_order=movie.shared_universe_order,
+        shared_universe=s.SharedUniverseOut(
+            key=movie.shared_universe.key,
+            name=movie.shared_universe.get_name(lang),
+            description=movie.shared_universe.get_description(lang),
+            movies=[
+                s.SharedUniverseMovies(
+                    key=shared_movie.key,
+                    title=shared_movie.get_title(lang),
+                    poster=shared_movie.poster,
+                    order=shared_movie.shared_universe_order,
+                )
+                for shared_movie in movie.shared_universe.get_sorted_movies()
+            ],
+        )
+        if movie.shared_universe
+        else None,
     )
 
 
@@ -375,7 +409,8 @@ async def get_poster(filename: str):
     file_path = os.path.join(UPLOAD_DIRECTORY, filename)
 
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(os.path.join(UPLOAD_DIRECTORY, "poster-placeholder.jpg"))
+        # raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path)
 
@@ -845,11 +880,14 @@ def create_movie(
     file: UploadFile = File(None),
     lang: s.Language = s.Language.UK,
     temp_movie: bool = Query(default=False),
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Create a new movie"""
 
-    current_user = CFG.CURRENT_USER
+    if current_user.role != s.UserRole.OWNER.value:
+        log(log.ERROR, "Only owner allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
@@ -872,7 +910,7 @@ def create_movie(
 
         add_new_characters(new_movie.id, db, form_data.actors_keys)
 
-        add_new_movie_rating(new_movie, db, current_user, form_data)
+        add_new_movie_rating(new_movie, db, current_user.id, form_data)
 
         if temp_movie:
             remove_temp_movie(form_data.key)
@@ -893,12 +931,16 @@ def create_movie(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Data not found"}},
 )
 def get_pre_create_data(
-    # movie_in: s.MovieIn,
     temp_movie_key: str | None = None,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get pre-create data for a new movie"""
+
+    if current_user.role != s.UserRole.OWNER.value:
+        log(log.ERROR, "Only owner allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     # Order by natural order of RelatedMovie
     base_movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.relation_type)).all()
@@ -1104,10 +1146,15 @@ def get_pre_create_data(
 def quick_add_movie(
     form_data: s.QuickMovieFormData,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """For quick and temporary adding of new movies in a JSON file.
     Then these data will be used to fully add the movie to the database."""
+
+    if current_user.role != s.UserRole.OWNER.value:
+        log(log.ERROR, "Only owner allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
