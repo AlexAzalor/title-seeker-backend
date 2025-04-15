@@ -1,6 +1,8 @@
+import os
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
-from api.dependency.user import get_current_user
+from api.controllers.create_movie import QUICK_MOVIES_FILE, get_movies_data_from_file
+from api.dependency.user import get_admin, get_current_user
 import app.models as m
 import sqlalchemy as sa
 
@@ -37,7 +39,22 @@ def google_auth(
 
         log(log.DEBUG, "User [%s] created", user.email)
 
-    return s.GoogleAuthOut(uuid=user.uuid, full_name=user.full_name, email=user.email, role=user.role)
+    new_movies_to_add_count = 0
+
+    if user.role == s.UserRole.OWNER.value:
+        if os.path.exists(QUICK_MOVIES_FILE):
+            temp_movies = get_movies_data_from_file()
+
+            if temp_movies:
+                new_movies_to_add_count = len(temp_movies)
+
+    return s.GoogleAuthOut(
+        uuid=user.uuid,
+        full_name=user.full_name,
+        email=user.email,
+        role=user.role,
+        new_movies_to_add_count=new_movies_to_add_count,
+    )
 
 
 @user_router.delete(
@@ -353,3 +370,37 @@ def genre_radar_chart(
 #             for movie, rating in zip(movies, current_user.ratings)
 #         ],
 #     )
+
+
+@user_router.get(
+    "/all/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.UsersListOut,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def get_all_users(
+    admin: m.User = Depends(get_admin),
+    # lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get all users"""
+
+    users = db.scalars(sa.select(m.User).where(m.User.is_deleted.is_(False))).all()
+
+    if not users:
+        log(log.ERROR, "Users not found")
+        raise HTTPException(status_code=404, detail="Users not found")
+
+    users_out = [
+        s.UserOut(
+            uuid=user.uuid,
+            full_name=user.full_name,
+            email=user.email,
+            role=s.UserRole(user.role),
+            created_at=user.created_at,
+        )
+        for user in users
+        if user.role != s.UserRole.OWNER.value
+    ]
+
+    return s.UsersListOut(users=users_out)

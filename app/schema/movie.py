@@ -338,6 +338,14 @@ class MoviePreviewOutList(BaseModel):
     )
 
 
+class TempMovieList(BaseModel):
+    temporary_movies: list[TempMovie]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieSearchOut(BaseModel):
     key: str
     title_en: str

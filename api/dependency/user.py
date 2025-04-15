@@ -27,7 +27,6 @@ def get_current_user(
         sa.select(m.User)
         .where(
             m.User.is_deleted.is_(False),
-            m.User.role.in_([s.UserRole.USER.value, s.UserRole.OWNER.value]),
             m.User.uuid == user_uuid,
         )
         .options(joinedload(m.User.ratings))
@@ -45,6 +44,30 @@ def get_current_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User was not found",
         )
+    return user
+
+
+def get_admin(
+    user_uuid: str,
+    db: Session = Depends(get_db),
+) -> m.User:
+    """Raises an exception if the current user is not admin or owner"""
+
+    user = db.scalar(
+        sa.select(m.User).where(
+            m.User.is_deleted.is_(False),
+            m.User.role.in_([s.UserRole.ADMIN.value, s.UserRole.OWNER.value]),
+            m.User.uuid == user_uuid,
+        )
+    )
+
+    if not user:
+        log(log.INFO, "User not allowed to access this resource")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not allowed to access this resource",
+        )
+
     return user
 
 

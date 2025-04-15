@@ -23,7 +23,7 @@ from api.controllers.create_movie import (
     set_percentage_match,
 )
 
-from api.dependency.user import get_current_user
+from api.dependency.user import get_admin, get_current_user
 from api.utils import extract_values, extract_word, get_error_message
 import app.models as m
 import app.schema as s
@@ -124,7 +124,9 @@ def get_movies(
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
                 main_genre=main_genre,
-                rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0),
+                rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0)
+                if current_user
+                else 0.0,
             )
         )
 
@@ -1635,3 +1637,31 @@ def get_similar_movies(
             for movie in similar_movies
         ],
     )
+
+
+@movie_router.get(
+    "/movies-to-add/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.TempMovieList,
+)
+def movies_to_add(
+    admin_user: m.User = Depends(get_admin),
+):
+    """List of new movies to add"""
+
+    temporary_movies = []
+
+    if os.path.exists(QUICK_MOVIES_FILE):
+        temp_movies = get_movies_data_from_file()
+
+        if temp_movies:
+            for temp_movie in temp_movies:
+                temporary_movies.append(
+                    s.TempMovie(
+                        key=temp_movie.key,
+                        title_en=temp_movie.title_en,
+                        rating=temp_movie.rating,
+                    )
+                )
+
+    return s.TempMovieList(temporary_movies=temporary_movies)

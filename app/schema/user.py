@@ -102,3 +102,23 @@ class GenreChartDataList(BaseModel):
     joined_date: datetime
     movies_rated: int
     last_movie_rate_date: datetime | None
+
+
+class UserOut(BaseModel):
+    uuid: str
+    full_name: str
+    email: str
+    role: UserRole
+    created_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class UsersListOut(BaseModel):
+    users: list[UserOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

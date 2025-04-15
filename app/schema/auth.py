@@ -20,6 +20,7 @@ class GoogleAuthOut(BaseModel):
     full_name: str
     email: str
     role: str
+    new_movies_to_add_count: int
 
 
 class GoogleTokenVerification(BaseModel):

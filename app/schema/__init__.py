@@ -67,6 +67,7 @@ from .movie import (
     MovieOutShort,
     SimilarMovieOut,
     SimilarMovieOutList,
+    TempMovieList,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
@@ -83,6 +84,8 @@ from .user import (
     GenreChartDataOut,
     GenreChartDataList,
     TopMyMoviesOut,
+    UserOut,
+    UsersListOut,
 )
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
