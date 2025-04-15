@@ -1,7 +1,7 @@
 # ruff: noqa: F401
 from .admin import Admin
 
-from .general import TitleType
+from .general import TitleType, SortOrder, SortBy
 
 from .token import Token, TokenData
 from .whoami import WhoAmI
@@ -72,7 +72,18 @@ from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, Ac
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
 from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
-from .user import UserExportCreate, UsersJSONFile, UserRateMovieIn, RatingCriteria, UserRole
+from .user import (
+    UserExportCreate,
+    UsersJSONFile,
+    UserRateMovieIn,
+    RatingCriteria,
+    UserRole,
+    TimeRateMovieOut,
+    MovieChartData,
+    GenreChartDataOut,
+    GenreChartDataList,
+    TopMyMoviesOut,
+)
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut

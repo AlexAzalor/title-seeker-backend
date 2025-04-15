@@ -2,8 +2,9 @@ import json
 import os
 from datetime import datetime
 from random import randint
-from typing import Annotated
+from typing import Annotated, Sequence, Union
 
+from fastapi_pagination import Page, paginate
 import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
 from fastapi.responses import FileResponse
@@ -44,33 +45,55 @@ UPLOAD_DIRECTORY = "./uploads/posters/"
 @movie_router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MoviePreviewOutList,
+    response_model=Page[s.MoviePreviewOut],
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def get_movies(
     # query: str = Query(default="", max_length=128),
-    # lang: Language = Language.UK,
-    # selected_locations: Annotated[Union[List[str], None], Query()] = None,
-    # order_by: s.JobsOrderBy = s.JobsOrderBy.CREATED_AT,
-    # order_type: s.OrderType = s.OrderType.ASC,
-    # current_user: m.User = Depends(get_current_user),
-    # genre_uuid: str | None = None,
+    sort_by: s.SortBy = s.SortBy.RATED_AT,
+    sort_order: s.SortOrder = s.SortOrder.DESC,
+    current_user: m.User = Depends(get_current_user),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Get movies by query params"""
 
-    db_movies = (
-        db.scalars(
-            sa.select(m.Movie)
-            .where(m.Movie.is_deleted.is_(False))
-            .order_by(m.Movie.id.desc())
-            .options(joinedload(m.Movie.translations))
-            # .order_by(m.Movie.release_date.desc())
+    db_movies: Union[list[m.Movie], Sequence[m.Movie]] = []
+
+    if not current_user:
+        db_movies = (
+            db.scalars(
+                sa.select(m.Movie)
+                .where(m.Movie.is_deleted.is_(False))
+                .order_by(m.Movie.id.desc())
+                .options(joinedload(m.Movie.translations))
+                # .order_by(m.Movie.release_date.desc())
+            )
+            .unique()
+            .all()
         )
-        .unique()
-        .all()
-    )
+    else:
+        my_ratings = current_user.ratings
+        is_reverse = sort_order == s.SortOrder.DESC
+
+        if sort_by == s.SortBy.RATED_AT:
+            my_ratings = sorted(my_ratings, key=lambda x: x.updated_at, reverse=is_reverse)
+
+        if sort_by == s.SortBy.RATING:
+            my_ratings = sorted(my_ratings, key=lambda x: x.rating, reverse=is_reverse)
+
+        if sort_by == s.SortBy.RATINGS_COUNT:
+            my_ratings = sorted(my_ratings, key=lambda x: x.movie.ratings_count, reverse=is_reverse)
+
+        if sort_by == s.SortBy.RELEASE_DATE:
+            my_ratings = sorted(
+                my_ratings, key=lambda x: x.movie.release_date if x.movie.release_date else "", reverse=is_reverse
+            )
+
+        if sort_by == s.SortBy.RANDOM:
+            my_ratings = sorted(my_ratings, key=lambda x: randint(0, 100), reverse=is_reverse)
+
+        db_movies = [rating.movie for rating in my_ratings if rating.movie.is_deleted is False]
 
     movies_out = []
     for movie in db_movies:
@@ -101,25 +124,31 @@ def get_movies(
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
                 main_genre=main_genre,
+                rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0),
             )
         )
 
-    temporary_movies = []
+    # temporary_movies = []
 
-    if os.path.exists(QUICK_MOVIES_FILE):
-        temp_movies = get_movies_data_from_file()
+    # if os.path.exists(QUICK_MOVIES_FILE):
+    #     temp_movies = get_movies_data_from_file()
 
-        if temp_movies:
-            for temp_movie in temp_movies:
-                temporary_movies.append(
-                    s.TempMovie(
-                        key=temp_movie.key,
-                        title_en=temp_movie.title_en,
-                        rating=temp_movie.rating,
-                    )
-                )
+    #     if temp_movies:
+    #         for temp_movie in temp_movies:
+    #             temporary_movies.append(
+    #                 s.TempMovie(
+    #                     key=temp_movie.key,
+    #                     title_en=temp_movie.title_en,
+    #                     rating=temp_movie.rating,
+    #                 )
+    #             )
 
-    return s.MoviePreviewOutList(movies=movies_out, temporary_movies=temporary_movies)
+    # data_out = s.MoviePreviewOutList(movies=movies_out, temporary_movies=temporary_movies)
+
+    # if sort_order == s.SortOrder.DESC:
+    #     movies_out = movies_out[::-1]
+
+    return paginate(movies_out)
 
 
 @movie_router.get(
@@ -180,6 +209,7 @@ def get_movie(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner rating not found")
 
     return s.MovieOut(
+        created_at=movie.created_at,
         key=movie.key,
         title=movie.get_title(lang),
         description=movie.get_description(lang),
@@ -660,6 +690,7 @@ def super_search_movies(
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
                 main_genre=main_genre,
+                rating=movie.average_rating,
             )
         )
 
