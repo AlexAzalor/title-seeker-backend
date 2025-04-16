@@ -1,3 +1,4 @@
+from datetime import datetime
 import enum
 from pydantic import BaseModel, ConfigDict
 
@@ -31,6 +32,8 @@ class RatingExportCreate(BaseModel):
     humor: float | None = None
     animation_cartoon: float | None = None
     comment: str | None = None
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,

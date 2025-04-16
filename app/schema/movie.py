@@ -289,6 +289,8 @@ class MovieOut(BaseModel):
     shared_universe: SharedUniverseOut | None = None
     shared_universe_order: int | None = None
 
+    created_at: datetime
+
     model_config = ConfigDict(
         from_attributes=True,
     )
@@ -309,6 +311,7 @@ class MoviePreviewOut(BaseModel):
     release_date: datetime
     duration: str
     main_genre: str
+    rating: float
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -328,6 +331,14 @@ class TempMovie(BaseModel):
 class MoviePreviewOutList(BaseModel):
     movies: list[MoviePreviewOut]
     # Temporary new movies
+    temporary_movies: list[TempMovie]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TempMovieList(BaseModel):
     temporary_movies: list[TempMovie]
 
     model_config = ConfigDict(

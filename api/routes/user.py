@@ -1,11 +1,14 @@
+import os
+from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
-from api.dependency.user import get_current_user
+from api.controllers.create_movie import QUICK_MOVIES_FILE, get_movies_data_from_file
+from api.dependency.user import get_admin, get_current_user
 import app.models as m
 import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 from config import config
 
@@ -36,7 +39,46 @@ def google_auth(
 
         log(log.DEBUG, "User [%s] created", user.email)
 
-    return s.GoogleAuthOut(uuid=user.uuid, full_name=user.full_name, email=user.email, role=user.role)
+    new_movies_to_add_count = 0
+
+    if user.role == s.UserRole.OWNER.value:
+        if os.path.exists(QUICK_MOVIES_FILE):
+            temp_movies = get_movies_data_from_file()
+
+            if temp_movies:
+                new_movies_to_add_count = len(temp_movies)
+
+    return s.GoogleAuthOut(
+        uuid=user.uuid,
+        full_name=user.full_name,
+        email=user.email,
+        role=user.role,
+        new_movies_to_add_count=new_movies_to_add_count,
+    )
+
+
+@user_router.delete(
+    "/delete-google-profile",
+    status_code=status.HTTP_200_OK,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Google account not found"}},
+)
+def delete_google_profile(
+    current_user: m.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete user profile"""
+
+    if current_user.role == s.UserRole.OWNER.value:
+        log(log.ERROR, "Owner profile cannot be deleted")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner profile cannot be deleted")
+
+    current_user.is_deleted = True
+    current_user.email = current_user.email + "-delete at-" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # The synchronize_session=False argument ensures that the session does not attempt to synchronize the in-memory state with the database after the bulk delete.
+    db.query(m.Rating).filter(m.Rating.user_id == current_user.id).delete(synchronize_session=False)
+
+    db.commit()
+    log(log.DEBUG, "User [%s] deleted", current_user.email)
 
 
 @user_router.put(
@@ -203,3 +245,171 @@ def rate_movie(
     # with open("data/ratings.json", "w") as file:
     #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
     #     print("Ratings data saved to [data/ratings.json] file")
+
+
+@user_router.get(
+    "/time-rate-movies",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieChartData,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def time_rate_movie(
+    current_user: m.User = Depends(get_current_user),
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get data for time rate movies chart"""
+
+    movies = db.scalars(sa.select(m.Movie).where(m.Movie.is_deleted.is_(False))).all()
+    if not movies:
+        log(log.ERROR, "Movies not found")
+        raise HTTPException(status_code=404, detail="Movies not found")
+
+    data = []
+
+    for rating in current_user.ratings:
+        created_at = rating.created_at if rating.created_at > rating.updated_at else rating.updated_at
+        data.append(
+            s.TimeRateMovieOut(
+                # TODO: Implement Timezone
+                created_at=created_at + +timedelta(hours=3),
+                rating=rating.rating,
+                movie_title=rating.movie.get_title(lang),
+            )
+        )
+
+    return s.MovieChartData(movie_chart_data=sorted(data, key=lambda x: x.created_at)[-30:])
+
+
+@user_router.get(
+    "/genre-radar-chart",
+    status_code=status.HTTP_200_OK,
+    response_model=s.GenreChartDataList,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def genre_radar_chart(
+    current_user: m.User = Depends(get_current_user),
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get top users genres for radar chart"""
+
+    ratings = sorted(current_user.ratings, key=lambda x: x.rating, reverse=True)[:3]
+
+    top_rated_movies = [
+        s.TopMyMoviesOut(
+            key=rating.movie.key, title=rating.movie.get_title(lang), rating=rating.rating, poster=rating.movie.poster
+        )
+        for rating in ratings
+    ]
+
+    genres_keys = ["action", "adventure", "comedy", "drama", "fantasy", "sci-fi", "horror", "romance"]
+
+    # separate route?
+    stmt = (
+        sa.select(m.Genre)
+        .options(selectinload(m.Genre.movies), selectinload(m.Genre.translations))
+        .join(m.Genre.movies)
+        .join(m.Movie.ratings)
+        .where(m.Rating.user_id == current_user.id)
+        .where(m.Genre.key.in_(genres_keys))
+        .group_by(m.Genre.id)  # Grouping by ID since we're returning Genre objects
+    )
+
+    result = db.scalars(stmt).all()
+
+    genre_counts = []
+
+    for genre in result:
+        count = sum(1 for movie in genre.movies if any(r.user_id == current_user.id for r in movie.ratings))
+        genre_counts.append(
+            s.GenreChartDataOut(
+                name=genre.get_name(lang),
+                count=count,
+            )
+        )
+
+    last_rating_date = None
+
+    if current_user.ratings:
+        create_date = current_user.ratings[-1].created_at
+        update_date = current_user.ratings[-1].updated_at
+        # Compare the two dates and assign the later one to last_rating_date
+        last_rating_date = create_date if create_date > update_date else update_date
+
+    actors_count = None
+
+    if current_user.role == s.UserRole.OWNER.value:
+        actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
+
+    return s.GenreChartDataList(
+        genre_data=genre_counts,
+        top_rated_movies=top_rated_movies,
+        joined_date=current_user.created_at,
+        movies_rated=len(current_user.ratings),
+        last_movie_rate_date=last_rating_date,
+        total_actors_count=actors_count,
+    )
+
+
+# @user_router.get(
+#     "/my-rated-movies",
+#     status_code=status.HTTP_200_OK,
+#     response_model=s.MoviePreviewOutList,
+#     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+# )
+# def my_rated_movies(
+#     current_user: m.User = Depends(get_current_user),
+#     lang: s.Language = s.Language.UK,
+#     db: Session = Depends(get_db),
+# ):
+#     """Get list of all movies rated by user"""
+
+#     movies = [movie.movie for movie in current_user.ratings if not movie.is_deleted]
+
+#     return s.MoviePreviewOutList(
+
+#         movies=[
+#             s.MoviePreviewOut(
+#                 key=movie.key,
+#                 title=movie.get_title(lang),
+#                 poster=movie.poster,
+#                 rating=rating.rating,
+#             )
+#             for movie, rating in zip(movies, current_user.ratings)
+#         ],
+#     )
+
+
+@user_router.get(
+    "/all/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.UsersListOut,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def get_all_users(
+    admin: m.User = Depends(get_admin),
+    # lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get all users"""
+
+    users = db.scalars(sa.select(m.User).where(m.User.is_deleted.is_(False))).all()
+
+    if not users:
+        log(log.ERROR, "Users not found")
+        raise HTTPException(status_code=404, detail="Users not found")
+
+    users_out = [
+        s.UserOut(
+            uuid=user.uuid,
+            full_name=user.full_name,
+            email=user.email,
+            role=s.UserRole(user.role),
+            created_at=user.created_at,
+        )
+        for user in users
+        if user.role != s.UserRole.OWNER.value
+    ]
+
+    return s.UsersListOut(users=users_out)

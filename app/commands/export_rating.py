@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import sqlalchemy as sa
 
@@ -28,9 +29,11 @@ HUMOR = "humor"
 ANIMATION_CARTOON = "animation_cartoon"
 RATING = "rating"
 COMMENT = "comment"
+CREATED_AT = "created_at"
+UPDATED_AT = "updated_at"
 
 # Last column need to be filled!
-LAST_SHEET_COLUMN = "P"
+LAST_SHEET_COLUMN = "R"
 RATING_RANGE_NAME = f"Rating!A1:{LAST_SHEET_COLUMN}"
 
 
@@ -58,6 +61,8 @@ def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
                         humor=rating.humor,
                         animation_cartoon=rating.animation_cartoon,
                         comment=rating.comment if rating.comment else "",
+                        created_at=rating.created_at,
+                        updated_at=rating.updated_at,
                     )
                 )
                 session.flush()
@@ -79,6 +84,8 @@ def write_ratings_in_db(ratings: list[s.RatingExportCreate]):
                 humor=rating.humor,
                 animation_cartoon=rating.animation_cartoon,
                 comment=rating.comment,
+                created_at=rating.created_at,
+                updated_at=rating.updated_at,
             )
 
             session.add(new_rating)
@@ -127,6 +134,8 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
     INDEX_ANIMATION_CARTOON = values[0].index(ANIMATION_CARTOON)
     INDEX_RATING = values[0].index(RATING)
     INDEX_COMMENT = values[0].index(COMMENT)
+    INDEX_CREATED_AT = values[0].index(CREATED_AT)
+    INDEX_UPDATED_AT = values[0].index(UPDATED_AT)
 
     print("values: ", values[:1])
     for row in values[1:]:
@@ -190,6 +199,14 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
 
         comment = row[INDEX_COMMENT]
 
+        created_at_str = row[INDEX_CREATED_AT]
+        if not created_at_str:
+            continue
+
+        updated_at_str = row[INDEX_UPDATED_AT]
+        if not updated_at_str:
+            continue
+
         ratings.append(
             s.RatingExportCreate(
                 id=id,
@@ -207,6 +224,8 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
                 humor=humor if humor else None,
                 animation_cartoon=animation_cartoon if animation_cartoon else None,
                 comment=comment if comment else None,
+                created_at=datetime.strptime(created_at_str, "%d.%m.%Y %H:%M:%S"),
+                updated_at=datetime.strptime(updated_at_str, "%d.%m.%Y %H:%M:%S"),
             )
         )
 

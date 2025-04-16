@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
@@ -55,6 +56,69 @@ class UserRateMovieIn(BaseModel):
     movie_key: str
     rating: float
     rating_criteria: RatingCriteria
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TimeRateMovieOut(BaseModel):
+    created_at: datetime
+    rating: float
+    movie_title: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieChartData(BaseModel):
+    movie_chart_data: list[TimeRateMovieOut]
+
+
+class GenreChartDataOut(BaseModel):
+    name: str
+    count: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TopMyMoviesOut(BaseModel):
+    key: str
+    title: str
+    rating: float
+    poster: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenreChartDataList(BaseModel):
+    genre_data: list[GenreChartDataOut]
+    top_rated_movies: list[TopMyMoviesOut]
+    joined_date: datetime
+    movies_rated: int
+    last_movie_rate_date: datetime | None
+    total_actors_count: int | None = None
+
+
+class UserOut(BaseModel):
+    uuid: str
+    full_name: str
+    email: str
+    role: UserRole
+    created_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class UsersListOut(BaseModel):
+    users: list[UserOut]
 
     model_config = ConfigDict(
         from_attributes=True,
