@@ -68,6 +68,10 @@ def delete_google_profile(
 ):
     """Delete user profile"""
 
+    if current_user.role == s.UserRole.OWNER.value:
+        log(log.ERROR, "Owner profile cannot be deleted")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner profile cannot be deleted")
+
     current_user.is_deleted = True
     current_user.email = current_user.email + "-delete at-" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # The synchronize_session=False argument ensures that the session does not attempt to synchronize the in-memory state with the database after the bulk delete.
@@ -333,13 +337,18 @@ def genre_radar_chart(
         # Compare the two dates and assign the later one to last_rating_date
         last_rating_date = create_date if create_date > update_date else update_date
 
-    # Get all actors
+    actors_count = None
+
+    if current_user.role == s.UserRole.OWNER.value:
+        actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
+
     return s.GenreChartDataList(
         genre_data=genre_counts,
         top_rated_movies=top_rated_movies,
         joined_date=current_user.created_at,
         movies_rated=len(current_user.ratings),
         last_movie_rate_date=last_rating_date,
+        total_actors_count=actors_count,
     )
 
 
