@@ -69,3 +69,29 @@ class MovieFilterFormOut(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class GenreFormIn(BaseModel):
+    """Form for creating a new genre and subgenre"""
+
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str
+    description_en: str
+    parent_genre_key: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenreFormOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    parent_genre_key: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

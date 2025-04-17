@@ -1,5 +1,4 @@
-from typing import Annotated
-from fastapi import APIRouter, Form, HTTPException, Depends, status
+from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 import app.models as m
 import sqlalchemy as sa
@@ -15,65 +14,60 @@ subgenre_router = APIRouter(prefix="/subgenres", tags=["Subgenres"])
 @subgenre_router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.SubgenreOut,
+    response_model=s.GenreFormOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Subgenre already exists"},
         status.HTTP_201_CREATED: {"description": "Subgenre successfully created"},
     },
 )
 def create_subgenre(
-    key: Annotated[str, Form()],
-    name_uk: Annotated[str, Form()],
-    name_en: Annotated[str, Form()],
-    parent_genre_key: Annotated[str, Form()],
-    description_uk: Annotated[str | None, Form()] = None,
-    description_en: Annotated[str | None, Form()] = None,
+    form_data: s.GenreFormIn = Body(...),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Create new subgenre"""
 
-    subgenre = db.scalar(sa.select(m.Subgenre).where(m.Subgenre.key == key))
+    subgenre = db.scalar(sa.select(m.Subgenre).where(m.Subgenre.key == form_data.key))
 
     if subgenre:
         log(log.ERROR, "Subgenre [%s] already exists")
         raise HTTPException(status_code=400, detail="Subgenre already exists")
 
-    genre_id = db.scalar(sa.select(m.Genre.id).where(m.Genre.key == parent_genre_key))
+    genre_id = db.scalar(sa.select(m.Genre.id).where(m.Genre.key == form_data.parent_genre_key))
     if not genre_id:
-        log(log.ERROR, "Genre [%s] not found", parent_genre_key)
+        log(log.ERROR, "Genre [%s] not found", form_data.parent_genre_key)
         raise HTTPException(status_code=404, detail="Genre not found")
 
     try:
         new_subgenre = m.Subgenre(
             genre_id=genre_id,
-            key=key,
+            key=form_data.key,
             translations=[
                 m.SubgenreTranslation(
                     language=s.Language.UK.value,
-                    name=name_uk,
-                    description=description_uk,
+                    name=form_data.name_uk,
+                    description=form_data.description_uk,
                 ),
                 m.SubgenreTranslation(
                     language=s.Language.EN.value,
-                    name=name_en,
-                    description=description_en,
+                    name=form_data.name_en,
+                    description=form_data.description_en,
                 ),
             ],
         )
 
         db.add(new_subgenre)
         db.commit()
-        log(log.INFO, "Subgenre [%s] successfully created", key)
+        log(log.INFO, "Subgenre [%s] successfully created", form_data.key)
     except Exception as e:
-        log(log.ERROR, "Error creating subgenre [%s]: %s", key, e)
+        log(log.ERROR, "Error creating subgenre [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating subgenre")
 
     db.refresh(new_subgenre)
 
-    return s.SubgenreOut(
+    return s.GenreFormOut(
         key=new_subgenre.key,
-        name=next((t.name for t in new_subgenre.translations if t.language == lang.value)),
-        description=next((t.description for t in new_subgenre.translations if t.language == lang.value)),
-        parent_genre_key=parent_genre_key,
+        name=new_subgenre.get_name(lang),
+        description=new_subgenre.get_description(lang),
+        parent_genre_key=form_data.parent_genre_key,
     )
