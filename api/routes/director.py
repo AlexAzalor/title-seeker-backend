@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from typing import Annotated
-from fastapi import APIRouter, File, Form, HTTPException, Depends, UploadFile, status
+from fastapi import APIRouter, Body, File, HTTPException, Depends, UploadFile, status
 from api.controllers.create_movie import add_image_to_s3_bucket
 from api.routes.avatar import UPLOAD_DIRECTORY
 import app.models as m
@@ -53,22 +53,14 @@ def get_directors(
     },
 )
 def create_director(
-    key: Annotated[str, Form()],
-    first_name_uk: Annotated[str, Form()],
-    last_name_uk: Annotated[str, Form()],
-    first_name_en: Annotated[str, Form()],
-    last_name_en: Annotated[str, Form()],
-    born: Annotated[str, Form()],
-    born_in_uk: Annotated[str, Form()],
-    born_in_en: Annotated[str, Form()],
-    died: Annotated[str | None, Form()] = None,
-    file: UploadFile = File(None),
+    form_data: Annotated[s.PersonForm, Body(...)],
+    file: UploadFile = File(),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Create new director"""
 
-    director = db.scalar(sa.select(m.Director).where(m.Director.key == key))
+    director = db.scalar(sa.select(m.Director).where(m.Director.key == form_data.key))
 
     if director:
         log(log.ERROR, "Director [%s] already exists")
@@ -76,30 +68,30 @@ def create_director(
 
     try:
         new_director = m.Director(
-            key=key,
-            born=datetime.strptime(born, "%d.%m.%Y"),
-            died=datetime.strptime(died, "%d.%m.%Y") if died else None,
+            key=form_data.key,
+            born=datetime.strptime(form_data.born, "%d.%m.%Y"),
+            died=datetime.strptime(form_data.died, "%d.%m.%Y") if form_data.died else None,
             translations=[
                 m.DirectorTranslation(
                     language=s.Language.UK.value,
-                    first_name=first_name_uk,
-                    last_name=last_name_uk,
-                    born_in=born_in_uk,
+                    first_name=form_data.first_name_uk,
+                    last_name=form_data.last_name_uk,
+                    born_in=form_data.born_in_uk,
                 ),
                 m.DirectorTranslation(
                     language=s.Language.EN.value,
-                    first_name=first_name_en,
-                    last_name=last_name_en,
-                    born_in=born_in_en,
+                    first_name=form_data.first_name_en,
+                    last_name=form_data.last_name_en,
+                    born_in=form_data.born_in_en,
                 ),
             ],
         )
 
         db.add(new_director)
         db.commit()
-        log(log.INFO, "Director [%s] successfully created", key)
+        log(log.INFO, "Director [%s] successfully created", form_data.key)
     except Exception as e:
-        log(log.ERROR, "Error creating director [%s]: %s", key, e)
+        log(log.ERROR, "Error creating director [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating director")
 
     db.refresh(new_director)
@@ -125,9 +117,9 @@ def create_director(
             new_director.avatar = file_name
             db.commit()
 
-            log(log.INFO, "Avatar for director [%s] successfully uploaded", key)
+            log(log.INFO, "Avatar for director [%s] successfully uploaded", form_data.key)
         except Exception as e:
-            log(log.ERROR, "Error uploading avatar for director [%s]: %s", key, e)
+            log(log.ERROR, "Error uploading avatar for director [%s]: %s", form_data.key, e)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for director")
 
     return s.DirectorOut(
