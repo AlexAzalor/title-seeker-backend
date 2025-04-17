@@ -1,7 +1,7 @@
 # ruff: noqa: F401
 from .admin import Admin
 
-from .general import TitleType, SortOrder, SortBy, PersonForm
+from .general import TitleType, SortOrder, SortBy, PersonForm, MovieFilterFormIn, MovieFilterFormOut
 
 from .token import Token, TokenData
 from .whoami import WhoAmI

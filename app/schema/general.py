@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from config import config
 
 CFG = config()
@@ -46,3 +46,26 @@ class PersonForm(BaseModel):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
+
+
+class MovieFilterFormIn(BaseModel):
+    """Form for creating a new movie attribute for specification, keyword, action time"""
+
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str | None = None
+    description_en: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieFilterFormOut(BaseModel):
+    key: str
+    name: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
