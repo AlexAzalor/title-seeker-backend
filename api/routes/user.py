@@ -43,10 +43,10 @@ def google_auth(
 
     if user.role == s.UserRole.OWNER.value:
         if os.path.exists(QUICK_MOVIES_FILE):
-            temp_movies = get_movies_data_from_file()
+            quick_movies = get_movies_data_from_file()
 
-            if temp_movies:
-                new_movies_to_add_count = len(temp_movies)
+            if quick_movies:
+                new_movies_to_add_count = len(quick_movies)
 
     return s.GoogleAuthOut(
         uuid=user.uuid,
@@ -350,35 +350,6 @@ def genre_radar_chart(
         last_movie_rate_date=last_rating_date,
         total_actors_count=actors_count,
     )
-
-
-# @user_router.get(
-#     "/my-rated-movies",
-#     status_code=status.HTTP_200_OK,
-#     response_model=s.MoviePreviewOutList,
-#     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
-# )
-# def my_rated_movies(
-#     current_user: m.User = Depends(get_current_user),
-#     lang: s.Language = s.Language.UK,
-#     db: Session = Depends(get_db),
-# ):
-#     """Get list of all movies rated by user"""
-
-#     movies = [movie.movie for movie in current_user.ratings if not movie.is_deleted]
-
-#     return s.MoviePreviewOutList(
-
-#         movies=[
-#             s.MoviePreviewOut(
-#                 key=movie.key,
-#                 title=movie.get_title(lang),
-#                 poster=movie.poster,
-#                 rating=rating.rating,
-#             )
-#             for movie, rating in zip(movies, current_user.ratings)
-#         ],
-#     )
 
 
 @user_router.get(

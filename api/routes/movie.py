@@ -19,7 +19,7 @@ from api.controllers.create_movie import (
     add_new_movie_rating,
     create_new_movie,
     get_movies_data_from_file,
-    remove_temp_movie,
+    remove_quick_movie,
     set_percentage_match,
 )
 
@@ -129,26 +129,6 @@ def get_movies(
                 else 0.0,
             )
         )
-
-    # temporary_movies = []
-
-    # if os.path.exists(QUICK_MOVIES_FILE):
-    #     temp_movies = get_movies_data_from_file()
-
-    #     if temp_movies:
-    #         for temp_movie in temp_movies:
-    #             temporary_movies.append(
-    #                 s.TempMovie(
-    #                     key=temp_movie.key,
-    #                     title_en=temp_movie.title_en,
-    #                     rating=temp_movie.rating,
-    #                 )
-    #             )
-
-    # data_out = s.MoviePreviewOutList(movies=movies_out, temporary_movies=temporary_movies)
-
-    # if sort_order == s.SortOrder.DESC:
-    #     movies_out = movies_out[::-1]
 
     return paginate(movies_out)
 
@@ -912,7 +892,7 @@ def create_movie(
     form_data: Annotated[s.MovieFormData, Body(...)],
     file: UploadFile = File(None),
     lang: s.Language = s.Language.UK,
-    temp_movie: bool = Query(default=False),
+    is_quick_movie: bool = Query(default=False),
     current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -929,7 +909,7 @@ def create_movie(
     try:
         new_movie = create_new_movie(db, form_data)
         db.add(new_movie)
-        # Flush need to get new_movie ID but not commit new data to DB, for rollback
+        # Flush need to get new_movie ID but not commit new data to DB, for rollback (in case of error)
         db.flush()
 
         if CFG.ENV == "production":
@@ -945,8 +925,8 @@ def create_movie(
 
         add_new_movie_rating(new_movie, db, current_user.id, form_data)
 
-        if temp_movie:
-            remove_temp_movie(form_data.key)
+        if is_quick_movie:
+            remove_quick_movie(form_data.key)
 
         db.commit()
         log(log.INFO, "Movie [%s] successfully created", form_data.key)
@@ -964,7 +944,7 @@ def create_movie(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Data not found"}},
 )
 def get_pre_create_data(
-    temp_movie_key: str | None = None,
+    quick_movie_key: str | None = None,
     lang: s.Language = s.Language.UK,
     current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -1117,16 +1097,16 @@ def get_pre_create_data(
             )
         )
 
-    temporary_movie = None
+    quick_movie = None
 
-    if temp_movie_key:
+    if quick_movie_key:
         if os.path.exists(QUICK_MOVIES_FILE):
             movies = get_movies_data_from_file()
 
             if movies:
                 for movie in movies:
-                    if movie.key == temp_movie_key:
-                        temporary_movie = s.QuickMovieFormData(
+                    if movie.key == quick_movie_key:
+                        quick_movie = s.QuickMovieFormData(
                             key=movie.key,
                             title_en=movie.title_en,
                             rating=movie.rating,
@@ -1162,7 +1142,7 @@ def get_pre_create_data(
         genres=genres_out,
         keywords=keywords_out,
         action_times=action_times_out,
-        temporary_movie=temporary_movie,
+        quick_movie=quick_movie,
         shared_universes=shared_universes_out,
         characters=characters_out,
     )
@@ -1642,26 +1622,26 @@ def get_similar_movies(
 @movie_router.get(
     "/movies-to-add/",
     status_code=status.HTTP_200_OK,
-    response_model=s.TempMovieList,
+    response_model=s.QuickMovieList,
 )
 def movies_to_add(
     admin_user: m.User = Depends(get_admin),
 ):
     """List of new movies to add"""
 
-    temporary_movies = []
+    quick_movies_out = []
 
     if os.path.exists(QUICK_MOVIES_FILE):
-        temp_movies = get_movies_data_from_file()
+        quick_movies = get_movies_data_from_file()
 
-        if temp_movies:
-            for temp_movie in temp_movies:
-                temporary_movies.append(
-                    s.TempMovie(
-                        key=temp_movie.key,
-                        title_en=temp_movie.title_en,
-                        rating=temp_movie.rating,
+        if quick_movies:
+            for quick_movie in quick_movies:
+                quick_movies_out.append(
+                    s.QuickMovie(
+                        key=quick_movie.key,
+                        title_en=quick_movie.title_en,
+                        rating=quick_movie.rating,
                     )
                 )
 
-    return s.TempMovieList(temporary_movies=temporary_movies)
+    return s.QuickMovieList(quick_movies=quick_movies_out)

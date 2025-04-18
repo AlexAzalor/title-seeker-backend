@@ -53,7 +53,6 @@ from .movie import (
     MovieRating,
     UserRatingCriteria,
     MoviePreviewOut,
-    MoviePreviewOutList,
     MovieSpecification,
     MovieKeyword,
     MovieActionTime,
@@ -64,7 +63,7 @@ from .movie import (
     MovieFormData,
     QuickMovieFormData,
     QuickMovieJSON,
-    TempMovie,
+    QuickMovie,
     MovieCarousel,
     MovieCarouselList,
     ActorSimple,
@@ -76,7 +75,7 @@ from .movie import (
     MovieOutShort,
     SimilarMovieOut,
     SimilarMovieOutList,
-    TempMovieList,
+    QuickMovieList,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn

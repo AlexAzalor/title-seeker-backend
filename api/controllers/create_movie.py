@@ -453,7 +453,7 @@ def get_movies_data_from_file():
     return file_data.movies
 
 
-def remove_temp_movie(movie_key: str):
+def remove_quick_movie(movie_key: str):
     """Remove movie from json file"""
 
     if os.path.exists(QUICK_MOVIES_FILE):
