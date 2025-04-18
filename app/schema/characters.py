@@ -26,6 +26,18 @@ class CharactersJSONFile(BaseModel):
     )
 
 
+class CharacterFormIn(BaseModel):
+    """Form for creating a new character"""
+
+    key: str
+    name_uk: str
+    name_en: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class CharacterOut(BaseModel):
     key: str
     name: str

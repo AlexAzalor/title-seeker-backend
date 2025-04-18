@@ -1,5 +1,4 @@
-from typing import Annotated
-from fastapi import APIRouter, Form, HTTPException, Depends, status
+from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 import app.models as m
 import sqlalchemy as sa
@@ -22,15 +21,13 @@ character_router = APIRouter(prefix="/characters", tags=["Characters"])
     },
 )
 def create_character(
-    key: Annotated[str, Form()],
-    name_uk: Annotated[str, Form()],
-    name_en: Annotated[str, Form()],
+    form_data: s.CharacterFormIn = Body(...),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Create new character"""
 
-    character = db.scalar(sa.select(m.Character).where(m.Character.key == key))
+    character = db.scalar(sa.select(m.Character).where(m.Character.key == form_data.key))
 
     if character:
         log(log.ERROR, "Character [%s] already exists")
@@ -38,24 +35,24 @@ def create_character(
 
     try:
         new_character = m.Character(
-            key=key,
+            key=form_data.key,
             translations=[
                 m.CharacterTranslation(
                     language=s.Language.UK.value,
-                    name=name_uk,
+                    name=form_data.name_uk,
                 ),
                 m.CharacterTranslation(
                     language=s.Language.EN.value,
-                    name=name_en,
+                    name=form_data.name_en,
                 ),
             ],
         )
 
         db.add(new_character)
         db.commit()
-        log(log.INFO, "Character [%s] successfully created", key)
+        log(log.INFO, "Character [%s] successfully created", form_data.key)
     except Exception as e:
-        log(log.ERROR, "Error creating Character [%s]: %s", key, e)
+        log(log.ERROR, "Error creating Character [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating character")
 
     db.refresh(new_character)

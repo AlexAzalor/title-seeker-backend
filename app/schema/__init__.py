@@ -97,7 +97,7 @@ from .user import (
     UsersListOut,
 )
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
-from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut
+from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut, CharacterFormIn
 from .specifications import SpecificationExportCreate, SpecificationsJSONFile, SpecificationOut
 from .keyword import KeywordExportCreate, KeywordsJSONFile, KeywordOut
 from .action_time import ActionTimeExportCreate, ActionTimesJSONFile, ActionTimeOut
