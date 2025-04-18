@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from fastapi import UploadFile
 
 from api.dependency.s3_client import get_s3_connect
+from api.utils import process_movie_rating
 import app.schema as s
 import app.models as m
 from app.logger import log
@@ -298,6 +299,8 @@ def add_new_movie_rating(new_movie: m.Movie, db: Session, current_user: int, for
         )
 
         db.add(new_rating)
+
+        process_movie_rating(new_movie)
 
         log(log.INFO, "Rating [%s] successfully created")
     except Exception as e:

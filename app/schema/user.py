@@ -33,6 +33,7 @@ class UsersJSONFile(BaseModel):
     )
 
 
+# TODO: Enum?
 class RatingCriteria(BaseModel):
     acting: float
     plot_storyline: float

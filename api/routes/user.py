@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
 from api.controllers.create_movie import QUICK_MOVIES_FILE, get_movies_data_from_file
 from api.dependency.user import get_admin, get_current_user
+from api.utils import process_movie_rating
 import app.models as m
 import sqlalchemy as sa
 
@@ -93,6 +94,11 @@ def update_rate_movie(
 ):
     """Update movie rating"""
 
+    movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
     if not current_user.ratings:
         log(log.ERROR, "User [%s] has no ratings to update", current_user.email)
         raise HTTPException(status_code=404, detail="User has no ratings to update")
@@ -117,11 +123,8 @@ def update_rate_movie(
     rating.animation_cartoon = rating_data.animation_cartoon if rating_data.animation_cartoon else None
 
     db.commit()
-    # movie_ratings = movie.ratings
-    # average_rating = round(sum([rating.rating for rating in movie_ratings]) / len(movie_ratings), 2)
 
-    # movie.average_rating = average_rating
-    # movie.ratings_count = len(movie_ratings)
+    process_movie_rating(movie)
 
     db.commit()
 
@@ -205,11 +208,7 @@ def rate_movie(
     db.flush()
     log(log.DEBUG, "Rating for movie [%s] created", movie.key)
 
-    # movie_ratings = movie.ratings
-    # average_rating = round(sum([rating.rating for rating in movie_ratings]) / len(movie_ratings), 2)
-
-    # movie.average_rating = average_rating
-    # movie.ratings_count = len(movie_ratings)
+    process_movie_rating(movie)
 
     db.commit()
 

@@ -219,14 +219,16 @@ def get_movie(
         # owner_rating=owner_rating.rating,
         owner_rating=owner_rating.rating,
         # Main AVERAGE rating
+        # The .get() method only returns the default value if the key does not exist in the dictionary. If the key exists but its value is None, .get() will return None instead of the default value.
         overall_average_rating=movie.average_rating,
         overall_average_rating_criteria=s.UserRatingCriteria(
-            acting=movie.average_by_criteria.get("acting", 0.01),
-            plot_storyline=movie.average_by_criteria.get("plot_storyline", 0.01),
-            script_dialogue=movie.average_by_criteria.get("script_dialogue", 0.01),
-            music=movie.average_by_criteria.get("music", 0.01),
-            enjoyment=movie.average_by_criteria.get("enjoyment", 0.01),
-            production_design=movie.average_by_criteria.get("production_design", 0.01),
+            acting=movie.average_by_criteria.get("acting") or 0.01,
+            # acting=movie.average_by_criteria.get("acting", 0.01),
+            plot_storyline=movie.average_by_criteria.get("plot_storyline") or 0.01,
+            script_dialogue=movie.average_by_criteria.get("script_dialogue") or 0.01,
+            music=movie.average_by_criteria.get("music") or 0.01,
+            enjoyment=movie.average_by_criteria.get("enjoyment") or 0.01,
+            production_design=movie.average_by_criteria.get("production_design") or 0.01,
             visual_effects=movie.average_by_criteria.get("visual_effects"),
             scare_factor=movie.average_by_criteria.get("scare_factor"),
             humor=movie.average_by_criteria.get("humor"),

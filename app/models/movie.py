@@ -107,7 +107,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     average_rating: orm.Mapped[float] = orm.mapped_column(sa.Float, default=0.00)
     ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
     rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
-    average_by_criteria: orm.Mapped[dict[str, float]] = orm.mapped_column(sa.JSON, nullable=True)
+    average_by_criteria: orm.Mapped[dict[str, float | None]] = orm.mapped_column(sa.JSON, nullable=True)
 
     collection_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)  # Order in collection
 

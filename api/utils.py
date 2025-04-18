@@ -5,6 +5,7 @@ import filetype
 from fastapi import UploadFile, HTTPException, status
 from fastapi.routing import APIRoute
 from app import schema as s
+from app import models as m
 
 from app.logger import log
 
@@ -60,3 +61,50 @@ def extract_word(input_string: List[str]) -> List[str]:
         else:
             words_list.append(word.strip())
     return words_list
+
+
+def calculate_average_rating(ratings: list[m.Rating], attribute: str) -> float:
+    """
+    Calculate the average of a specific attribute from a list of ratings.
+
+    :param ratings: List of Rating objects.
+    :param attribute: The name of the attribute to calculate the average for.
+    :return: The average value rounded to 2 decimal places.
+    """
+    if not ratings:
+        return 0.0
+
+    # Use getattr to dynamically access the attribute
+    values = [getattr(rating, attribute, 0) for rating in ratings if getattr(rating, attribute, None) is not None]
+    return round(sum(values) / len(values), 2) if values else 0.0
+
+
+def process_movie_rating(movie: m.Movie):
+    """
+    Process the movie rating and calculate averages for various criteria.
+    """
+    movie_ratings = movie.ratings
+
+    movie.average_rating = calculate_average_rating(movie_ratings, "rating")
+    movie.ratings_count = len(movie_ratings)
+
+    movie.average_by_criteria = {
+        "acting": calculate_average_rating(movie_ratings, "acting"),
+        "plot_storyline": calculate_average_rating(movie_ratings, "plot_storyline"),
+        "script_dialogue": calculate_average_rating(movie_ratings, "script_dialogue"),
+        "music": calculate_average_rating(movie_ratings, "music"),
+        "enjoyment": calculate_average_rating(movie_ratings, "enjoyment"),
+        "production_design": calculate_average_rating(movie_ratings, "production_design"),
+        "visual_effects": calculate_average_rating(movie_ratings, "visual_effects")
+        if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS
+        else None,
+        "scare_factor": calculate_average_rating(movie_ratings, "scare_factor")
+        if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR
+        else None,
+        "humor": calculate_average_rating(movie_ratings, "humor")
+        if movie.rating_criterion == s.RatingCriterion.HUMOR
+        else None,
+        "animation_cartoon": calculate_average_rating(movie_ratings, "animation_cartoon")
+        if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON
+        else None,
+    }
