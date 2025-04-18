@@ -52,10 +52,10 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     release_date: orm.Mapped[datetime | None] = orm.mapped_column(sa.DateTime)  # None?
     duration: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False)  # in minutes
     # my_rating: orm.Mapped[float | None] = orm.mapped_column(sa.Float, nullable=True)
-    budget: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False)
+    budget: orm.Mapped[int] = orm.mapped_column(sa.BigInteger, nullable=False)
     # Box office
-    domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
-    worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)
+    domestic_gross: orm.Mapped[int | None] = orm.mapped_column(sa.BigInteger, nullable=True)
+    worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.BigInteger, nullable=True)
     poster: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
 
     actors: orm.Mapped[list["Actor"]] = orm.relationship(
