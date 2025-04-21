@@ -258,12 +258,12 @@ def get_movie(
         else None,
         actors=[
             s.MovieActor(
-                key=actor.key,
-                full_name=actor.full_name(lang),
-                character_name=movie.get_character(actor.id, lang),
-                avatar_url=actor.avatar,
+                key=char.actor.key,
+                full_name=char.actor.full_name(lang),
+                character_name=char.character.get_name(lang),
+                avatar_url=char.actor.avatar,
             )
-            for actor in movie.actors
+            for char in sorted(movie.characters, key=lambda x: x.order)
         ],
         directors=[
             s.MovieDirector(

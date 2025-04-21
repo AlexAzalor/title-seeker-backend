@@ -68,7 +68,7 @@ def write_characters_in_db(characters: list[s.CharacterExportCreate]):
             a_ids = character.actors_ids
             m_ids = character.movies_ids
 
-            for actor_id in character.actors_ids:
+            for idx, actor_id in enumerate(character.actors_ids):
                 if second_movie:
                     second_movie = False
 
@@ -85,6 +85,7 @@ def write_characters_in_db(characters: list[s.CharacterExportCreate]):
                         actor_id=actor_id,
                         movie_id=movie_id,
                         character_id=character_db.id,
+                        order=idx,
                     )
 
                     session.add(new_character_relation)

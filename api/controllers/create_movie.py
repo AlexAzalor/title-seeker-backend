@@ -253,7 +253,7 @@ def set_percentage_match(movie_id: int, db: Session, form_data: s.MovieFormData)
 
 def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.ActorCharacterKey]):
     try:
-        for actor in actors_keys:
+        for idx, actor in enumerate(actors_keys):
             actor_db = db.scalar(sa.select(m.Actor).where(m.Actor.key == actor.key))
             if not actor_db:
                 log(log.ERROR, "Actor [%s] not found", actor.key)
@@ -268,6 +268,7 @@ def add_new_characters(new_movie_id: int, db: Session, actors_keys: list[s.Actor
                 actor_id=actor_db.id,
                 movie_id=new_movie_id,
                 character_id=character_db.id,
+                order=idx + 1,
             )
 
             db.add(new_character)

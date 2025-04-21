@@ -1,6 +1,5 @@
 from app.database import db
 import sqlalchemy as sa
-from app import schema as s
 from sqlalchemy import orm
 
 
@@ -25,10 +24,10 @@ class MovieActorCharacter(db.Model):
     actor: orm.Mapped["Actor"] = orm.relationship("Actor", back_populates="characters")
     character: orm.Mapped["Character"] = orm.relationship("Character", back_populates="characters")
 
+    # Order of importance of an actor in the movie
+    order: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False, server_default="0")
+
     __table_args__ = (sa.UniqueConstraint("movie_id", "actor_id", "character_id", name="uq_movie_actor_character"),)
 
     def __repr__(self):
         return f"<ID: [{self.id}], Movie: [{self.movie_id}], Actor: [{self.actor_id}], Char: [{self.character_id}]>"
-
-    def get_name(self, language: s.Language = s.Language.UK) -> str:
-        return next((t.name for t in self.translations if t.language == language.value), self.translations[0].name)
