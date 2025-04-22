@@ -313,6 +313,10 @@ class MoviePreviewOut(BaseModel):
     main_genre: str
     rating: float
 
+
+class MoviePreviewOutList(BaseModel):
+    movies: list[MoviePreviewOut]
+
     model_config = ConfigDict(
         from_attributes=True,
     )

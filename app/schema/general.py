@@ -25,6 +25,7 @@ class SortBy(Enum):
     RELEASE_DATE = "release_date"
     # CREATED_AT = "created_at"
     RANDOM = "random"
+    ID = "id"
 
 
 class PersonForm(BaseModel):

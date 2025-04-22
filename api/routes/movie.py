@@ -2,9 +2,10 @@ import json
 import os
 from datetime import datetime
 from random import randint
-from typing import Annotated, Sequence, Union
+from typing import Annotated, Sequence
 
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
 from fastapi.responses import FileResponse
@@ -55,48 +56,13 @@ def get_movies(
     current_user: m.User = Depends(get_current_user),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
+    params: Params = Depends(),
 ):
     """Get movies by query params"""
 
-    db_movies: Union[list[m.Movie], Sequence[m.Movie]] = []
+    is_reverse = sort_order == s.SortOrder.DESC
 
-    if not current_user:
-        db_movies = (
-            db.scalars(
-                sa.select(m.Movie)
-                .where(m.Movie.is_deleted.is_(False))
-                .order_by(m.Movie.id.desc())
-                .options(joinedload(m.Movie.translations))
-                # .order_by(m.Movie.release_date.desc())
-            )
-            .unique()
-            .all()
-        )
-    else:
-        my_ratings = current_user.ratings
-        is_reverse = sort_order == s.SortOrder.DESC
-
-        if sort_by == s.SortBy.RATED_AT:
-            my_ratings = sorted(my_ratings, key=lambda x: x.updated_at, reverse=is_reverse)
-
-        if sort_by == s.SortBy.RATING:
-            my_ratings = sorted(my_ratings, key=lambda x: x.rating, reverse=is_reverse)
-
-        if sort_by == s.SortBy.RATINGS_COUNT:
-            my_ratings = sorted(my_ratings, key=lambda x: x.movie.ratings_count, reverse=is_reverse)
-
-        if sort_by == s.SortBy.RELEASE_DATE:
-            my_ratings = sorted(
-                my_ratings, key=lambda x: x.movie.release_date if x.movie.release_date else "", reverse=is_reverse
-            )
-
-        if sort_by == s.SortBy.RANDOM:
-            my_ratings = sorted(my_ratings, key=lambda x: randint(0, 100), reverse=is_reverse)
-
-        db_movies = [rating.movie for rating in my_ratings if rating.movie.is_deleted is False]
-
-    movies_out = []
-    for movie in db_movies:
+    def get_main_genre(movie: m.Movie) -> str:
         biggest_genre = db.scalar(
             sa.select(m.Genre)
             .join(m.movie_genres)
@@ -104,7 +70,7 @@ def get_movies(
             .order_by(m.movie_genres.c.percentage_match.desc())
             .limit(1)
         )
-        main_genre = "No genre"
+
         if biggest_genre:
             genre_name = biggest_genre.get_name(lang)
             percentage_match = next(
@@ -114,8 +80,28 @@ def get_movies(
                 ),
                 0.0,
             )
-            main_genre = f"{genre_name} ({percentage_match}%)"
-        movies_out.append(
+            return f"{genre_name} ({percentage_match}%)"
+        return "No main genre"
+
+    def rating_to_custom_schema(movies: Sequence[m.Rating]) -> Sequence[s.MoviePreviewOut]:
+        return [
+            s.MoviePreviewOut(
+                key=movie.movie.key,
+                title=movie.movie.get_title(lang),
+                poster=movie.movie.poster,
+                # TODO: fix none release date
+                release_date=movie.movie.release_date if movie.movie.release_date else datetime.now(),
+                duration=movie.movie.formatted_duration(lang.value),
+                main_genre=get_main_genre(movie.movie),
+                rating=next((t.rating for t in movie.movie.ratings if t.user_id == current_user.id), 0.0)
+                if current_user
+                else 0.0,
+            )
+            for movie in movies
+        ]
+
+    def movie_to_custom_schema(movies: Sequence[m.Movie]) -> Sequence[s.MoviePreviewOut]:
+        return [
             s.MoviePreviewOut(
                 key=movie.key,
                 title=movie.get_title(lang),
@@ -123,14 +109,90 @@ def get_movies(
                 # TODO: fix none release date
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
-                main_genre=main_genre,
+                main_genre=get_main_genre(movie),
                 rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0)
                 if current_user
                 else 0.0,
             )
+            for movie in movies
+        ]
+
+    if current_user:
+        if sort_by == s.SortBy.RATED_AT:
+            rated_at = m.Rating.updated_at.desc() if is_reverse else m.Rating.updated_at.asc()
+            base_rating_query = sa.select(m.Rating).where(m.Rating.user_id == current_user.id).order_by(rated_at)
+
+        if sort_by == s.SortBy.RATING:
+            rating = m.Rating.rating.desc() if is_reverse else m.Rating.rating.asc()
+            base_rating_query = sa.select(m.Rating).where(m.Rating.user_id == current_user.id).order_by(rating)
+
+        if sort_by == s.SortBy.RATINGS_COUNT:
+            ratings_count = m.Movie.ratings_count.desc() if is_reverse else m.Movie.ratings_count.asc()
+            base_rating_query = (
+                sa.select(m.Rating)
+                .join(m.Movie, m.Rating.movie)
+                .where(m.Rating.user_id == current_user.id)
+                .order_by(ratings_count)
+            )
+
+        if sort_by == s.SortBy.RELEASE_DATE:
+            release_date = m.Movie.release_date.desc() if is_reverse else m.Movie.release_date.asc()
+            # If you need to reuse the logic for accessing movie.release_date in multiple places, a @hybrid_property is a good choice. However, if this is a one-off query or performance is critical, using an explicit join is better.
+            base_rating_query = (
+                sa.select(m.Rating)
+                .join(m.Movie, m.Rating.movie)
+                .where(m.Rating.user_id == current_user.id)
+                .order_by(release_date)
+            )
+
+        if sort_by == s.SortBy.RANDOM:
+            base_rating_query = (
+                sa.select(m.Rating).where(m.Rating.user_id == current_user.id).order_by(sa.func.random())
+            )
+
+        return paginate(db, base_rating_query, params, transformer=rating_to_custom_schema)
+
+    if sort_by == s.SortBy.RELEASE_DATE:
+        release_date = m.Movie.release_date.desc() if is_reverse else m.Movie.release_date.asc()
+        base_query = (
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(release_date)
+            .options(joinedload(m.Movie.translations))
+        )
+    elif sort_by == s.SortBy.RANDOM:
+        base_query = (
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(sa.func.random())
+            .options(joinedload(m.Movie.translations))
+        )
+    elif sort_by == s.SortBy.RATING:
+        average_rating = m.Movie.average_rating.desc() if is_reverse else m.Movie.average_rating.asc()
+        base_query = (
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(average_rating)
+            .options(joinedload(m.Movie.translations))
+        )
+    elif sort_by == s.SortBy.RATINGS_COUNT:
+        ratings_count = m.Movie.ratings_count.desc() if is_reverse else m.Movie.ratings_count.asc()
+        base_query = (
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(ratings_count)
+            .options(joinedload(m.Movie.translations))
+        )
+    else:
+        by_id = m.Movie.id.desc() if is_reverse else m.Movie.id.asc()
+        base_query = (
+            sa.select(m.Movie)
+            .where(m.Movie.is_deleted.is_(False))
+            .order_by(by_id)
+            .options(joinedload(m.Movie.translations))
         )
 
-    return paginate(movies_out)
+    return paginate(db, base_query, params, transformer=movie_to_custom_schema)
 
 
 @movie_router.get(
@@ -432,17 +494,11 @@ async def get_poster(filename: str):
 @movie_router.get(
     "/super-search/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieSuperSearchResult,
+    response_model=Page[s.MoviePreviewOut],
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def super_search_movies(
     # query: str = Query(default="", max_length=128),
-    # lang: Language = Language.UK,
-    # selected_locations: Annotated[Union[List[str], None], Query()] = None,
-    # order_by: s.JobsOrderBy = s.JobsOrderBy.CREATED_AT,
-    # order_type: s.OrderType = s.OrderType.ASC,
-    # current_user: m.User = Depends(get_current_user),
-    # genre_uuid: str,
     genre_name: Annotated[list[str], Query()] = [],
     subgenre_name: Annotated[list[str], Query()] = [],
     actor_name: Annotated[list[str], Query()] = [],
@@ -452,10 +508,52 @@ def super_search_movies(
     action_time_name: Annotated[list[str], Query()] = [],
     universe: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
+    sort_by: s.SortBy = s.SortBy.RATED_AT,
+    sort_order: s.SortOrder = s.SortOrder.DESC,
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    params: Params = Depends(),
 ):
     """Get movies by query params"""
+
+    def get_main_genre(movie: m.Movie) -> str:
+        biggest_genre = db.scalar(
+            sa.select(m.Genre)
+            .join(m.movie_genres)
+            .where(m.movie_genres.c.movie_id == movie.id)
+            .order_by(m.movie_genres.c.percentage_match.desc())
+            .limit(1)
+        )
+
+        if biggest_genre:
+            genre_name = biggest_genre.get_name(lang)
+            percentage_match = next(
+                (
+                    mg.percentage_match
+                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
+                ),
+                0.0,
+            )
+            return f"{genre_name} ({percentage_match}%)"
+        return "No main genre"
+
+    def movie_to_custom_schema(movies: Sequence[m.Movie]) -> Sequence[s.MoviePreviewOut]:
+        return [
+            s.MoviePreviewOut(
+                key=movie.key,
+                title=movie.get_title(lang),
+                poster=movie.poster,
+                # TODO: fix none release date
+                release_date=movie.release_date if movie.release_date else datetime.now(),
+                duration=movie.formatted_duration(lang.value),
+                main_genre=get_main_genre(movie),
+                rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0)
+                if current_user
+                else 0.0,
+            )
+            for movie in movies
+        ]
 
     query = sa.select(m.Movie).options(joinedload(m.Movie.translations))
 
@@ -643,44 +741,23 @@ def super_search_movies(
             logical_op(*[m.Movie.shared_universe.has(m.SharedUniverse.key == su_key) for su_key in universe])
         )
 
-    movies_db = db.scalars(query).unique().all()
+    is_reverse = sort_order == s.SortOrder.DESC
+    if sort_by == s.SortBy.RELEASE_DATE:
+        release_date = m.Movie.release_date.desc() if is_reverse else m.Movie.release_date.asc()
+        query = query.order_by(release_date)
+    elif sort_by == s.SortBy.RANDOM:
+        query = query.order_by(sa.func.random())
+    elif sort_by == s.SortBy.RATING:
+        average_rating = m.Movie.average_rating.desc() if is_reverse else m.Movie.average_rating.asc()
+        query = query.order_by(average_rating)
+    elif sort_by == s.SortBy.RATINGS_COUNT:
+        ratings_count = m.Movie.ratings_count.desc() if is_reverse else m.Movie.ratings_count.asc()
+        query = query.order_by(ratings_count)
+    else:
+        by_id = m.Movie.id.desc() if is_reverse else m.Movie.id.asc()
+        query = query.order_by(by_id)
 
-    movies_out = []
-    for movie in movies_db:
-        biggest_genre = db.scalar(
-            sa.select(m.Genre)
-            .join(m.movie_genres)
-            .where(m.movie_genres.c.movie_id == movie.id)
-            .order_by(m.movie_genres.c.percentage_match.desc())
-            .limit(1)
-        )
-
-        main_genre = "No genre"
-        if biggest_genre:
-            main_genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
-            percentage_match = next(
-                (
-                    mg.percentage_match
-                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
-                ),
-                0.0,
-            )
-            main_genre = f"{main_genre_name} ({percentage_match}%)"
-        movies_out.append(
-            s.MoviePreviewOut(
-                key=movie.key,
-                title=next((t.title for t in movie.translations if t.language == lang.value)),
-                poster=movie.poster,
-                release_date=movie.release_date if movie.release_date else datetime.now(),
-                duration=movie.formatted_duration(lang.value),
-                main_genre=main_genre,
-                rating=movie.average_rating,
-            )
-        )
-
-    return s.MovieSuperSearchResult(
-        movies=movies_out,
-    )
+    return paginate(db, query, params, transformer=movie_to_custom_schema)
 
 
 @movie_router.get(
