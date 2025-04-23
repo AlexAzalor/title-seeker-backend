@@ -70,7 +70,7 @@ def test_search_movies(client: TestClient, db: Session):
     actors = db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(ACTORS))).all()
     assert actors
 
-    response = client.get("/api/movies/search/", params={"genre_name": GENRES, "actor_name": ACTORS})
+    response = client.get("/api/movies/search/", params={"genre": GENRES, "actor": ACTORS})
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieSearchResult.model_validate(response.json())
     assert data
@@ -97,7 +97,7 @@ def test_search_movies(client: TestClient, db: Session):
 
     response = client.get(
         "/api/movies/search/",
-        params={"genre_name": GENRES, "subgenre_name": SUBGENRES, "actor_name": ACTORS, "director_name": DIRECTORS},
+        params={"genre": GENRES, "subgenre": SUBGENRES, "actor": ACTORS, "director": DIRECTORS},
     )
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieSearchResult.model_validate(response.json())
@@ -115,7 +115,7 @@ def test_search_movies(client: TestClient, db: Session):
     directors = db.scalars(sa.select(m.Director).where(m.Director.key.in_(DIRECTORS))).all()
     assert directors
 
-    response = client.get("/api/movies/search/", params={"genre_name": GENRES, "director_name": DIRECTORS})
+    response = client.get("/api/movies/search/", params={"genre": GENRES, "director": DIRECTORS})
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieSearchResult.model_validate(response.json())
     assert data

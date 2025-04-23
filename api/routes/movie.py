@@ -499,13 +499,13 @@ async def get_poster(filename: str):
 )
 def super_search_movies(
     # query: str = Query(default="", max_length=128),
-    genre_name: Annotated[list[str], Query()] = [],
-    subgenre_name: Annotated[list[str], Query()] = [],
-    actor_name: Annotated[list[str], Query()] = [],
-    director_name: Annotated[list[str], Query()] = [],
-    specification_name: Annotated[list[str], Query()] = [],
-    keyword_name: Annotated[list[str], Query()] = [],
-    action_time_name: Annotated[list[str], Query()] = [],
+    genre: Annotated[list[str], Query()] = [],
+    subgenre: Annotated[list[str], Query()] = [],
+    specification: Annotated[list[str], Query()] = [],
+    keyword: Annotated[list[str], Query()] = [],
+    action_time: Annotated[list[str], Query()] = [],
+    actor: Annotated[list[str], Query()] = [],
+    director: Annotated[list[str], Query()] = [],
     universe: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
@@ -560,8 +560,8 @@ def super_search_movies(
     # condition = lambda x: x > 5
     # filtered = list(filter(condition, [1,2,3,4,5,6,7,8,9,10]))
 
-    genres_keys = extract_word(genre_name)
-    genres_values: list[list[int]] = extract_values(genre_name)
+    genres_keys = extract_word(genre)
+    genres_values: list[list[int]] = extract_values(genre)
 
     if genres_keys:
         db_g_keys = db.scalars(sa.select(m.Genre.key).where(m.Genre.key.in_(genres_keys))).all()
@@ -569,8 +569,8 @@ def super_search_movies(
             log(log.ERROR, "Genres [%s] not found", genres_keys)
             raise HTTPException(status_code=404, detail="Genres not found")
 
-    subgenres_keys: list[str] = extract_word(subgenre_name)
-    subgenres_values: list[list[int]] = extract_values(subgenre_name)
+    subgenres_keys: list[str] = extract_word(subgenre)
+    subgenres_values: list[list[int]] = extract_values(subgenre)
 
     if subgenres_keys:
         db_sg_keys = db.scalars(sa.select(m.Subgenre.key).where(m.Subgenre.key.in_(subgenres_keys))).all()
@@ -578,8 +578,8 @@ def super_search_movies(
             log(log.ERROR, "Subgenres [%s] not found", subgenres_keys)
             raise HTTPException(status_code=404, detail="Subgenres not found")
 
-    specifications_keys: list[str] = extract_word(specification_name)
-    specifications_values = extract_values(specification_name)
+    specifications_keys: list[str] = extract_word(specification)
+    specifications_values = extract_values(specification)
 
     if specifications_keys:
         db_s_keys = db.scalars(sa.select(m.Specification.key).where(m.Specification.key.in_(specifications_keys))).all()
@@ -587,8 +587,8 @@ def super_search_movies(
             log(log.ERROR, "Specifications [%s] not found", specifications_keys)
             raise HTTPException(status_code=404, detail="Specifications not found")
 
-    keywords_keys: list[str] = extract_word(keyword_name)
-    keywords_values = extract_values(keyword_name)
+    keywords_keys: list[str] = extract_word(keyword)
+    keywords_values = extract_values(keyword)
 
     if keywords_keys:
         db_k_keys = db.scalars(sa.select(m.Keyword.key).where(m.Keyword.key.in_(keywords_keys))).all()
@@ -596,8 +596,8 @@ def super_search_movies(
             log(log.ERROR, "Keyword(s) [%s] not found", keywords_keys)
             raise HTTPException(status_code=404, detail="Keywords not found")
 
-    action_times_keys: list[str] = extract_word(action_time_name)
-    action_times_values = extract_values(action_time_name)
+    action_times_keys: list[str] = extract_word(action_time)
+    action_times_values = extract_values(action_time)
 
     if action_times_keys:
         db_at_keys = db.scalars(sa.select(m.ActionTime.key).where(m.ActionTime.key.in_(action_times_keys))).all()
@@ -727,14 +727,11 @@ def super_search_movies(
 
             query = query.where(logical_op(*conditions))
 
-    if actor_name:
-        query = query.where(logical_op(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor_name]))
+    if actor:
+        query = query.where(logical_op(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor]))
 
-    if director_name:
-        query = query.where(m.Movie.directors.any(m.Director.key.in_(director_name)))
-        # query = query.where(
-        #     sa.and_(*[m.Movie.directors.any(m.Director.key == director_key) for director_key in director_name])
-        # )
+    if director:
+        query = query.where(m.Movie.directors.any(m.Director.key.in_(director)))
 
     if universe:
         query = query.where(
