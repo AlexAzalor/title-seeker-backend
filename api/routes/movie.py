@@ -24,6 +24,7 @@ from api.controllers.create_movie import (
     set_percentage_match,
 )
 
+from api.controllers.movie_filters import get_filters
 from api.dependency.user import get_admin, get_current_user
 from api.utils import extract_values, extract_word, get_error_message
 import app.models as m
@@ -216,6 +217,7 @@ def get_movie(
         .where(m.Movie.key == movie_key)
         .options(
             # add rest?
+            # Do I need to use joinedload() for all relationships? I get name from db function
             joinedload(m.Movie.translations),
             joinedload(m.Movie.actors),
             joinedload(m.Movie.directors),
@@ -833,117 +835,28 @@ def get_movie_filters(
 ):
     """Get all movie filters"""
 
-    actors = db.scalars(sa.select(m.Actor)).all()
-    if not actors:
-        log(log.ERROR, "Actors [%s] not found")
-        raise HTTPException(status_code=404, detail="Actors not found")
+    genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out = get_filters(db, lang)
 
-    directors = db.scalars(sa.select(m.Director)).all()
-    if not directors:
-        log(log.ERROR, "Director [%s] not found")
-        raise HTTPException(status_code=404, detail="Director not found")
+    # TODO: Fix this
+    subgenres = db.scalars(
+        sa.select(m.Subgenre)
+        .join(m.Subgenre.translations)
+        .where(m.SubgenreTranslation.language == lang.value)
+        .order_by(m.SubgenreTranslation.name)
+    ).all()
+    if not subgenres:
+        log(log.ERROR, "Subgenre [%s] not found")
+        raise HTTPException(status_code=404, detail="Subgenre not found")
 
-    genres = db.scalars(sa.select(m.Genre)).all()
-    if not genres:
-        log(log.ERROR, "Genres [%s] not found")
-        raise HTTPException(status_code=404, detail="Genres not found")
-
-    specifications = db.scalars(sa.select(m.Specification)).all()
-    if not specifications:
-        log(log.ERROR, "Specifications [%s] not found")
-        raise HTTPException(status_code=404, detail="Specifications not found")
-
-    keywords = db.scalars(sa.select(m.Keyword)).all()
-    if not keywords:
-        log(log.ERROR, "Keywords [%s] not found")
-        raise HTTPException(status_code=404, detail="Keywords not found")
-
-    action_times = db.scalars(sa.select(m.ActionTime)).all()
-    if not action_times:
-        log(log.ERROR, "Action times [%s] not found")
-        raise HTTPException(status_code=404, detail="Action times not found")
-
-    actors_out = []
-
-    for actor in actors:
-        actors_out.append(
-            s.ActorOut(
-                key=actor.key,
-                name=actor.full_name(lang),
-            )
+    subgenres_out = [
+        s.SubgenreOut(
+            key=subgenre.key,
+            name=subgenre.get_name(lang),
+            description=subgenre.get_description(lang),
+            parent_genre_key=subgenre.genre.key,
         )
-
-    directors_out = []
-
-    for director in directors:
-        directors_out.append(
-            s.DirectorOut(
-                key=director.key,
-                name=director.full_name(lang),
-            )
-        )
-
-    genres_out = []
-    subgenres_out = []
-
-    for genre in genres:
-        genres_out.append(
-            s.GenreOut(
-                key=genre.key,
-                name=next((t.name for t in genre.translations if t.language == lang.value)),
-                description=next((t.description for t in genre.translations if t.language == lang.value)),
-                subgenres=[
-                    s.SubgenreOut(
-                        key=subgenre.key,
-                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
-                        parent_genre_key=subgenre.genre.key,
-                    )
-                    for subgenre in genre.subgenres
-                ],
-            )
-        )
-        if genre.subgenres:
-            for subgenre in genre.subgenres:
-                subgenres_out.append(
-                    s.SubgenreOut(
-                        key=subgenre.key,
-                        name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-                        description=next((t.description for t in subgenre.translations if t.language == lang.value)),
-                        parent_genre_key=subgenre.genre.key,
-                    )
-                )
-
-    specifications_out = []
-
-    for specification in specifications:
-        specifications_out.append(
-            s.SpecificationOut(
-                key=specification.key,
-                name=next((t.name for t in specification.translations if t.language == lang.value)),
-                description=next((t.description for t in specification.translations if t.language == lang.value)),
-            )
-        )
-
-    keywords_out = []
-    for keyword in keywords:
-        keywords_out.append(
-            s.KeywordOut(
-                key=keyword.key,
-                name=next((t.name for t in keyword.translations if t.language == lang.value)),
-                description=next((t.description for t in keyword.translations if t.language == lang.value)),
-            )
-        )
-
-    action_times_out = []
-    for action_time in action_times:
-        action_times_out.append(
-            s.ActionTimeOut(
-                key=action_time.key,
-                name=next((t.name for t in action_time.translations if t.language == lang.value)),
-                description=next((t.description for t in action_time.translations if t.language == lang.value)),
-            )
-        )
+        for subgenre in subgenres
+    ]
 
     return s.MovieFiltersListOut(
         genres=genres_out,
@@ -1031,147 +944,52 @@ def get_pre_create_data(
         log(log.ERROR, "Only owner allowed to add movie")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
+    genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out = get_filters(db, lang)
+
     # Order by natural order of RelatedMovie
-    base_movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.relation_type)).all()
+    base_movies = db.scalars(
+        sa.select(m.Movie)
+        .join(m.Movie.translations)
+        .where(m.MovieTranslation.language == lang.value)
+        .where(m.Movie.is_deleted.is_(False))
+        .order_by(
+            # Ignore "The" at the beginning of the title (not remove)
+            sa.func.regexp_replace(m.MovieTranslation.title, r"^(The\s)", "", "i"),
+            m.Movie.relation_type,
+        )
+    ).all()
     if not base_movies:
         log(log.ERROR, "Base movies not found")
         raise HTTPException(status_code=404, detail="Base movies not found")
 
     # TODO: add full_name as hybrid_property?
-    actors = db.scalars(
-        sa.select(m.Actor)
-        .join(m.Actor.translations)
-        .where(m.ActorTranslation.language == lang.value)
-        .order_by(sa.func.concat(m.ActorTranslation.first_name, " ", m.ActorTranslation.last_name))
+    shared_universes = db.scalars(
+        sa.select(m.SharedUniverse)
+        .join(m.SharedUniverse.translations)
+        .where(m.SharedUniverseTranslation.language == lang.value)
+        .order_by(m.SharedUniverseTranslation.name)
     ).all()
-
-    if not actors:
-        log(log.ERROR, "Actors [%s] not found")
-        raise HTTPException(status_code=404, detail="Actors not found")
-
-    directors = db.scalars(
-        sa.select(m.Director)
-        .join(m.Director.translations)
-        .where(m.DirectorTranslation.language == lang.value)
-        .order_by(sa.func.concat(m.DirectorTranslation.first_name, " ", m.DirectorTranslation.last_name))
-    ).all()
-    if not directors:
-        log(log.ERROR, "Director [%s] not found")
-        raise HTTPException(status_code=404, detail="Director not found")
-
-    genres = (
-        db.scalars(sa.select(m.Genre).options(joinedload(m.Genre.subgenres), joinedload(m.Genre.translations)))
-        .unique()
-        .all()
-    )
-    if not genres:
-        log(log.ERROR, "Genres [%s] not found")
-        raise HTTPException(status_code=404, detail="Genres not found")
-
-    specifications = db.scalars(sa.select(m.Specification)).all()
-    if not specifications:
-        log(log.ERROR, "Specifications [%s] not found")
-        raise HTTPException(status_code=404, detail="Specifications not found")
-
-    keywords = db.scalars(sa.select(m.Keyword)).all()
-    if not keywords:
-        log(log.ERROR, "Keywords [%s] not found")
-        raise HTTPException(status_code=404, detail="Keywords not found")
-
-    action_times = db.scalars(sa.select(m.ActionTime)).all()
-    if not action_times:
-        log(log.ERROR, "Action times [%s] not found")
-        raise HTTPException(status_code=404, detail="Action times not found")
-
-    shared_universes = db.scalars(sa.select(m.SharedUniverse)).all()
     if not shared_universes:
         log(log.ERROR, "Shared universes [%s] not found")
         raise HTTPException(status_code=404, detail="Shared universes not found")
 
-    characters = db.scalars(sa.select(m.Character)).all()
+    characters = db.scalars(
+        sa.select(m.Character)
+        .join(m.Character.translations)
+        .where(m.CharacterTranslation.language == lang.value)
+        .order_by(m.CharacterTranslation.name)
+    ).all()
     if not characters:
         log(log.ERROR, "Characters [%s] not found")
         raise HTTPException(status_code=404, detail="Characters not found")
 
-    base_movies_out = []
-    for base_movie in base_movies:
-        base_movies_out.append(
-            s.MovieOutShort(
-                key=base_movie.key,
-                name=base_movie.get_title(lang),
-            )
+    base_movies_out = [
+        s.MovieOutShort(
+            key=base_movie.key,
+            name=base_movie.get_title(lang),
         )
-
-    actors_out = []
-
-    for actor in actors:
-        actors_out.append(
-            s.ActorOut(
-                key=actor.key,
-                name=actor.full_name(lang),
-            )
-        )
-
-    directors_out = []
-
-    for director in directors:
-        directors_out.append(
-            s.DirectorOut(
-                key=director.key,
-                name=director.full_name(lang),
-            )
-        )
-
-    specifications_out = []
-
-    for specification in specifications:
-        specifications_out.append(
-            s.SpecificationOut(
-                key=specification.key,
-                name=specification.get_name(lang),
-                description=specification.get_description(lang),
-            )
-        )
-
-    genres_out = []
-
-    for genre in genres:
-        genres_out.append(
-            s.GenreOut(
-                key=genre.key,
-                name=genre.get_name(lang),
-                description=genre.get_description(lang),
-                subgenres=[
-                    s.SubgenreOut(
-                        key=subgenre.key,
-                        name=subgenre.get_name(lang),
-                        description=subgenre.get_description(lang),
-                        parent_genre_key=subgenre.genre.key,
-                    )
-                    for subgenre in genre.subgenres
-                ],
-            )
-        )
-
-    keywords_out = []
-    for keyword in keywords:
-        keywords_out.append(
-            s.KeywordOut(
-                key=keyword.key,
-                name=keyword.get_name(lang),
-                description=keyword.get_description(lang),
-            )
-        )
-
-    action_times_out = []
-    for action_time in action_times:
-        action_times_out.append(
-            s.ActionTimeOut(
-                key=action_time.key,
-                name=action_time.get_name(lang),
-                description=action_time.get_description(lang),
-            )
-        )
+        for base_movie in base_movies
+    ]
 
     quick_movie = None
 
@@ -1190,25 +1008,22 @@ def get_pre_create_data(
                             rating_criteria=movie.rating_criteria,
                         )
 
-    shared_universes_out = []
-
-    for universe in shared_universes:
-        shared_universes_out.append(
-            s.SharedUniversePreCreateOut(
-                key=universe.key,
-                name=universe.get_name(lang),
-                description=universe.get_description(lang),
-            )
+    shared_universes_out = [
+        s.SharedUniversePreCreateOut(
+            key=universe.key,
+            name=universe.get_name(lang),
+            description=universe.get_description(lang),
         )
+        for universe in shared_universes
+    ]
 
-    characters_out = []
-    for character in characters:
-        characters_out.append(
-            s.CharacterOut(
-                key=character.key,
-                name=character.get_name(lang),
-            )
+    characters_out = [
+        s.CharacterOut(
+            key=character.key,
+            name=character.get_name(lang),
         )
+        for character in characters
+    ]
 
     return s.MoviePreCreateData(
         base_movies=base_movies_out,
