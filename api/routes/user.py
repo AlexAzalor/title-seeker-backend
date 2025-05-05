@@ -11,6 +11,7 @@ import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
+from app.schema.user import UserRole
 from config import config
 
 CFG = config()
@@ -53,7 +54,7 @@ def google_auth(
         uuid=user.uuid,
         full_name=user.full_name,
         email=user.email,
-        role=user.role,
+        role=UserRole(user.role),
         new_movies_to_add_count=new_movies_to_add_count,
     )
 

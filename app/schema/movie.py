@@ -259,7 +259,7 @@ class MovieOut(BaseModel):
     actors: list[MovieActor]
     poster: str
     directors: list[MovieDirector]
-    genres: list[MovieGenre] = []
+    genres: list[MovieGenre]
     subgenres: list[MovieSubgenre] = []
     specifications: list[MovieSpecification]
     keywords: list[MovieKeyword]

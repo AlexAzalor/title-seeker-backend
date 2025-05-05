@@ -2,6 +2,8 @@
 from pydantic import BaseModel, ConfigDict
 from enum import Enum
 
+from app.schema.user import UserRole
+
 
 class Auth(BaseModel):
     first_name: str
@@ -19,7 +21,7 @@ class GoogleAuthOut(BaseModel):
     uuid: str
     full_name: str
     email: str
-    role: str
+    role: UserRole
     new_movies_to_add_count: int
 
 
