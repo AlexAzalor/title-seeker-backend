@@ -8,7 +8,6 @@ from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
-from fastapi.responses import FileResponse
 
 from sqlalchemy.orm import Session, aliased, joinedload
 
@@ -457,40 +456,6 @@ def get_movie(
         if movie.shared_universe
         else None,
     )
-
-
-# need async?
-@movie_router.post("/upload-poster/{movie_id}", status_code=status.HTTP_200_OK)
-async def upload_poster(movie_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Upload poster for movie"""
-
-    movie = db.query(m.Movie).filter(m.Movie.id == movie_id).first()
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-
-    file_name = f"{movie_id}_{file.filename}"
-    file_location = f"{UPLOAD_DIRECTORY}{file_name}"
-
-    with open(file_location, "wb+") as file_object:
-        file_object.write(file.file.read())
-
-    movie.poster = file_name
-    db.commit()
-
-    return {"info": "Poster uploaded successfully"}
-
-
-@movie_router.get("/posters/{filename}", status_code=status.HTTP_200_OK)
-async def get_poster(filename: str):
-    """Check if file exists and return it (for testing purposes)"""
-
-    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
-
-    if not os.path.exists(file_path):
-        return FileResponse(os.path.join(UPLOAD_DIRECTORY, "poster-placeholder.jpg"))
-        # raise HTTPException(status_code=404, detail="File not found")
-
-    return FileResponse(file_path)
 
 
 @movie_router.get(

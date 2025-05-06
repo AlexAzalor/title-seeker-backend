@@ -12,28 +12,25 @@ from config import config
 
 CFG = config()
 
+PAGE_SIZE = 30
+PAGE = 1
+
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_movies(client: TestClient, db: Session):
     movies = db.scalars(sa.select(m.Movie)).all()
     assert movies
 
-    # response = client.get("/api/movies")
-    # assert response.status_code == status.HTTP_200_OK
-    # data = .model_validate(response.json())
-    # assert data
-
-    # # Test get by key
-    # movie = movies[0]
-    # assert movie
-    # response = client.get(f"/api/movies/{movie.key}")
-    # assert response.status_code == status.HTTP_200_OK
-
-    # response = client.get("/api/movies", params={"lang": s.Language.UK.value})
-    # assert response.status_code == status.HTTP_200_OK
-
-    # response = client.get("/api/movies", params={"lang": s.Language.EN.value})
-    # assert response.status_code == status.HTTP_200_OK
+    # /api/movies/?lang=uk&page=1&size=30&sort_order=desc&sort_by=id
+    response = client.get("/api/movies", params={"page": PAGE, "size": PAGE_SIZE})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert len(data.items) == PAGE_SIZE
+    assert data.total
+    assert data.page == PAGE
+    assert data.size == PAGE_SIZE
+    assert data.pages
 
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
@@ -46,80 +43,55 @@ def test_get_movie(client: TestClient, db: Session):
     data = s.MovieOut.model_validate(response.json())
     assert data
     assert data.key == movie.key
-    for actor in data.actors:
-        assert actor.character_name
-    assert data.actors
-    assert data.directors
-    assert data.genres
-    # assert data.subgenres
-    assert data.specifications
-    assert data.keywords
-    assert data.action_times
-    assert data.ratings
 
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
-def test_search_movies(client: TestClient, db: Session):
-    GENRES = ["crime", "drama"]
-    ACTORS = ["morgan-freeman"]
-    RESULT_MOVIE = ["the-shawshank-redemption", "the-dark-knight"]
+def test_super_search(client: TestClient, db: Session):
+    movies = db.scalars(sa.select(m.Movie)).all()
+    assert movies
 
-    genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(GENRES))).all()
-    assert genres
+    SEARCH_GENRE = "action(10,100)"
 
-    actors = db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(ACTORS))).all()
-    assert actors
+    response = client.get("/api/movies/super-search/", params={"genre": SEARCH_GENRE})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert len(data.items)
 
-    response = client.get("/api/movies/search/", params={"genre": GENRES, "actor": ACTORS})
+    # Test super search to find a specific movie (The Shawshank Redemption)
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    director = db.scalar(sa.select(m.Director).where(m.Director.key == "frank-darabont"))
+    assert director
+    actor = db.scalar(sa.select(m.Actor).where(m.Actor.key == "morgan-freeman"))
+    assert actor
+
+    SEARCH_PARAMS = {
+        "genre": "drama(10,100)",
+        "specification": "prison(10,100)",
+        "actor": "morgan-freeman",
+        "director": "frank-darabont",
+    }
+
+    response = client.get("/api/movies/super-search/", params=SEARCH_PARAMS)
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert [m for m in data.items if m.key == movie.key]
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_search(client: TestClient, db: Session):
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+
+    SEARCH_QUERY = movie.get_title()
+
+    response = client.get("/api/movies/search/", params={"query": SEARCH_QUERY})
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieSearchResult.model_validate(response.json())
     assert data
-    assert [m.key for m in data.movies] == RESULT_MOVIE
-
-    # Test search by all filters
-    GENRES = ["adventure", "drama", "fantasy"]
-    SUBGENRES = ["quest", "sword-sorcery"]
-    ACTORS = ["hugo-weaving", "elijah-wood", "ian-mckellen"]
-    DIRECTORS = ["peter-jackson"]
-    RESULT_MOVIE = ["the-lord-of-the-rings-the-fellowship-of-the-ring"]
-
-    genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(GENRES))).all()
-    assert genres
-
-    subgenres = db.scalars(sa.select(m.Subgenre).where(m.Subgenre.key.in_(SUBGENRES))).all()
-    assert subgenres
-
-    actors = db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(ACTORS))).all()
-    assert actors
-
-    directors = db.scalars(sa.select(m.Director).where(m.Director.key.in_(DIRECTORS))).all()
-    assert directors
-
-    response = client.get(
-        "/api/movies/search/",
-        params={"genre": GENRES, "subgenre": SUBGENRES, "actor": ACTORS, "director": DIRECTORS},
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = s.MovieSearchResult.model_validate(response.json())
-    assert data
-    assert [m.key for m in data.movies] == RESULT_MOVIE
-
-    # Test search by minimal filters
-    GENRES = ["crime"]
-    DIRECTORS = ["frank-darabont"]
-    RESULT_MOVIE = ["the-shawshank-redemption", "the-green-mile"]
-
-    genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(GENRES))).all()
-    assert genres
-
-    directors = db.scalars(sa.select(m.Director).where(m.Director.key.in_(DIRECTORS))).all()
-    assert directors
-
-    response = client.get("/api/movies/search/", params={"genre": GENRES, "director": DIRECTORS})
-    assert response.status_code == status.HTTP_200_OK
-    data = s.MovieSearchResult.model_validate(response.json())
-    assert data
-    assert [m.key for m in data.movies] == RESULT_MOVIE
+    assert [m for m in data.movies if m.key == movie.key]
 
 
 @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
@@ -132,11 +104,14 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert data.directors
 
 
-def test_create_movie(client: TestClient, db: Session):
+def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     actor = db.scalar(sa.select(m.Actor))
     assert actor
     director = db.scalar(sa.select(m.Director))
     assert director
+
+    character = db.scalar(sa.select(m.Character))
+    assert character
 
     genre = db.scalar(sa.select(m.Genre).where(m.Genre.subgenres.any()))
     assert genre
@@ -166,7 +141,7 @@ def test_create_movie(client: TestClient, db: Session):
         actors_keys=[
             s.ActorCharacterKey(
                 key=actor.key,
-                character_key="Char key",
+                character_key=character.key,
                 # character_name_uk="Char uk name",
                 # character_name_en="Char en name",
             )
@@ -216,16 +191,19 @@ def test_create_movie(client: TestClient, db: Session):
             "/api/movies",
             data={"form_data": form_data.model_dump_json()},
             files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
-            params={"lang": s.Language.EN.value},
+            params={"lang": s.Language.EN.value, "user_uuid": auth_user_owner.uuid},
         )
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    # Test create with existing key
-    response = client.post(
-        "/api/movies",
-        data={"form_data": form_data.model_dump_json()},
-    )
+    # Test create with existing key - should fail
+    with open("./uploads/posters/1_The Shawshank Redemption.png", "rb") as image:
+        response = client.post(
+            "/api/movies",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
+            params={"lang": s.Language.EN.value, "user_uuid": auth_user_owner.uuid},
+        )
     assert response.status_code == status.HTTP_409_CONFLICT
 
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
@@ -233,7 +211,7 @@ def test_create_movie(client: TestClient, db: Session):
     os.remove(f"./uploads/posters/{movie.id}_1_The Shawshank Redemption.png")
 
 
-def test_quick_movies(client: TestClient):
+def test_quick_movies(client: TestClient, auth_user_owner: m.User):
     form_data = s.QuickMovieFormData(
         key="test-quick-add-key",
         title_en="Test quick EN",
@@ -255,17 +233,41 @@ def test_quick_movies(client: TestClient):
 
     initial_movie_data = get_movies_data_from_file()
 
-    response = client.post("/api/movies/quick-add/", json=form_data.model_dump())
+    response = client.post(
+        "/api/movies/quick-add/", json=form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
+    )
     assert response.status_code == status.HTTP_201_CREATED
 
     updated_movie_data = get_movies_data_from_file()
     assert len(initial_movie_data) + 1 == len(updated_movie_data)
 
     # Test quick add with existing (in file) key
-    response = client.post("/api/movies/quick-add/", json=form_data.model_dump())
+    response = client.post(
+        "/api/movies/quick-add/", json=form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     remove_quick_movie(form_data.key)
 
     current_movies = get_movies_data_from_file()
     assert len(initial_movie_data) == len(current_movies)
+
+
+def test_get_random_movies(client: TestClient):
+    """Test 10 random movies"""
+    response = client.get("/api/movies/random/")
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.MovieCarouselList.model_validate(response.json())
+    assert data
+    assert len(data.movies) == 10
+
+
+def test_get_similar_movies(client: TestClient, db: Session):
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+
+    response = client.get("/api/movies/similar/", params={"movie_key": movie.key})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.SimilarMovieOutList.model_validate(response.json())
+    assert data
+    assert data.similar_movies

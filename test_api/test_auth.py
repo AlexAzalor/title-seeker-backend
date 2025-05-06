@@ -1,14 +1,13 @@
-# import pytest
-# import sqlalchemy as sa
-# from fastapi import status
-# from fastapi.testclient import TestClient
-# from sqlalchemy.orm import Session
-# from werkzeug.security import check_password_hash
+import pytest
+import sqlalchemy as sa
+from fastapi import status
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 
 from app.schema import GoogleTokenVerification, AppleTokenVerification
 
-# from app import models as m
+from app import models as m
 from app import schema as s
 from config import config
 
@@ -48,40 +47,57 @@ DUMMY_IOS_VALIDATION = AppleTokenVerification(
 )
 
 
-# @pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
-# def test_auth(db: Session, client: TestClient):
-#     USER_NAME = db.scalar(sa.select(m.User.first_name).order_by(m.User.id))
-#     assert USER_NAME
-#     user_auth = s.Auth(first_name=USER_NAME, password=USER_PASSWORD)
-#     response = client.post("/api/auth/token", json=user_auth.model_dump())
-#     assert response.status_code == status.HTTP_200_OK
-#     token = s.Token.model_validate(response.json())
-#     assert token.access_token and token.token_type == "bearer"
-#     header = dict(Authorization=f"Bearer {token.access_token}")
-#     res = client.get("api/users/me", headers=header)
-#     assert res.status_code == status.HTTP_200_OK
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_google_auth(client: TestClient, db: Session):
+    auth_data = s.GoogleAuthIn(
+        email=DUMMY_GOOGLE_VALIDATION.email,
+        given_name=DUMMY_GOOGLE_VALIDATION.given_name,
+        family_name=DUMMY_GOOGLE_VALIDATION.family_name,
+    )
 
-#     old_password = "Titlehunt2024"
-#     new_password = "New_password1"
+    # Test new user creation
+    user = db.scalar(sa.select(m.User).where(m.User.is_deleted.is_(False), m.User.email == auth_data.email))
+    assert not user
 
-#     # change password
-#     data_change_password: s.PasswordAuthIn = s.PasswordAuthIn(
-#         old_password=old_password,
-#         new_password=new_password,
-#     )
-#     response = client.post(
-#         "/api/auth/change-password",
-#         json=data_change_password.model_dump(),
-#         headers=header,
-#     )
-#     assert response.status_code == status.HTTP_200_OK
-#     user_db = db.scalar(sa.select(m.User).where(m.User.first_name == USER_NAME))
-#     assert user_db
-#     assert check_password_hash(user_db.password, new_password)
+    response = client.post(
+        "/api/auth/google/",
+        json=auth_data.model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.GoogleAuthOut.model_validate(response.json())
+    assert data
+    assert data.email == auth_data.email
+    assert data.role == s.UserRole.USER
 
-#     # auth with new password
-#     user_auth = s.Auth(first_name=USER_NAME, password=new_password)
-#     response = client.post("/api/auth/token", json=user_auth.model_dump())
-#     assert response.status_code == status.HTTP_200_OK
-#     token = s.Token.model_validate(response.json())
-#     assert token.access_token and token.token_type == "bearer"
+    # Test login
+    user = db.scalar(sa.select(m.User).where(m.User.is_deleted.is_(False), m.User.email == auth_data.email))
+    assert user
+
+    response = client.post(
+        "/api/auth/google/",
+        json=auth_data.model_dump(),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.GoogleAuthOut.model_validate(response.json())
+    assert data
+    assert data.email == auth_data.email
+    assert data.role == s.UserRole.USER
+
+    # Test delete user
+    response = client.delete(
+        "/api/auth/google/",
+        params={"user_uuid": user.uuid},
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    user = db.scalar(sa.select(m.User).where(m.User.is_deleted.is_(False), m.User.email == auth_data.email))
+    assert not user
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_prevent_delete_owner(client: TestClient, db: Session, auth_user_owner: m.User):
+    response = client.delete(
+        "/api/auth/google/",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN

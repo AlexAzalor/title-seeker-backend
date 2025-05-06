@@ -13,7 +13,14 @@ CFG = config()
 app = FastAPI(
     version=CFG.VERSION,
     generate_unique_id_function=custom_generate_unique_id,
+    openapi_tags=[
+        {
+            "name": "Filters",
+            "description": "Filters are the names of unique entities (created by me) by which movies are searched.",
+        },
+    ],
 )
+
 
 app.include_router(router)
 add_pagination(app)

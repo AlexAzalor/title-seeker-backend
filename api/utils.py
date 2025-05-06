@@ -108,3 +108,14 @@ def process_movie_rating(movie: m.Movie):
         if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON
         else None,
     }
+
+
+def check_admin_permissions(
+    current_user: m.User,
+):
+    """
+    Check if the user has admin permissions
+    """
+    if current_user.role not in [s.UserRole.ADMIN.value, s.UserRole.OWNER.value]:
+        log(log.ERROR, "User [%s] is not admin or owner", current_user.uuid)
+        raise HTTPException(status_code=403, detail="Not enough permissions")

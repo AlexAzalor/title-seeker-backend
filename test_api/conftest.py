@@ -41,6 +41,7 @@ def db() -> Generator[orm.Session, None, None]:
         from app.commands.export_specifications import export_specifications_from_json_file
         from app.commands.export_keywords import export_keywords_from_json_file
         from app.commands.export_action_times import export_action_times_from_json_file
+        from app.commands.export_shared_universe import export_su_from_json_file
         from app.commands.export_movies import export_movies_from_json_file
         from app.commands.export_rating import export_ratings_from_json_file
         from app.commands.export_characters import export_characters_from_json_file
@@ -53,6 +54,7 @@ def db() -> Generator[orm.Session, None, None]:
         export_specifications_from_json_file()
         export_keywords_from_json_file()
         export_action_times_from_json_file()
+        export_su_from_json_file()
         export_movies_from_json_file()
         export_ratings_from_json_file()
         export_characters_from_json_file()
@@ -109,28 +111,29 @@ def client(db, monkeypatch) -> Generator[TestClient, None, None]:
         yield c
 
 
-# @pytest.fixture
-# def auth_header(
-#     client: TestClient,
-#     db: orm.Session,
-# ) -> Generator[dict[str, str], None, None]:
-#     """Returns an authorized test client for the API"""
-#     authorized_header: dict[str, str] = {}
-#     user = db.scalar(select(m.User).where(m.User.id == 1))
-#     assert user
+@pytest.fixture
+def auth_user_owner(
+    client: TestClient,
+    db: orm.Session,
+):
+    """Returns an authorized test client for the API"""
+    # authorized_header: dict[str, str] = {}
+    user = db.scalar(select(m.User).where(m.User.id == 1, m.User.role == s.UserRole.OWNER.value))
+    assert user
+    yield user
 
-#     response = client.post(
-#         "/api/auth/login",
-#         data={
-#             "username": user.first_name,
-#             "password": CFG.TEST_USER_PASSWORD,
-#         },
-#     )
-#     assert response.status_code == status.HTTP_200_OK
-#     token = s.Token.model_validate(response.json())
-#     authorized_header["Authorization"] = f"Bearer {token.access_token}"
+    # response = client.post(
+    #     "/api/auth/login",
+    #     data={
+    #         "username": user.first_name,
+    #         "password": CFG.TEST_USER_PASSWORD,
+    #     },
+    # )
+    # assert response.status_code == status.HTTP_200_OK
+    # token = s.Token.model_validate(response.json())
+    # authorized_header["Authorization"] = f"Bearer {token.access_token}"
 
-#     yield authorized_header
+    # yield authorized_header
 
 
 # @pytest.fixture

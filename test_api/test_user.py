@@ -18,47 +18,85 @@ def test_rate_movie(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
 
-    user = db.scalar(sa.select(m.User))
+    user = db.scalar(sa.select(m.User).where(m.User.role == s.UserRole.USER.value))
     assert user
 
     rating = db.scalar(sa.select(m.Rating))
     assert rating
 
-    # Test rate movie
+    # Test add new rate
     data_in = s.UserRateMovieIn(
         uuid=user.uuid,
         movie_key=movie.key,
-        rating=7.34,
+        rating=7.69,
         rating_criteria=s.RatingCriteria(
-            acting=5,
-            plot_storyline=4,
-            script_dialogue=2,
-            music=3,
-            enjoyment=4,
-            production_design=3,
+            acting=1.83,
+            plot_storyline=1.65,
+            script_dialogue=1.48,
+            music=1.09,
+            enjoyment=0.87,
+            production_design=0.77,
         ),
     )
 
     response = client.post(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())
+    assert response.status_code == status.HTTP_201_CREATED
+    assert movie.ratings
+    ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
+    assert data_in.rating in ratings_values
+
+    # Test update rate
+    data_in = s.UserRateMovieIn(
+        uuid=user.uuid,
+        movie_key=movie.key,
+        rating=9.08,
+        rating_criteria=s.RatingCriteria(
+            acting=2.42,
+            plot_storyline=1.85,
+            script_dialogue=1.90,
+            music=1.4,
+            enjoyment=0.81,
+            production_design=0.7,
+        ),
+    )
+
+    response = client.put(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())
     assert response.status_code == status.HTTP_200_OK
     assert movie.ratings
     ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
     assert data_in.rating in ratings_values
 
-    # data_in = s.UserRateMovieIn(
-    #     uuid=user.uuid,
-    #     movie_key=movie.key,
-    #     rating=9.5,
-    #     acting=5,
-    #     plot_storyline=4,
-    #     music=3,
-    #     dialogue=2,
-    #     production_design=3,
-    # )
 
-    # # Test update rate movie
-    # response = client.put(f"/api/users/rate-movie/{user.uuid}", json=data_in.model_dump())
-    # assert response.status_code == status.HTTP_200_OK
-    # assert movie.ratings
-    # ratings_values = [rating.rating for rating in movie.ratings if rating.user_id == user.id]
-    # assert data_in.rating in ratings_values
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User):
+    assert auth_user_owner.ratings
+
+    response = client.get("/api/users/time-rate-movies/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieChartData.model_validate(response.json())
+    assert data
+    assert len(data.movie_chart_data) == 30
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User):
+    assert auth_user_owner.ratings
+
+    response = client.get("/api/users/genre-radar-chart/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.GenreChartDataList.model_validate(response.json())
+    assert data
+    assert data.genre_data
+    assert data.top_rated_movies
+    assert data.joined_date
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_get_all_users(client: TestClient, auth_user_owner: m.User):
+    assert auth_user_owner.ratings
+
+    response = client.get("/api/users/all/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.UsersListOut.model_validate(response.json())
+    assert data
+    assert data.users

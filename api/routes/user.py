@@ -1,7 +1,5 @@
-import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
-from api.controllers.create_movie import QUICK_MOVIES_FILE, get_movies_data_from_file
 from api.dependency.user import get_admin, get_current_user
 from api.utils import process_movie_rating
 import app.models as m
@@ -11,7 +9,6 @@ import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
-from app.schema.user import UserRole
 from config import config
 
 CFG = config()
@@ -20,67 +17,56 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @user_router.post(
-    "/google-auth",
-    status_code=status.HTTP_200_OK,
-    response_model=s.GoogleAuthOut,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Google account not found"}},
+    "/rate-movie/{user_uuid}",
+    status_code=status.HTTP_201_CREATED,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
-def google_auth(
-    auth_data: s.GoogleAuthIn,
-    db: Session = Depends(get_db),
-):
-    """Authenticate user with Google account"""
-
-    user = db.scalar(sa.select(m.User).where(m.User.is_deleted.is_(False), m.User.email == auth_data.email))
-
-    if not user:
-        user = m.User(first_name=auth_data.given_name, last_name=auth_data.family_name, email=auth_data.email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-        log(log.DEBUG, "User [%s] created", user.email)
-
-    new_movies_to_add_count = 0
-
-    if user.role == s.UserRole.OWNER.value:
-        if os.path.exists(QUICK_MOVIES_FILE):
-            quick_movies = get_movies_data_from_file()
-
-            if quick_movies:
-                new_movies_to_add_count = len(quick_movies)
-
-    return s.GoogleAuthOut(
-        uuid=user.uuid,
-        full_name=user.full_name,
-        email=user.email,
-        role=UserRole(user.role),
-        new_movies_to_add_count=new_movies_to_add_count,
-    )
-
-
-@user_router.delete(
-    "/delete-google-profile",
-    status_code=status.HTTP_200_OK,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Google account not found"}},
-)
-def delete_google_profile(
+def rate_movie(
+    data: s.UserRateMovieIn,
     current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Delete user profile"""
+    """Add new movie rating"""
 
-    if current_user.role == s.UserRole.OWNER.value:
-        log(log.ERROR, "Owner profile cannot be deleted")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner profile cannot be deleted")
+    movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found")
+        raise HTTPException(status_code=404, detail="Movie not found")
 
-    current_user.is_deleted = True
-    current_user.email = current_user.email + "-delete at-" + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # The synchronize_session=False argument ensures that the session does not attempt to synchronize the in-memory state with the database after the bulk delete.
-    db.query(m.Rating).filter(m.Rating.user_id == current_user.id).delete(synchronize_session=False)
+    user_rating = db.scalar(
+        sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
+    )
+    if user_rating:
+        log(log.ERROR, "Rating for movie [%s] already exists", movie.key)
+        raise HTTPException(status_code=400, detail="Rating for movie already exists")
+
+    rating_data = data.rating_criteria
+
+    new_rating = m.Rating(
+        user_id=current_user.id,
+        movie_id=movie.id,
+        rating=data.rating,
+        acting=rating_data.acting,
+        plot_storyline=rating_data.plot_storyline,
+        script_dialogue=rating_data.script_dialogue,
+        music=rating_data.music,
+        enjoyment=rating_data.enjoyment,
+        production_design=rating_data.production_design,
+        visual_effects=rating_data.visual_effects if rating_data.visual_effects else None,
+        scare_factor=rating_data.scare_factor if rating_data.scare_factor else None,
+        humor=rating_data.humor if rating_data.humor else None,
+        animation_cartoon=rating_data.animation_cartoon if rating_data.animation_cartoon else None,
+    )
+
+    db.add(new_rating)
+    db.flush()
+    log(log.DEBUG, "Rating for movie [%s] created", movie.key)
+
+    process_movie_rating(movie)
 
     db.commit()
-    log(log.DEBUG, "User [%s] deleted", current_user.email)
+
+    log(log.DEBUG, "Rating for movie [%s] updated", movie.key)
 
 
 @user_router.put(
@@ -130,121 +116,6 @@ def update_rate_movie(
     db.commit()
 
     log(log.DEBUG, "Rating for movie [%s] updated", data.movie_key)
-
-    # backgroud task?
-    # https://fastapi.tiangolo.com/tutorial/background-tasks/
-    # ratings = db.scalars(sa.select(m.Rating)).all()
-    # if not ratings:
-    #     log(log.ERROR, "Ratings are empty!")
-
-    # ratings_to_file = []
-    # for rating in ratings:
-    #     ratings_to_file.append(
-    #         s.RatingExportCreate(
-    #             id=rating.id,
-    #             movie_id=rating.movie_id,
-    #             user_id=rating.user_id,
-    #             rating=rating.rating,
-    #             acting=rating.acting,
-    #             plot_storyline=rating.plot_storyline,
-    #             music=rating.music,
-
-    #             dialogue=rating.dialogue,
-    #             production_design=rating.production_design,
-
-    #             visual_effects=rating.visual_effects,
-    #             scare_factor=rating.scare_factor,
-    #             comment=rating.comment,
-    #         )
-    #     )
-
-    # with open("data/ratings.json", "w") as file:
-    #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
-    #     print("Ratings data saved to [data/ratings.json] file")
-
-
-@user_router.post(
-    "/rate-movie/{user_uuid}",
-    status_code=status.HTTP_200_OK,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
-)
-def rate_movie(
-    data: s.UserRateMovieIn,
-    current_user: m.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Rate a movie"""
-
-    movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
-    if not movie:
-        log(log.ERROR, "Movie [%s] not found")
-        raise HTTPException(status_code=404, detail="Movie not found")
-
-    user_rating = db.scalar(
-        sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
-    )
-    if user_rating:
-        log(log.ERROR, "Rating for movie [%s] already exists", movie.key)
-        raise HTTPException(status_code=400, detail="Rating for movie already exists")
-
-    rating_data = data.rating_criteria
-
-    new_rating = m.Rating(
-        user_id=current_user.id,
-        movie_id=movie.id,
-        rating=data.rating,
-        acting=rating_data.acting,
-        plot_storyline=rating_data.plot_storyline,
-        script_dialogue=rating_data.script_dialogue,
-        music=rating_data.music,
-        enjoyment=rating_data.enjoyment,
-        production_design=rating_data.production_design,
-        visual_effects=rating_data.visual_effects if rating_data.visual_effects else None,
-        scare_factor=rating_data.scare_factor if rating_data.scare_factor else None,
-        humor=rating_data.humor if rating_data.humor else None,
-        animation_cartoon=rating_data.animation_cartoon if rating_data.animation_cartoon else None,
-    )
-
-    db.add(new_rating)
-    db.flush()
-    log(log.DEBUG, "Rating for movie [%s] created", movie.key)
-
-    process_movie_rating(movie)
-
-    db.commit()
-
-    log(log.DEBUG, "Rating for movie [%s] updated", movie.key)
-
-    # backgroud task?
-    # https://fastapi.tiangolo.com/tutorial/background-tasks/
-    # ratings = db.scalars(sa.select(m.Rating)).all()
-    # if not ratings:
-    #     log(log.ERROR, "Ratings are empty!")
-
-    # ratings_to_file = []
-    # for rating in ratings:
-    #     ratings_to_file.append(
-    #         s.RatingExportCreate(
-    #             id=rating.id,
-    #             movie_id=rating.movie_id,
-    #             user_id=rating.user_id,
-    #             rating=rating.rating,
-    #             acting=rating.acting,
-    #             plot_storyline=rating.plot_storyline,
-    #             music=rating.music,
-
-    #             dialogue=rating.dialogue,
-    #             production_design=rating.production_design,
-
-    #             visual_effects=rating.visual_effects,
-    #             scare_factor=rating.scare_factor,
-    #             comment=rating.comment,
-    #         )
-    #     )
-
-    # with open("data/ratings.json", "w") as file:
-    #     json.dump(s.RatingsJSONFile(ratings=ratings_to_file).model_dump(mode="json"), file, indent=4)
-    #     print("Ratings data saved to [data/ratings.json] file")
 
 
 @user_router.get(

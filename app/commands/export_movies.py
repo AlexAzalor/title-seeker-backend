@@ -5,6 +5,7 @@ import sqlalchemy as sa
 
 from googleapiclient.discovery import build
 
+from api.utils import process_movie_rating
 from app import models as m
 from app import schema as s
 from app.database import db
@@ -203,6 +204,8 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
             )
 
             session.add(new_rating)
+
+            process_movie_rating(new_movie)
 
             for percentage_match_dict in movie.genres_list:
                 for genre_id, percentage in percentage_match_dict.items():

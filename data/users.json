@@ -2,21 +2,17 @@
     "users": [
         {
             "id": 1,
-            "first_name": "Local",
-            "last_name": "Host",
-            "description": "Some text..."
+            "first_name": "Alexandr",
+            "last_name": "Yablunovsky",
+            "role": "owner",
+            "email": "yablunovsky.a@gmail.com"
         },
         {
             "id": 2,
-            "first_name": "John",
-            "last_name": "Smith",
-            "description": ""
-        },
-        {
-            "id": 3,
-            "first_name": "Alica",
-            "last_name": "Doe",
-            "description": ""
+            "first_name": "Alexandr",
+            "last_name": "Yablunovsky",
+            "role": "user",
+            "email": "xy55xy.azalor@gmail.com"
         }
     ]
 }

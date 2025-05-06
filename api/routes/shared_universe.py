@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
+from api.dependency.user import get_admin
+from api.utils import check_admin_permissions
 import app.models as m
 import sqlalchemy as sa
 
@@ -24,9 +26,12 @@ def create_shared_universe(
     # TODO: refactor GenreFormIn name
     form_data: s.GenreFormIn = Body(...),
     lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Create new shared universe"""
+
+    check_admin_permissions(current_user)
 
     shared_universe = db.scalar(sa.select(m.SharedUniverse.key).where(m.SharedUniverse.key == form_data.key))
 

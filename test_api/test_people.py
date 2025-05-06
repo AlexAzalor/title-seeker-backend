@@ -1,0 +1,125 @@
+import pytest
+
+import sqlalchemy as sa
+
+# from fastapi import status
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+from api.routes.people import TOP_ACTORS_LIMIT
+from app import models as m
+from app import schema as s
+from fastapi import status
+
+# from app import schema as s
+from config import config
+
+CFG = config()
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
+    actors = db.scalars(sa.select(m.Actor)).all()
+    assert actors
+
+    form_data = s.PersonForm(
+        key="test_actor",
+        first_name_uk="Тестовий",
+        last_name_uk="Актор",
+        first_name_en="Test",
+        last_name_en="Actor",
+        born="01.01.1990",
+        died=None,
+        born_in_uk="США",
+        born_in_en="US",
+    )
+
+    with open("./uploads/actors/1_Morgan Freeman.png", "rb") as image:
+        response = client.post(
+            "/api/people/actors/",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_Morgan Freeman.png", image, "image/png")},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.ActorOut.model_validate(response.json())
+    assert data
+    assert data.key == form_data.key
+
+    # Test create actor with existing key (should fail)
+    with open("./uploads/actors/1_Morgan Freeman.png", "rb") as image:
+        response = client.post(
+            "/api/people/actors/",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_Morgan Freeman.png", image, "image/png")},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # Test get actors with most movies
+    response = client.get("/api/people/actors-with-most-movies/")
+    assert response.status_code == status.HTTP_200_OK
+    top_actors = s.ActorsList.model_validate(response.json())
+    assert top_actors
+    assert len(top_actors.actors) == TOP_ACTORS_LIMIT
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_characters(client: TestClient, db: Session, auth_user_owner: m.User):
+    characters = db.scalars(sa.select(m.Character)).all()
+    assert characters
+
+    form_data = s.CharacterFormIn(
+        key="test_character",
+        name_en="Test Character",
+        name_uk="Тестовий Персонаж",
+    )
+
+    response = client.post(
+        "/api/people/characters/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.CharacterOut.model_validate(response.json())
+    assert data
+    assert data.key == form_data.key
+
+
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
+def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
+    directors = db.scalars(sa.select(m.Director)).all()
+    assert directors
+
+    form_data = s.PersonForm(
+        key="test_director",
+        first_name_uk="Тестовий",
+        last_name_uk="Режисер",
+        first_name_en="Test",
+        last_name_en="Director",
+        born="01.01.1990",
+        died=None,
+        born_in_uk="США",
+        born_in_en="US",
+    )
+
+    with open("./uploads/directors/1_Frank Darabont.png", "rb") as image:
+        response = client.post(
+            "/api/people/directors/",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_Frank Darabont.png", image, "image/png")},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.DirectorOut.model_validate(response.json())
+    assert data
+    assert data.key == form_data.key
+
+    # Test create director with existing key (should fail)
+    with open("./uploads/directors/1_Frank Darabont.png", "rb") as image:
+        response = client.post(
+            "/api/people/directors/",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": ("1_Frank Darabont.png", image, "image/png")},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

@@ -314,8 +314,12 @@ class MoviePreviewOut(BaseModel):
     rating: float
 
 
-class MoviePreviewOutList(BaseModel):
-    movies: list[MoviePreviewOut]
+class PaginationDataOut(BaseModel):
+    items: list[MoviePreviewOut]
+    total: int
+    page: int
+    size: int
+    pages: int
 
     model_config = ConfigDict(
         from_attributes=True,
