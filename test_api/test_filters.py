@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 
 from fastapi import status
@@ -13,7 +11,6 @@ from config import config
 CFG = config()
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_specification(client: TestClient, db: Session, auth_user_owner: m.User):
     NEW_SPEC_KEY = "test_specification"
 
@@ -39,7 +36,6 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     assert data.key == NEW_SPEC_KEY
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User):
     NEW_KEYWORD_KEY = "test_keyword"
 
@@ -65,7 +61,6 @@ def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User
     assert data.key == NEW_KEYWORD_KEY
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_action_time(client: TestClient, db: Session, auth_user_owner: m.User):
     NEW_AT_KEY = "test_action_time"
 

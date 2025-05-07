@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 
 from fastapi import status
@@ -13,7 +11,6 @@ from config import config
 CFG = config()
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_rate_movie(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
@@ -67,7 +64,6 @@ def test_rate_movie(client: TestClient, db: Session):
     assert data_in.rating in ratings_values
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User):
     assert auth_user_owner.ratings
 
@@ -78,7 +74,6 @@ def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User)
     assert len(data.movie_chart_data) == 30
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User):
     assert auth_user_owner.ratings
 
@@ -91,7 +86,6 @@ def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User)
     assert data.joined_date
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_all_users(client: TestClient, auth_user_owner: m.User):
     assert auth_user_owner.ratings
 

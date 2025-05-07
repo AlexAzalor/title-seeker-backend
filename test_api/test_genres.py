@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 
 from fastapi import status
@@ -13,7 +11,6 @@ from config import config
 CFG = config()
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_genre(client: TestClient, db: Session, auth_user_owner: m.User):
     genres = db.scalars(sa.select(m.Genre)).all()
     assert genres
@@ -42,7 +39,6 @@ def test_create_genre(client: TestClient, db: Session, auth_user_owner: m.User):
     assert data.key == NEW_GENRE_KEY
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_subgenre(client: TestClient, db: Session, auth_user_owner: m.User):
     subgenres = db.scalars(sa.select(m.Genre)).all()
     assert subgenres

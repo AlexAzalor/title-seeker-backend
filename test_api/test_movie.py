@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -15,7 +13,6 @@ PAGE_SIZE = 30
 PAGE = 1
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_movies(client: TestClient, db: Session):
     movies = db.scalars(sa.select(m.Movie)).all()
     assert movies
@@ -32,7 +29,6 @@ def test_get_movies(client: TestClient, db: Session):
     assert data.pages
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_movie(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
@@ -44,7 +40,6 @@ def test_get_movie(client: TestClient, db: Session):
     assert data.key == movie.key
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_super_search(client: TestClient, db: Session):
     movies = db.scalars(sa.select(m.Movie)).all()
     assert movies
@@ -79,7 +74,6 @@ def test_super_search(client: TestClient, db: Session):
     assert [m for m in data.items if m.key == movie.key]
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_search(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
@@ -93,7 +87,6 @@ def test_search(client: TestClient, db: Session):
     assert [m for m in data.movies if m.key == movie.key]
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_movie_filters(client: TestClient, db: Session):
     response = client.get("/api/movies/filters/")
     assert response.status_code == status.HTTP_200_OK

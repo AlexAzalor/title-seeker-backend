@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 
 from fastapi import status
@@ -13,7 +11,6 @@ from config import config
 CFG = config()
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_create_shared_universe(client: TestClient, db: Session, auth_user_owner: m.User):
     shared_universes = db.scalars(sa.select(m.SharedUniverse)).all()
     assert shared_universes

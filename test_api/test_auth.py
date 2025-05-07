@@ -1,4 +1,3 @@
-import pytest
 import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -44,7 +43,6 @@ DUMMY_IOS_VALIDATION = AppleTokenVerification(
 )
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_google_auth(client: TestClient, db: Session):
     auth_data = s.GoogleAuthIn(
         email=DUMMY_GOOGLE_VALIDATION.email,
@@ -91,7 +89,6 @@ def test_google_auth(client: TestClient, db: Session):
     assert not user
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_prevent_delete_owner(client: TestClient, db: Session, auth_user_owner: m.User):
     response = client.delete(
         "/api/auth/google/",

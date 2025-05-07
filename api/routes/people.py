@@ -1,10 +1,8 @@
-import os
 from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Body, File, HTTPException, Depends, UploadFile, status
-from api.controllers.create_movie import add_image_to_s3_bucket
+from api.controllers.people import add_avatar_to_new_actor, add_avatar_to_new_director
 from api.dependency.user import get_admin
-from api.routes.file import UPLOAD_DIRECTORY
 from api.utils import check_admin_permissions
 import app.models as m
 import sqlalchemy as sa
@@ -77,33 +75,12 @@ def create_actor(
 
     db.refresh(new_actor)
 
-    file_name = f"{new_actor.id}_{file.filename}"
-
-    if CFG.ENV == "production":
-        add_image_to_s3_bucket(file, "actors", file_name)
-        new_actor.avatar = file_name
-        db.commit()
-        log(log.INFO, "Avatar for actor [%s] successfully uploaded to the S3 Bucket", form_data.key)
-    else:
-        try:
-            directory_path = UPLOAD_DIRECTORY + "actors/"
-
-            if not os.path.exists(directory_path):
-                os.makedirs(directory_path)
-
-            file_location = f"{directory_path}{file_name}"
-
-            with open(file_location, "wb+") as file_object:
-                file_object.write(file.file.read())
-
-            new_actor.avatar = file_name
-            db.commit()
-
-            log(log.INFO, "Avatar for actor [%s] successfully uploaded", form_data.key)
-        except Exception as e:
-            log(log.ERROR, "Error uploading avatar for actor [%s]: %s", form_data.key, e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for actor")
-
+    add_avatar_to_new_actor(
+        actor_key=form_data.key,
+        file=file,
+        new_actor=new_actor,
+        db=db,
+    )
     return s.ActorOut(
         key=new_actor.key,
         name=new_actor.full_name(lang),
@@ -256,31 +233,12 @@ def create_director(
 
     db.refresh(new_director)
 
-    file_name = f"{new_director.id}_{file.filename}"
-
-    if CFG.ENV == "production":
-        add_image_to_s3_bucket(file, "directors", file_name)
-        new_director.avatar = file_name
-        db.commit()
-    else:
-        try:
-            directory_path = UPLOAD_DIRECTORY + "directors/"
-
-            if not os.path.exists(directory_path):
-                os.makedirs(directory_path)
-
-            file_location = f"{directory_path}{file_name}"
-
-            with open(file_location, "wb+") as file_object:
-                file_object.write(file.file.read())
-
-            new_director.avatar = file_name
-            db.commit()
-
-            log(log.INFO, "Avatar for director [%s] successfully uploaded", form_data.key)
-        except Exception as e:
-            log(log.ERROR, "Error uploading avatar for director [%s]: %s", form_data.key, e)
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error uploading avatar for director")
+    add_avatar_to_new_director(
+        director_key=form_data.key,
+        file=file,
+        new_director=new_director,
+        db=db,
+    )
 
     return s.DirectorOut(
         key=new_director.key,

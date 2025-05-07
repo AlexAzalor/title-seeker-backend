@@ -1,5 +1,3 @@
-import pytest
-
 import sqlalchemy as sa
 
 # from fastapi import status
@@ -16,7 +14,6 @@ from config import config
 CFG = config()
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
     actors = db.scalars(sa.select(m.Actor)).all()
     assert actors
@@ -33,11 +30,14 @@ def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
         born_in_en="US",
     )
 
-    with open("./uploads/actors/1_Morgan Freeman.png", "rb") as image:
+    actor_name = "1_Morgan Freeman.png"
+    actor_path = f"{CFG.TEST_DATA_PATH}{actor_name}"
+
+    with open(actor_path, "rb") as image:
         response = client.post(
             "/api/people/actors/",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_Morgan Freeman.png", image, "image/png")},
+            files={"file": (actor_name, image, "image/png")},
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_201_CREATED
@@ -46,11 +46,11 @@ def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
     assert data.key == form_data.key
 
     # Test create actor with existing key (should fail)
-    with open("./uploads/actors/1_Morgan Freeman.png", "rb") as image:
+    with open(actor_path, "rb") as image:
         response = client.post(
             "/api/people/actors/",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_Morgan Freeman.png", image, "image/png")},
+            files={"file": (actor_name, image, "image/png")},
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -63,7 +63,6 @@ def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
     assert len(top_actors.actors) == TOP_ACTORS_LIMIT
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_characters(client: TestClient, db: Session, auth_user_owner: m.User):
     characters = db.scalars(sa.select(m.Character)).all()
     assert characters
@@ -85,7 +84,6 @@ def test_characters(client: TestClient, db: Session, auth_user_owner: m.User):
     assert data.key == form_data.key
 
 
-@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
     directors = db.scalars(sa.select(m.Director)).all()
     assert directors
@@ -102,11 +100,14 @@ def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
         born_in_en="US",
     )
 
-    with open("./uploads/directors/1_Frank Darabont.png", "rb") as image:
+    director_name = "1_Frank Darabont.png"
+    director_path = f"{CFG.TEST_DATA_PATH}{director_name}"
+
+    with open(director_path, "rb") as image:
         response = client.post(
             "/api/people/directors/",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_Frank Darabont.png", image, "image/png")},
+            files={"file": (director_name, image, "image/png")},
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_201_CREATED
@@ -115,11 +116,11 @@ def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
     assert data.key == form_data.key
 
     # Test create director with existing key (should fail)
-    with open("./uploads/directors/1_Frank Darabont.png", "rb") as image:
+    with open(director_path, "rb") as image:
         response = client.post(
             "/api/people/directors/",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_Frank Darabont.png", image, "image/png")},
+            files={"file": (director_name, image, "image/png")},
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
