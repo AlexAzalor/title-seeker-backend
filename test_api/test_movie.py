@@ -1,4 +1,3 @@
-import os
 import pytest
 
 import sqlalchemy as sa
@@ -207,29 +206,32 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
         ),
     )
 
-    with open("./uploads/posters/1_The Shawshank Redemption.png", "rb") as image:
+    poster_name = "1_The Shawshank Redemption.png"
+    poster_path = f"./test_api/test_data/{poster_name}"
+
+    with open(poster_path, "rb") as image:
         response = client.post(
             "/api/movies",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
+            files={"file": (poster_name, image, "image/png")},
             params={"lang": s.Language.EN.value, "user_uuid": auth_user_owner.uuid},
         )
 
     assert response.status_code == status.HTTP_201_CREATED
 
     # Test create with existing key - should fail
-    with open("./uploads/posters/1_The Shawshank Redemption.png", "rb") as image:
+    with open(poster_path, "rb") as image:
         response = client.post(
             "/api/movies",
             data={"form_data": form_data.model_dump_json()},
-            files={"file": ("1_The Shawshank Redemption.png", image, "image/png")},
+            files={"file": (poster_name, image, "image/png")},
             params={"lang": s.Language.EN.value, "user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_409_CONFLICT
 
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
     assert movie
-    os.remove(f"./uploads/posters/{movie.id}_1_The Shawshank Redemption.png")
+    # os.remove(f"./test_api/test_data/{movie.id}_1_The Shawshank Redemption.png")
 
 
 def test_quick_movies(client: TestClient, auth_user_owner: m.User):
