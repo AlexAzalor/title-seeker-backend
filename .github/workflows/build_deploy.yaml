@@ -19,7 +19,7 @@ env:
 
 jobs:
   on-develop-branch-check:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       on_develop: ${{ steps.contains_tag.outputs.retval }}
     steps:
@@ -34,7 +34,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,6 +60,10 @@ jobs:
         working-directory: .
         run: |
           poetry run mypy
+      - name: Run tests
+        working-directory: .
+        run: |
+          poetry run pytest
 
   # build:
   #   name: Build and Push

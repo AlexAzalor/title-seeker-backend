@@ -228,3 +228,13 @@ scp -i test-five-key.pem ubuntu@13.51.73.255:/home/ubuntu/backups/db_backup_2025
 
 unarchive:
 tar xvzf backups/db_backup_20250303_191329.tgz
+
+movie = db.session.scalar(sa.select(m.Movie).where(m.Movie.id == 10))
+actor = db.session.scalar(sa.select(m.Actor).where(m.Actor.id == 34))
+movie.actors.remove(actor)
+
+movie.actors.append(actor)
+
+char = db.session.scalars(sa.select(m.MovieActorCharacter).where(m.MovieActorCharacter.movie_id == 10)).all()
+c = char[0]
+db.session.delete(c)
