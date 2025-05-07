@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+import pytest
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -10,6 +11,7 @@ from config import config
 CFG = config()
 
 
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_poster(client: TestClient, db: Session):
     movie: m.Movie | None = db.scalar(sa.select(m.Movie).where(m.Movie.id == 1))
     assert movie
@@ -29,6 +31,7 @@ def test_get_poster(client: TestClient, db: Session):
     assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_actors(client: TestClient, db: Session):
     actor: m.Actor | None = db.scalar(sa.select(m.Actor).where(m.Actor.id == 1))
     assert actor
@@ -48,6 +51,7 @@ def test_get_actors(client: TestClient, db: Session):
     assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.skipif(not CFG.IS_API, reason="API is not enabled")
 def test_get_director_avatar(client: TestClient, db: Session):
     director: m.Director | None = db.scalar(sa.select(m.Director).where(m.Director.id == 1))
     assert director
