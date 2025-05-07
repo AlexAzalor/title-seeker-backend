@@ -207,7 +207,7 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     )
 
     poster_name = "1_The Shawshank Redemption.png"
-    poster_path = f"./test_api/test_data/{poster_name}"
+    poster_path = f"{CFG.TEST_DATA_PATH}{poster_name}"
 
     with open(poster_path, "rb") as image:
         response = client.post(
@@ -231,7 +231,6 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
 
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
     assert movie
-    # os.remove(f"./test_api/test_data/{movie.id}_1_The Shawshank Redemption.png")
 
 
 def test_quick_movies(client: TestClient, auth_user_owner: m.User):

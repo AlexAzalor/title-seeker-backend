@@ -115,11 +115,17 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
 
 
 def add_poster_to_new_movie(new_movie: m.Movie, file: UploadFile, UPLOAD_DIRECTORY: str):
-    """For working localy only"""
+    """For local work only"""
+
+    app_env = os.getenv("APP_ENV")
 
     try:
-        file_name = f"{new_movie.id}_{file.filename}"
-        file_location = f"{UPLOAD_DIRECTORY}{file_name}"
+        if app_env == "testing":
+            file_name = file.filename
+            file_location = f"{CFG.TEST_DATA_PATH}{file_name}"
+        else:
+            file_name = f"{new_movie.id}_{file.filename}"
+            file_location = f"{UPLOAD_DIRECTORY}{file_name}"
 
         with open(file_location, "wb+") as file_object:
             file_object.write(file.file.read())

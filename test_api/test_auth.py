@@ -13,9 +13,6 @@ from config import config
 
 CFG = config()
 
-
-USER_PASSWORD = CFG.TEST_USER_PASSWORD
-
 DUMMY_GOOGLE_VALIDATION = GoogleTokenVerification(
     iss="https://accounts.google.com",
     email="test@example.com",

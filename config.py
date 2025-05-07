@@ -15,8 +15,6 @@ def get_version() -> str:
 class BaseConfig(BaseSettings):
     """Base configuration."""
 
-    CURRENT_USER: int = 1
-
     IS_API: bool = False
 
     ENV: str = "base"
@@ -49,52 +47,15 @@ class BaseConfig(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     # Business logic
-
-    MINIMUM_RATE: int = 1
-    MAXIMUM_RATE: int = 5
-
     UK: str = "uk"
     EN: str = "en"
 
-    MAX_USER_SEARCH_RESULTS: int = 10
-    MAX_JOBS_SEARCH_RESULTS: int = 15
-
     # for test data from google spreadsheets
     # "https://www.googleapis.com/auth/drive.file"
-    SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets"]
-    SPREADSHEET_ID: str = "1DxRxVDESUw-C6U-DwfpX5d0uTW7-61y49Xuu0yfaJhM"
-
-    ALL_UKRAINE: str = "all-ukraine"
-    RE_WORD: str = r"[^\w]"
-
-    TEST_USER_PASSWORD: str = "Titlehunt2024"
+    SCOPES: list[str]
+    SPREADSHEET_ID: str
 
     USER_CAROUSEL_LIMIT: int = 16
-
-    # Meest Public API
-    SUCCESS_STATUS: int = 1
-    REGIONS_API_URL: str = "https://publicapi.meest.com/geo_regions"
-    RAYONS_API_URL: str = "https://publicapi.meest.com/geo_districts"
-    SETTLEMENTS_API_URL: str = "https://publicapi.meest.com/geo_localities"
-    ADDRESSES_API_URL: str = "https://publicapi.meest.com/geo_streets"
-
-    # Preventing DDOS on Meest API
-    DELAY_TIME: int = 1
-
-    # Meest Public API types name
-    API_CITY: str = "місто"
-    API_VILLAGE: str = "село"
-
-    # ID from our db, model Region
-    KYIV_ID: int = 1
-
-    # GOOGLE AUTH
-    GOOGLE_CLIENT_ID: str = ""
-
-    # APPLE AUTH
-    APPLE_PUBLIC_KEY_URL: str = "https://appleid.apple.com/auth/keys"
-    APPLE_ISSUER: str = "https://appleid.apple.com"
-    APPLE_DECODE_ALGORITHMS: list[str] = ["RS256"]
 
     # S3
     AWS_ACCESS_KEY: str | None
@@ -103,15 +64,14 @@ class BaseConfig(BaseSettings):
     AWS_S3_BUCKET_NAME: str = "titlehunt"
     AWS_S3_BUCKET_URL: str
 
-    # EXPO
-    EXPO_TOKEN: str
-
     # aws sns
     AWS_SNS_ACCESS_KEY: str | None
     AWS_SNS_SECRET_KEY: str | None
     AWS_SNS_REGION: str | None
 
     SERVICES_LIMIT: int = 16
+
+    TEST_DATA_PATH:str = "./test_api/test_data/"
 
     # FASTAPI_USERNAME: str
     # FASTAPI_PASSWORD: str

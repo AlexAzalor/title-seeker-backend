@@ -23,6 +23,9 @@ from app import models as m
 from app import schema as s
 from config import config
 
+def pytest_configure():
+    os.environ["APP_ENV"] = "testing"
+
 CFG = config()
 
 
