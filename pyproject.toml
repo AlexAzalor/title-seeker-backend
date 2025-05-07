@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "api"
-version = "0.1.219"
+version = "0.1.220"
 description = "Title Hunt Backend API"
 authors = ["TitleHunt <titlehunt@gmail.com>"]
 
