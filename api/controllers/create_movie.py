@@ -121,7 +121,7 @@ def add_poster_to_new_movie(new_movie: m.Movie, file: UploadFile, UPLOAD_DIRECTO
 
     try:
         if app_env == "testing":
-            file_name = file.filename
+            file_name = file.filename if file.filename else ""
             file_location = f"{CFG.TEST_DATA_PATH}{file_name}"
         else:
             file_name = f"{new_movie.id}_{file.filename}"

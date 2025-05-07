@@ -71,7 +71,7 @@ class BaseConfig(BaseSettings):
 
     SERVICES_LIMIT: int = 16
 
-    TEST_DATA_PATH:str = "./test_api/test_data/"
+    TEST_DATA_PATH: str = "./test_api/test_data/"
 
     # FASTAPI_USERNAME: str
     # FASTAPI_PASSWORD: str
