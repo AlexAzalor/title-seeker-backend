@@ -834,63 +834,6 @@ def get_movie_filters(
     )
 
 
-@movie_router.post(
-    "/",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Error with type VALIDATION"},
-    },
-)
-def create_movie(
-    form_data: Annotated[s.MovieFormData, Body(...)],
-    file: UploadFile = File(None),
-    lang: s.Language = s.Language.UK,
-    is_quick_movie: bool = Query(default=False),
-    current_user: m.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Create a new movie"""
-
-    if current_user.role != s.UserRole.OWNER.value:
-        log(log.ERROR, "Only owner allowed to add movie")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
-
-    if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
-        message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message)
-
-    try:
-        new_movie = create_new_movie(db, form_data)
-        db.add(new_movie)
-        # Flush need to get new_movie ID but not commit new data to DB, for rollback (in case of error)
-        db.flush()
-
-        if CFG.ENV == "production":
-            file_name = f"{new_movie.id}_{file.filename}"
-            new_movie.poster = file_name
-            add_image_to_s3_bucket(file, "posters", file_name)
-        else:
-            add_poster_to_new_movie(new_movie, file, UPLOAD_DIRECTORY)
-
-        set_percentage_match(new_movie.id, db, form_data)
-
-        add_new_characters(new_movie.id, db, form_data.actors_keys)
-
-        add_new_movie_rating(new_movie, db, current_user.id, form_data)
-
-        if is_quick_movie:
-            remove_quick_movie(form_data.key)
-
-        db.commit()
-        log(log.INFO, "Movie [%s] successfully created", form_data.key)
-    except Exception as e:
-        db.rollback()
-        log(log.ERROR, "Error creating movie [%s]: %s", form_data.key, e)
-        error_message = get_error_message(lang, "Помилка створення фільму", "Error creating movie")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{error_message} - {e}")
-
-
 @movie_router.get(
     "/pre-create/",
     response_model=s.MoviePreCreateData,
@@ -1002,6 +945,63 @@ def get_pre_create_data(
         shared_universes=shared_universes_out,
         characters=characters_out,
     )
+
+
+@movie_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Error with type VALIDATION"},
+    },
+)
+def create_movie(
+    form_data: Annotated[s.MovieFormData, Body(...)],
+    file: UploadFile = File(None),
+    lang: s.Language = s.Language.UK,
+    is_quick_movie: bool = Query(default=False),
+    current_user: m.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create a new movie"""
+
+    if current_user.role != s.UserRole.OWNER.value:
+        log(log.ERROR, "Only owner allowed to add movie")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
+
+    if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
+        message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=message)
+
+    try:
+        new_movie = create_new_movie(db, form_data)
+        db.add(new_movie)
+        # Flush need to get new_movie ID but not commit new data to DB, for rollback (in case of error)
+        db.flush()
+
+        if CFG.ENV == "production":
+            file_name = f"{new_movie.id}_{file.filename}"
+            new_movie.poster = file_name
+            add_image_to_s3_bucket(file, "posters", file_name)
+        else:
+            add_poster_to_new_movie(new_movie, file, UPLOAD_DIRECTORY)
+
+        set_percentage_match(new_movie.id, db, form_data)
+
+        add_new_characters(new_movie.id, db, form_data.actors_keys)
+
+        add_new_movie_rating(new_movie, db, current_user.id, form_data)
+
+        if is_quick_movie:
+            remove_quick_movie(form_data.key)
+
+        db.commit()
+        log(log.INFO, "Movie [%s] successfully created", form_data.key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error creating movie [%s]: %s", form_data.key, e)
+        error_message = get_error_message(lang, "Помилка створення фільму", "Error creating movie")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{error_message} - {e}")
 
 
 @movie_router.post(

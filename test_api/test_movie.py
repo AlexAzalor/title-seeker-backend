@@ -104,6 +104,27 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert data.directors
 
 
+def test_pre_create_movie_data(client: TestClient, auth_user_owner: m.User):
+    """Should return all data needed for movie creation"""
+
+    response = client.get(
+        "/api/movies/pre-create/",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MoviePreCreateData.model_validate(response.json())
+    assert data
+    assert data.actors
+    assert data.directors
+    assert data.genres
+    assert data.specifications
+    assert data.keywords
+    assert data.action_times
+    assert data.shared_universes
+    assert data.base_movies
+    assert data.characters
+
+
 def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     actor = db.scalar(sa.select(m.Actor))
     assert actor

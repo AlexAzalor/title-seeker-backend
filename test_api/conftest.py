@@ -1,5 +1,6 @@
 from typing import Generator
-
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 import pytest
 from dotenv import load_dotenv
 from fastapi import status
@@ -7,10 +8,9 @@ from moto import mock_aws
 from mypy_boto3_s3 import S3Client
 from mypy_boto3_sns import SNSClient
 
-from test_api.utils import do_nothing
+from test_api.utils import do_nothing, regexp_replace
 
 load_dotenv("test_api/test.env")
-
 # ruff: noqa: F401 E402
 import os
 import boto3
@@ -72,6 +72,22 @@ def db() -> Generator[orm.Session, None, None]:
 @pytest.fixture
 def full_db(db: orm.Session) -> Generator[orm.Session, None, None]:
     yield db
+
+
+@event.listens_for(Engine, "connect")
+def register_sqlite_functions(dbapi_connection, connection_record):
+    """Register custom SQLite functions for the connection.
+
+    This is needed to fix the issue with regexp_replace function not being available in SQLite.
+    **sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such function: regexp_replace**
+
+    """
+    try:
+        # Just for protection from other engines
+        if dbapi_connection.__class__.__module__.startswith("sqlite3"):
+            dbapi_connection.create_function("regexp_replace", 4, regexp_replace)
+    except Exception:
+        pass  # Ignore for non-SQLite engines
 
 
 # @pytest.fixture
