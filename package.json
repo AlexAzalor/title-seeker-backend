@@ -1,6 +1,6 @@
 {
   "name": "title-hunt",
-  "version": "0.1.221",
+  "version": "0.1.222",
   "description": "Title Hunt - searching for titles using a special algorithm.",
   "main": "index.js",
   "scripts": {
