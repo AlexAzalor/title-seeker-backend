@@ -62,6 +62,8 @@ def get_movies(
 
     is_reverse = sort_order == s.SortOrder.DESC
 
+    print("------TEST------")
+
     def get_main_genre(movie: m.Movie) -> str:
         biggest_genre = db.scalar(
             sa.select(m.Genre)
