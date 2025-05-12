@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions
+from api.utils import check_admin_permissions, get_all_items
 import app.models as m
 import sqlalchemy as sa
 
@@ -16,10 +16,94 @@ filter_router = APIRouter(
 )
 
 
+@filter_router.get(
+    "/specifications/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.FilterList,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Specification already exists"},
+        status.HTTP_201_CREATED: {"description": "Specification successfully created"},
+    },
+)
+def get_specifications(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all specifications"""
+    check_admin_permissions(current_user)
+
+    specification_select = (
+        sa.select(m.Specification)
+        .join(m.Specification.translations)
+        .where(m.SpecificationTranslation.language == lang.value)
+        .order_by(m.SpecificationTranslation.name)
+    )
+
+    items = get_all_items(db, specification_select, lang)
+    return s.FilterList(items=items)
+
+
+@filter_router.get(
+    "/keywords/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.FilterList,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Keywords already exists"},
+        status.HTTP_201_CREATED: {"description": "Keywords successfully created"},
+    },
+)
+def get_keywords(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all keywords"""
+    check_admin_permissions(current_user)
+
+    keyword_select = (
+        sa.select(m.Keyword)
+        .join(m.Keyword.translations)
+        .where(m.KeywordTranslation.language == lang.value)
+        .order_by(m.KeywordTranslation.name)
+    )
+
+    items = get_all_items(db, keyword_select, lang)
+    return s.FilterList(items=items)
+
+
+@filter_router.get(
+    "/action-times/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.FilterList,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Keywords already exists"},
+        status.HTTP_201_CREATED: {"description": "Keywords successfully created"},
+    },
+)
+def get_action_times(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all action times"""
+    check_admin_permissions(current_user)
+
+    action_time_select = (
+        sa.select(m.ActionTime)
+        .join(m.ActionTime.translations)
+        .where(m.ActionTimeTranslation.language == lang.value)
+        .order_by(m.ActionTimeTranslation.name)
+    )
+
+    items = get_all_items(db, action_time_select, lang)
+    return s.FilterList(items=items)
+
+
 @filter_router.post(
     "/specifications/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.MovieFilterFormOut,
+    response_model=s.FilterItemOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Specification already exists"},
         status.HTTP_201_CREATED: {"description": "Specification successfully created"},
@@ -67,16 +151,18 @@ def create_specification(
 
     db.refresh(new_specification)
 
-    return s.MovieFilterFormOut(
+    return s.FilterItemOut(
         key=new_specification.key,
-        name=next((t.name for t in new_specification.translations if t.language == lang.value)),
+        name=new_specification.get_name(lang),
+        description=new_specification.get_description(lang),
+        percentage_match=0.0,
     )
 
 
 @filter_router.post(
     "/keywords/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.MovieFilterFormOut,
+    response_model=s.FilterItemOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Keyword already exists"},
         status.HTTP_201_CREATED: {"description": "Keyword successfully created"},
@@ -124,16 +210,18 @@ def create_keyword(
 
     db.refresh(new_keyword)
 
-    return s.MovieFilterFormOut(
+    return s.FilterItemOut(
         key=new_keyword.key,
-        name=next((t.name for t in new_keyword.translations if t.language == lang.value)),
+        name=new_keyword.get_name(lang),
+        description=new_keyword.get_description(lang),
+        percentage_match=0.0,
     )
 
 
 @filter_router.post(
     "/action-times/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.MovieFilterFormOut,
+    response_model=s.FilterItemOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Action Time already exists"},
         status.HTTP_201_CREATED: {"description": "Action Time successfully created"},
@@ -181,7 +269,9 @@ def create_action_time(
 
     db.refresh(new_action_time)
 
-    return s.MovieFilterFormOut(
+    return s.FilterItemOut(
         key=new_action_time.key,
-        name=next((t.name for t in new_action_time.translations if t.language == lang.value)),
+        name=new_action_time.get_name(lang),
+        description=new_action_time.get_description(lang),
+        percentage_match=0.0,
     )

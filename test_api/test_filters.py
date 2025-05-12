@@ -11,6 +11,48 @@ from config import config
 CFG = config()
 
 
+def test_get_specifications(client: TestClient, db: Session, auth_user_owner: m.User):
+    specifications = db.scalars(sa.select(m.Specification)).all()
+    assert specifications
+
+    response = client.get(
+        "/api/filters/specifications/",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.FilterList.model_validate(response.json())
+    assert data
+    assert data.items
+
+
+def test_get_keywords(client: TestClient, db: Session, auth_user_owner: m.User):
+    keywords = db.scalars(sa.select(m.Keyword)).all()
+    assert keywords
+
+    response = client.get(
+        "/api/filters/keywords/",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.FilterList.model_validate(response.json())
+    assert data
+    assert data.items
+
+
+def test_get_action_times(client: TestClient, db: Session, auth_user_owner: m.User):
+    action_times = db.scalars(sa.select(m.ActionTime)).all()
+    assert action_times
+
+    response = client.get(
+        "/api/filters/action-times/",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.FilterList.model_validate(response.json())
+    assert data
+    assert data.items
+
+
 def test_create_specification(client: TestClient, db: Session, auth_user_owner: m.User):
     NEW_SPEC_KEY = "test_specification"
 
@@ -31,9 +73,40 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
         params={"user_uuid": auth_user_owner.uuid},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.MovieFilterFormOut.model_validate(response.json())
+    data = s.FilterItemOut.model_validate(response.json())
     assert data
     assert data.key == NEW_SPEC_KEY
+
+    # Test update specification for movie
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+    assert not [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
+
+    add_form_data = s.FilterFormIn(
+        movie_key=movie.key,
+        items=[
+            s.FilterItemField(
+                key=NEW_SPEC_KEY,
+                name="Test specification",
+                percentage_match=70.0,
+            ),
+            s.FilterItemField(
+                key="philosophical",
+                name="Philosophical",
+                percentage_match=40.0,
+            ),
+        ],
+    )
+
+    response = client.put(
+        "/api/movies/specifications/",
+        json=add_form_data.model_dump(),
+        params={
+            "user_uuid": auth_user_owner.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
 
 
 def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User):
@@ -56,9 +129,40 @@ def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User
         params={"user_uuid": auth_user_owner.uuid},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.MovieFilterFormOut.model_validate(response.json())
+    data = s.FilterItemOut.model_validate(response.json())
     assert data
     assert data.key == NEW_KEYWORD_KEY
+
+    # Test update keyword for movie
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+    assert not [s for keyword in movie.keywords if keyword.key == NEW_KEYWORD_KEY]
+
+    add_form_data = s.FilterFormIn(
+        movie_key=movie.key,
+        items=[
+            s.FilterItemField(
+                key=NEW_KEYWORD_KEY,
+                name="Test keyword",
+                percentage_match=70.0,
+            ),
+            s.FilterItemField(
+                key="cool-antagonist",
+                name="Cool Antagonist",
+                percentage_match=40.0,
+            ),
+        ],
+    )
+
+    response = client.put(
+        "/api/movies/keywords/",
+        json=add_form_data.model_dump(),
+        params={
+            "user_uuid": auth_user_owner.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert [s for keyword in movie.keywords if keyword.key == NEW_KEYWORD_KEY]
 
 
 def test_create_action_time(client: TestClient, db: Session, auth_user_owner: m.User):
@@ -81,6 +185,37 @@ def test_create_action_time(client: TestClient, db: Session, auth_user_owner: m.
         params={"user_uuid": auth_user_owner.uuid},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.MovieFilterFormOut.model_validate(response.json())
+    data = s.FilterItemOut.model_validate(response.json())
     assert data
     assert data.key == NEW_AT_KEY
+
+    # Test update action_time for movie
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+    assert not [s for at in movie.action_times if at.key == NEW_AT_KEY]
+
+    add_form_data = s.FilterFormIn(
+        movie_key=movie.key,
+        items=[
+            s.FilterItemField(
+                key=NEW_AT_KEY,
+                name="Test action_time",
+                percentage_match=70.0,
+            ),
+            s.FilterItemField(
+                key="21st-century",
+                name="21st Century",
+                percentage_match=40.0,
+            ),
+        ],
+    )
+
+    response = client.put(
+        "/api/movies/action-times/",
+        json=add_form_data.model_dump(),
+        params={
+            "user_uuid": auth_user_owner.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert [s for at in movie.action_times if at.key == NEW_AT_KEY]

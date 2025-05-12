@@ -8,12 +8,11 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.schema.actor import ActorOut
 from app.schema.characters import CharacterOut
 from app.schema.director import DirectorOut
+from app.schema.filters import FilterItemOut
 from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
-from app.schema.specifications import SpecificationOut
-from app.schema.keyword import KeywordOut
-from app.schema.action_time import ActionTimeOut
+
 from config import config
 
 CFG = config()
@@ -397,9 +396,9 @@ class MovieFiltersListOut(BaseModel):
     subgenres: list[SubgenreOut]
     actors: list[ActorOut]
     directors: list[DirectorOut]
-    specifications: list[SpecificationOut]
-    keywords: list[KeywordOut]
-    action_times: list[ActionTimeOut]
+    specifications: list[FilterItemOut]
+    keywords: list[FilterItemOut]
+    action_times: list[FilterItemOut]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -475,9 +474,9 @@ class MoviePreCreateData(BaseModel):
     actors: list[ActorOut]
     directors: list[DirectorOut]
     genres: list[GenreOut]
-    specifications: list[SpecificationOut]
-    keywords: list[KeywordOut]
-    action_times: list[ActionTimeOut]
+    specifications: list[FilterItemOut]
+    keywords: list[FilterItemOut]
+    action_times: list[FilterItemOut]
     quick_movie: QuickMovieFormData | None = None
     shared_universes: list[SharedUniversePreCreateOut]
     base_movies: list[MovieOutShort]

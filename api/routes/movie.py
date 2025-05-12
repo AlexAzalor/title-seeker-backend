@@ -25,7 +25,7 @@ from api.controllers.create_movie import (
 
 from api.controllers.movie_filters import get_filters
 from api.dependency.user import get_admin, get_current_user
-from api.utils import extract_values, extract_word, get_error_message
+from api.utils import check_admin_permissions, extract_values, extract_word, get_error_message
 import app.models as m
 import app.schema as s
 from app.database import get_db
@@ -1503,3 +1503,172 @@ def movies_to_add(
                 )
 
     return s.QuickMovieList(quick_movies=quick_movies_out)
+
+
+@movie_router.put(
+    "/specifications/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Specification already exists"},
+        status.HTTP_201_CREATED: {"description": "Specification successfully created"},
+    },
+)
+def edit_specifications(
+    form_data: s.FilterFormIn,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie specifications"""
+
+    check_admin_permissions(current_user)
+
+    items_keys = [item.key for item in form_data.items]
+    specifications = db.scalars(sa.select(m.Specification).where(m.Specification.key.in_(items_keys))).all()
+
+    if not specifications:
+        log(log.ERROR, "Specification [%s] not found")
+        raise HTTPException(status_code=404, detail="Specification not found")
+
+    try:
+        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+        if not movie:
+            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        movie.specifications.clear()
+        movie.specifications.extend(specifications)
+        db.commit()
+
+        for item in form_data.items:
+            specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == item.key))
+            if not specification:
+                log(log.ERROR, "Specification [%s] not found", item.key)
+                raise HTTPException(status_code=404, detail="Specification not found")
+            movie_specification = (
+                m.movie_specifications.update()
+                .values({"percentage_match": item.percentage_match})
+                .where(
+                    m.movie_specifications.c.movie_id == movie.id,
+                    m.movie_specifications.c.specification_id == specification.id,
+                )
+            )
+            db.execute(movie_specification)
+        db.commit()
+
+        log(log.INFO, "Specification [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating specification [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating specification")
+
+
+@movie_router.put(
+    "/keywords/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Keywords already exists"},
+        status.HTTP_201_CREATED: {"description": "Keywords successfully created"},
+    },
+)
+def edit_Keywords(
+    form_data: s.FilterFormIn,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie keywords"""
+
+    check_admin_permissions(current_user)
+    items_keys = [item.key for item in form_data.items]
+    keywords = db.scalars(sa.select(m.Keyword).where(m.Keyword.key.in_(items_keys))).all()
+
+    if not keywords:
+        log(log.ERROR, "Keywords [%s] not found")
+        raise HTTPException(status_code=404, detail="Keywords not found")
+
+    try:
+        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+        if not movie:
+            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        movie.keywords.clear()
+        movie.keywords.extend(keywords)
+        db.commit()
+
+        for item in form_data.items:
+            keyword = db.scalar(sa.select(m.Keyword).where(m.Keyword.key == item.key))
+            if not keyword:
+                log(log.ERROR, "Keyword [%s] not found", item.key)
+                raise HTTPException(status_code=404, detail="Keyword not found")
+            movie_keyword = (
+                m.movie_keywords.update()
+                .values({"percentage_match": item.percentage_match})
+                .where(
+                    m.movie_keywords.c.movie_id == movie.id,
+                    m.movie_keywords.c.keyword_id == keyword.id,
+                )
+            )
+            db.execute(movie_keyword)
+        db.commit()
+
+        log(log.INFO, "Keywords [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating keyword [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating keyword")
+
+
+@movie_router.put(
+    "/action-times/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Action Times already exists"},
+        status.HTTP_201_CREATED: {"description": "Action Times successfully created"},
+    },
+)
+def edit_action_times(
+    form_data: s.FilterFormIn,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie action times"""
+
+    check_admin_permissions(current_user)
+    items_keys = [item.key for item in form_data.items]
+    action_times = db.scalars(sa.select(m.ActionTime).where(m.ActionTime.key.in_(items_keys))).all()
+
+    if not action_times:
+        log(log.ERROR, "Action Times [%s] not found")
+        raise HTTPException(status_code=404, detail="Action Times not found")
+
+    try:
+        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+        if not movie:
+            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+            raise HTTPException(status_code=404, detail="Movie not found")
+
+        movie.action_times.clear()
+        movie.action_times.extend(action_times)
+        db.commit()
+
+        for item in form_data.items:
+            action_time = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.key == item.key))
+            if not action_time:
+                log(log.ERROR, "Action Time [%s] not found", item.key)
+                raise HTTPException(status_code=404, detail="Action Time not found")
+            movie_action_time = (
+                m.movie_action_times.update()
+                .values({"percentage_match": item.percentage_match})
+                .where(
+                    m.movie_action_times.c.movie_id == movie.id,
+                    m.movie_action_times.c.action_time_id == action_time.id,
+                )
+            )
+            db.execute(movie_action_time)
+        db.commit()
+
+        log(log.INFO, "Action Times [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating action time [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating action time")

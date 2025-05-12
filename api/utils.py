@@ -1,5 +1,7 @@
 from datetime import datetime
 import re
+from boto3 import Session
+import sqlalchemy as sa
 from typing import List
 import filetype
 from fastapi import UploadFile, HTTPException, status
@@ -119,3 +121,23 @@ def check_admin_permissions(
     if current_user.role not in [s.UserRole.ADMIN.value, s.UserRole.OWNER.value]:
         log(log.ERROR, "User [%s] is not admin or owner", current_user.uuid)
         raise HTTPException(status_code=403, detail="Not enough permissions")
+
+
+def get_all_items(db: Session, items_select: sa.Select, lang: s.Language):
+    items = db.scalars(items_select).all()
+
+    if not items:
+        log(log.ERROR, "Filter items not found")
+        raise HTTPException(status_code=404, detail="Filter items not found")
+
+    item_out = [
+        s.FilterItemOut(
+            key=item.key,
+            name=item.get_name(lang),
+            description=item.get_description(lang),
+            percentage_match=0.0,
+        )
+        for item in items
+    ]
+
+    return item_out

@@ -108,28 +108,31 @@ def get_filters(db: Session, lang: s.Language):
     ]
 
     specifications_out = [
-        s.SpecificationOut(
+        s.FilterItemOut(
             key=specification.key,
             name=specification.get_name(lang),
             description=specification.get_description(lang),
+            percentage_match=0.0,
         )
         for specification in specifications
     ]
 
     keywords_out = [
-        s.KeywordOut(
+        s.FilterItemOut(
             key=keyword.key,
             name=keyword.get_name(lang),
             description=keyword.get_description(lang),
+            percentage_match=0.0,
         )
         for keyword in keywords
     ]
 
     action_times_out = [
-        s.ActionTimeOut(
+        s.FilterItemOut(
             key=action_time.key,
             name=action_time.get_name(lang),
             description=action_time.get_description(lang),
+            percentage_match=0.0,
         )
         for action_time in action_times
     ]
