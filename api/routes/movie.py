@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime
 from random import randint
-import re
 from typing import Annotated, Sequence
 
 from fastapi_pagination import Page, Params
@@ -744,8 +743,6 @@ def search(
     if title_type != s.TitleType.MOVIES:
         log(log.ERROR, "Title type [%s] not supported", title_type)
         raise HTTPException(status_code=404, detail="Title type not supported")
-
-
 
     normalized_query = normalize_query(query)
 
