@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from random import randint
+import re
 from typing import Annotated, Sequence
 
 from fastapi_pagination import Page, Params
@@ -25,7 +26,7 @@ from api.controllers.create_movie import (
 
 from api.controllers.movie_filters import get_filters
 from api.dependency.user import get_admin, get_current_user
-from api.utils import check_admin_permissions, extract_values, extract_word, get_error_message
+from api.utils import check_admin_permissions, extract_values, extract_word, get_error_message, normalize_query
 import app.models as m
 import app.schema as s
 from app.database import get_db
@@ -744,18 +745,27 @@ def search(
         log(log.ERROR, "Title type [%s] not supported", title_type)
         raise HTTPException(status_code=404, detail="Title type not supported")
 
+
+
+    normalized_query = normalize_query(query)
+
     movies_db = (
         db.scalars(
             sa.select(m.Movie)
             .where(m.Movie.is_deleted.is_(False))
-            .where(m.Movie.translations.any(m.MovieTranslation.title.ilike(f"%{query}%")))
+            .where(
+                m.Movie.translations.any(
+                    sa.func.regexp_replace(
+                        sa.func.lower(m.MovieTranslation.title), r"[^a-zA-Zа-яА-Я0-9 ]", "", "g"
+                    ).ilike(f"%{normalized_query}%")
+                )
+            )
             .limit(5)
             .options(joinedload(m.Movie.translations))
         )
         .unique()
         .all()
     )
-
     movies_out = []
     if movies_db:
         for movie in movies_db:
@@ -769,7 +779,7 @@ def search(
 
             main_genre = "No genre"
             if biggest_genre:
-                genre_name = next((t.name for t in biggest_genre.translations if t.language == lang.value))
+                genre_name = biggest_genre.get_name(lang)
                 percentage_match = next(
                     (
                         mg.percentage_match
@@ -781,8 +791,8 @@ def search(
             movies_out.append(
                 s.MovieSearchOut(
                     key=movie.key,
-                    title_en=next((t.title for t in movie.translations if t.language == s.Language.EN.value)),
-                    title_uk=next((t.title for t in movie.translations if t.language == s.Language.UK.value)),
+                    title_en=movie.get_title(s.Language.EN),
+                    title_uk=movie.get_title(s.Language.UK),
                     poster=movie.poster,
                     release_date=movie.release_date if movie.release_date else datetime.now(),
                     duration=movie.formatted_duration(lang.value),

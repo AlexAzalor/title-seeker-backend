@@ -78,7 +78,7 @@ def test_search(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
 
-    SEARCH_QUERY = movie.get_title()
+    SEARCH_QUERY = movie.get_title(s.Language.EN)
 
     response = client.get("/api/movies/search/", params={"query": SEARCH_QUERY})
     assert response.status_code == status.HTTP_200_OK

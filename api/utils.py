@@ -141,3 +141,9 @@ def get_all_items(db: Session, items_select: sa.Select, lang: s.Language):
     ]
 
     return item_out
+
+
+def normalize_query(query: str) -> str:
+    """Normalize the query for multilingual support."""
+    # Remove special characters and normalize for Ukrainian and English
+    return re.sub(r"[^a-zA-Zа-яА-Я0-9 ]", "", query.lower())
