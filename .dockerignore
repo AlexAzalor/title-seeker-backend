@@ -25,3 +25,6 @@ TODO.md
 
 **/*.pem
 **/*.sql
+
+.env
+**/.env

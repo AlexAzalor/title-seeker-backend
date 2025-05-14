@@ -110,4 +110,6 @@ from .filters import (
     FilterItemOut,
     FilterFormIn,
     FilterItemField,
+    FilterItem,
+    MovieFilterItem,
 )

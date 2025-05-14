@@ -104,3 +104,22 @@ class FilterFormIn(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class FilterItem(BaseModel):
+    key: str
+    name: str
+    description: str
+    percentage_match: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class MovieFilterItem(FilterItem):
+    parent_genre: FilterItem | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

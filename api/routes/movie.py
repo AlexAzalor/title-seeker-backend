@@ -339,7 +339,7 @@ def get_movie(
             for director in movie.directors
         ],
         genres=[
-            s.MovieGenre(
+            s.MovieFilterItem(
                 key=genre.key,
                 name=genre.get_name(lang),
                 description=genre.get_description(lang),
@@ -354,9 +354,9 @@ def get_movie(
             for genre in movie.genres
         ],
         subgenres=[
-            s.MovieSubgenre(
+            s.MovieFilterItem(
                 key=subgenre.key,
-                parent_genre=s.MovieGenre(
+                parent_genre=s.MovieFilterItem(
                     key=subgenre.genre.key,
                     name=subgenre.genre.get_name(lang),
                     description=subgenre.genre.get_description(lang),
@@ -381,7 +381,7 @@ def get_movie(
             for subgenre in movie.subgenres
         ],
         specifications=[
-            s.MovieSpecification(
+            s.MovieFilterItem(
                 key=specification.key,
                 name=specification.get_name(lang),
                 description=specification.get_description(lang),
@@ -398,7 +398,7 @@ def get_movie(
             for specification in movie.specifications
         ],
         keywords=[
-            s.MovieKeyword(
+            s.MovieFilterItem(
                 key=keyword.key,
                 name=keyword.get_name(lang),
                 description=keyword.get_description(lang),
@@ -413,7 +413,7 @@ def get_movie(
             for keyword in movie.keywords
         ],
         action_times=[
-            s.MovieActionTime(
+            s.MovieFilterItem(
                 key=action_time.key,
                 name=action_time.get_name(lang),
                 description=action_time.get_description(lang),
@@ -1188,7 +1188,7 @@ def get_similar_movies(
         raise HTTPException(status_code=404, detail="Movie not found")
 
     genres_list = [
-        s.MovieGenre(
+        s.MovieFilterItem(
             key=genre.key,
             name=next((t.name for t in genre.translations if t.language == lang.value)),
             description=next((t.description for t in genre.translations if t.language == lang.value)),
@@ -1204,9 +1204,9 @@ def get_similar_movies(
     ]
 
     subgenres_list = [
-        s.MovieSubgenre(
+        s.MovieFilterItem(
             key=subgenre.key,
-            parent_genre=s.MovieGenre(
+            parent_genre=s.MovieFilterItem(
                 key=subgenre.genre.key,
                 name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
                 description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
@@ -1232,7 +1232,7 @@ def get_similar_movies(
     ]
 
     specifications_list = [
-        s.MovieSpecification(
+        s.MovieFilterItem(
             key=specification.key,
             name=next((t.name for t in specification.translations if t.language == lang.value)),
             description=next((t.description for t in specification.translations if t.language == lang.value)),
@@ -1250,7 +1250,7 @@ def get_similar_movies(
     ]
 
     keywords_list = [
-        s.MovieKeyword(
+        s.MovieFilterItem(
             key=keyword.key,
             name=next((t.name for t in keyword.translations if t.language == lang.value)),
             description=next((t.description for t in keyword.translations if t.language == lang.value)),

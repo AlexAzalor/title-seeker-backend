@@ -67,6 +67,7 @@ def create_actor(
         )
 
         db.add(new_actor)
+        # TODO: need rolback if error
         db.commit()
         log(log.INFO, "Actor [%s] successfully created", form_data.key)
     except Exception as e:

@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.schema.actor import ActorOut
 from app.schema.characters import CharacterOut
 from app.schema.director import DirectorOut
-from app.schema.filters import FilterItemOut
+from app.schema.filters import FilterItemOut, MovieFilterItem
 from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
@@ -258,11 +258,11 @@ class MovieOut(BaseModel):
     actors: list[MovieActor]
     poster: str
     directors: list[MovieDirector]
-    genres: list[MovieGenre]
-    subgenres: list[MovieSubgenre] = []
-    specifications: list[MovieSpecification]
-    keywords: list[MovieKeyword]
-    action_times: list[MovieActionTime]
+    genres: list[MovieFilterItem]
+    subgenres: list[MovieFilterItem] = []
+    specifications: list[MovieFilterItem]
+    keywords: list[MovieFilterItem]
+    action_times: list[MovieFilterItem]
 
     # Ratings
     # All movies ratings
