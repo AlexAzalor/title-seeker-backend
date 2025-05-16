@@ -36,6 +36,10 @@ class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
 
     password_hash: orm.Mapped[str | None] = orm.mapped_column(sa.String(256))  # only for admin
 
+    preferred_language: orm.Mapped[str] = orm.mapped_column(
+        sa.String(10), default=s.Language.UK.value, server_default=s.Language.UK.value
+    )
+
     is_deleted: orm.Mapped[bool] = orm.mapped_column(default=False)
 
     @property

@@ -94,3 +94,13 @@ def test_get_all_users(client: TestClient, auth_user_owner: m.User):
     data = s.UsersListOut.model_validate(response.json())
     assert data
     assert data.users
+
+
+def test_set_language(client: TestClient, auth_simple_user: m.User):
+    assert auth_simple_user.preferred_language == s.Language.UK.value
+
+    # Set new language
+    lang = s.Language.EN.value
+    response = client.put(f"/api/users/language/{auth_simple_user.uuid}", params={"lang": lang})
+    assert response.status_code == status.HTTP_200_OK
+    assert auth_simple_user.preferred_language == lang

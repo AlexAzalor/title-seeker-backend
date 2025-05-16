@@ -2,6 +2,7 @@
 from pydantic import BaseModel, ConfigDict
 from enum import Enum
 
+from app.schema.language import Language
 from app.schema.user import UserRole
 
 
@@ -23,6 +24,7 @@ class GoogleAuthOut(BaseModel):
     email: str
     role: UserRole
     new_movies_to_add_count: int
+    my_language: Language
 
 
 class GoogleTokenVerification(BaseModel):

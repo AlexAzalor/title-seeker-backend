@@ -62,6 +62,7 @@ def google_auth(
         email=user.email,
         role=UserRole(user.role),
         new_movies_to_add_count=new_movies_to_add_count,
+        my_language=s.Language(user.preferred_language),
     )
 
 

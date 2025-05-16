@@ -255,3 +255,23 @@ def get_all_users(
     ]
 
     return s.UsersListOut(users=users_out)
+
+
+@user_router.put(
+    "/language/{user_uuid}",
+    status_code=status.HTTP_200_OK,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "User not found"}},
+)
+def set_language(
+    lang: s.Language,
+    current_user: m.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Set user language"""
+
+    if not current_user:
+        log(log.ERROR, "User [%s] not found", current_user.email)
+        raise HTTPException(status_code=404, detail="User not found")
+
+    current_user.preferred_language = lang.value
+    db.commit()

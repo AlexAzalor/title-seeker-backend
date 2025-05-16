@@ -77,6 +77,7 @@ def test_google_auth(client: TestClient, db: Session):
     assert data
     assert data.email == auth_data.email
     assert data.role == s.UserRole.USER
+    assert data.my_language == s.Language.UK
 
     # Test delete user
     response = client.delete(
