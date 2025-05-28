@@ -481,3 +481,50 @@ def remove_quick_movie(movie_key: str):
                     json.dump(s.QuickMovieJSON(movies=movies_to_file).model_dump(mode="json"), file, indent=4)
         except Exception as e:
             log(log.ERROR, "Error adding movie [%s] to file: %s", movie_key, e)
+
+
+def add_visual_profile(
+    category_key: str, category_criteria: list[s.CriterionRatingIn], movie_id: int, user_id: int, session: Session
+):
+    """Add visual profile to movie"""
+
+    category = session.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == category_key))
+    if not category:
+        log(log.ERROR, "Category [%s] not found", category_key)
+        raise Exception(f"Category [{category_key}] not found")
+
+    try:
+        new_vp = m.TitleVisualProfile(
+            movie_id=movie_id,
+            user_id=user_id,
+            category_id=category.id,
+        )
+
+        session.add(new_vp)
+        session.flush()
+    except Exception as e:
+        log(log.ERROR, "Error creating visual profile for movie [%s]: %s", movie_id, e)
+        e.args = (*e.args, "Error creating visual profile")
+        raise e
+
+    for idx, criterion in enumerate(category_criteria):
+        criterion_db = session.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+
+        if not criterion_db:
+            log(log.ERROR, "Criterion [%s] not found", criterion.key)
+            raise Exception(f"Criterion [{criterion.key}] not found")
+
+        try:
+            new_rating = m.TitleCriterionRating(
+                title_visual_profile_id=new_vp.id,
+                criterion_id=criterion_db.id,
+                rating=criterion.rating,
+                order=idx + 1,
+            )
+            session.add(new_rating)
+        except Exception as e:
+            log(log.ERROR, "Error creating visual profile rating for movie [%s]: %s", movie_id, e)
+            e.args = (*e.args, "Error creating visual profile rating")
+            raise e
+
+    # session.commit()

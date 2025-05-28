@@ -13,6 +13,7 @@ from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
 
+from app.schema.user import CriterionRatingIn, TitleCategoryData
 from config import config
 
 CFG = config()
@@ -241,6 +242,28 @@ class SimilarMovieOutList(BaseModel):
     similar_movies: list[SimilarMovieOut]
 
 
+class Criterion(BaseModel):
+    key: str
+    name: str
+    description: str
+    rating: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TitleVisualProfileOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    criteria: list[Criterion]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class MovieOut(BaseModel):
     key: str
     title: str
@@ -263,6 +286,9 @@ class MovieOut(BaseModel):
     specifications: list[MovieFilterItem]
     keywords: list[MovieFilterItem]
     action_times: list[MovieFilterItem]
+
+    # Visual profile
+    visual_profile: TitleVisualProfileOut | None = None
 
     # Ratings
     # All movies ratings
@@ -471,6 +497,7 @@ class MovieOutShort(BaseModel):
 
 
 class MoviePreCreateData(BaseModel):
+    title_categories: list[TitleCategoryData]
     actors: list[ActorOut]
     directors: list[DirectorOut]
     genres: list[GenreOut]
@@ -489,28 +516,33 @@ class MoviePreCreateData(BaseModel):
 
 class MovieFormData(BaseModel):
     key: str
+    poster: str | None = None
     title_uk: str
     title_en: str
-    description_uk: str
-    description_en: str
-    release_date: str
-    duration: int
-    budget: int
-    actors_keys: list[ActorCharacterKey]
-    directors_keys: list[str]
-    genres: list[MovieFilterField]
-    subgenres: list[MovieFilterField]
-    specifications: list[MovieFilterField]
-    keywords: list[MovieFilterField]
-    action_times: list[MovieFilterField]
+    # Rating
     rating_criterion_type: RatingCriterion
     rating_criteria: UserRatingCriteria
     rating: float
+    # Info
+    description_uk: str
+    description_en: str
+    release_date: str
+    location_en: str | None = None
+    location_uk: str | None = None
+    duration: int
+    budget: int
     domestic_gross: int | None = None
     worldwide_gross: int | None = None
-    poster: str | None = None
-    location_uk: str | None = None
-    location_en: str | None = None
+    # People
+    actors_keys: list[ActorCharacterKey]
+    directors_keys: list[str]
+    # Genres
+    genres: list[MovieFilterField]
+    subgenres: list[MovieFilterField]
+    # Filters
+    specifications: list[MovieFilterField]
+    keywords: list[MovieFilterField]
+    action_times: list[MovieFilterField]
 
     collection_order: int | None = None
     relation_type: RelatedMovie | None = None
@@ -518,6 +550,10 @@ class MovieFormData(BaseModel):
 
     shared_universe_key: str | None = None
     shared_universe_order: int | None = None
+
+    # Visual profile
+    category_key: str
+    category_criteria: list[CriterionRatingIn]
 
     @model_validator(mode="before")
     @classmethod

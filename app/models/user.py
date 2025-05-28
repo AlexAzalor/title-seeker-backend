@@ -18,6 +18,7 @@ CFG = config()
 
 if TYPE_CHECKING:
     from .rating import Rating
+    from .title_visual_profile.title_visual_profile import TitleVisualProfile
 
 
 class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
@@ -33,6 +34,10 @@ class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     role: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.UserRole.USER.value)
 
     ratings: orm.Mapped[list["Rating"]] = orm.relationship("Rating", back_populates="user")
+
+    visual_profiles: orm.Mapped[list["TitleVisualProfile"]] = orm.relationship(
+        "TitleVisualProfile", back_populates="user"
+    )
 
     password_hash: orm.Mapped[str | None] = orm.mapped_column(sa.String(256))  # only for admin
 
