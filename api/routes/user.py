@@ -299,27 +299,56 @@ def update_title_visual_profile(
         log(log.ERROR, "User [%s] has no visual profile for movie [%s]", current_user.email, data.movie_key)
         raise HTTPException(status_code=404, detail="User has no visual profile for this movie")
 
-    # enumerate for order
-    for idx, criterion in enumerate(data.criteria):
-        criterion_db = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+    # Change category and its criteria
+    if user_vp.category.key != data.category_key:
+        category = db.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == data.category_key))
+        if not category:
+            log(log.ERROR, "Category [%s] not found", data.category_key)
+            raise HTTPException(status_code=404, detail="Category not found")
 
-        if not criterion_db:
-            log(log.ERROR, "Criterion [%s] not found", criterion.key)
-            raise HTTPException(status_code=404, detail="Criterion not found")
+        user_vp.category_id = category.id
+        user_vp.ratings.clear()
 
-        criterion_rating = db.scalar(
-            sa.select(m.TitleCriterionRating).where(
-                m.TitleCriterionRating.title_visual_profile_id == user_vp.id,
-                m.TitleCriterionRating.criterion_id == criterion_db.id,
+        for idx, criterion in enumerate(data.criteria):
+            criterion_db = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+
+            if not criterion_db:
+                log(log.ERROR, "Criterion [%s] not found", criterion.key)
+                raise HTTPException(status_code=404, detail="Criterion not found")
+
+            new_rating = m.TitleCriterionRating(
+                title_visual_profile_id=user_vp.id,
+                criterion_id=criterion_db.id,
+                rating=criterion.rating,
+                order=idx + 1,
             )
-        )
-
-        if not criterion_rating:
-            log(log.ERROR, "Criterion rating for movie [%s] not found", data.movie_key)
-            raise HTTPException(status_code=404, detail="Criterion rating not found")
-
-        criterion_rating.rating = criterion.rating
-        criterion_rating.order = idx + 1
+            db.add(new_rating)
         db.commit()
+        log(log.DEBUG, "Title visual profile for movie [%s] updated with new category", data.movie_key)
+
+    # Update existing criteria ratings
+    else:
+        # enumerate for order
+        for idx, criterion in enumerate(data.criteria):
+            criterion_db = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+
+            if not criterion_db:
+                log(log.ERROR, "Criterion [%s] not found", criterion.key)
+                raise HTTPException(status_code=404, detail="Criterion not found")
+
+            criterion_rating = db.scalar(
+                sa.select(m.TitleCriterionRating).where(
+                    m.TitleCriterionRating.title_visual_profile_id == user_vp.id,
+                    m.TitleCriterionRating.criterion_id == criterion_db.id,
+                )
+            )
+
+            if not criterion_rating:
+                log(log.ERROR, "Criterion rating for movie [%s] not found", data.movie_key)
+                raise HTTPException(status_code=404, detail="Criterion rating not found")
+
+            criterion_rating.rating = criterion.rating
+            criterion_rating.order = idx + 1
+            db.commit()
 
     log(log.DEBUG, "Title visual profile for movie [%s] updated", data.movie_key)

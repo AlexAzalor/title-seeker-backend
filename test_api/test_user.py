@@ -138,3 +138,26 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
     assert movie.visual_profiles[0].ratings[0].rating == NEW_RATING_VALUE
     # Check that the order is preserved (max 6)
     assert movie.visual_profiles[0].ratings[0].order == 6
+
+    # Test update category with new criteria
+    new_category = db.scalar(
+        sa.select(m.TitleCategory).where(m.TitleCategory.key != movie.visual_profiles[0].category.key)
+    )
+    assert new_category
+
+    data_in = s.TitleVisualProfileIn(
+        category_key=new_category.key,
+        movie_key=movie.key,
+        criteria=[
+            s.CriterionRatingIn(
+                name=criterion.get_name(),
+                key=criterion.key,
+                rating=NEW_RATING_VALUE,
+            )
+            for criterion in new_category.criteria
+        ],
+    )
+
+    response = client.put(f"/api/users/title-visual-profile/{auth_user_owner.uuid}", json=data_in.model_dump())
+    assert response.status_code == status.HTTP_200_OK
+    assert movie.visual_profiles[0].category.key == new_category.key

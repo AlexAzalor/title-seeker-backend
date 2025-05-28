@@ -97,10 +97,6 @@ from .user import (
     TopMyMoviesOut,
     UserOut,
     UsersListOut,
-    CriterionRatingIn,
-    TitleVisualProfileIn,
-    CategoryCriterionData,
-    TitleCategoryData,
 )
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut, CharacterFormIn
@@ -128,4 +124,11 @@ from .visual_profile import (
     VPRatingJSONFile,
     TitleCriterionRatingExportCreate,
     TitleCriterionRatingJSONFile,
+    CriterionRatingIn,
+    TitleVisualProfileIn,
+    CategoryCriterionData,
+    TitleCategoryData,
+    VisualProfileListOut,
+    CategoryFormIn,
+    CategoryFormOut,
 )

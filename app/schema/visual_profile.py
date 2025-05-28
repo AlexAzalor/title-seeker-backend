@@ -89,3 +89,71 @@ class TitleCriterionRatingJSONFile(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class CriterionRatingIn(BaseModel):
+    key: str
+    rating: int
+    name: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TitleVisualProfileIn(BaseModel):
+    movie_key: str
+    category_key: str
+    criteria: list[CriterionRatingIn]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class CategoryCriterionData(BaseModel):
+    key: str
+    name: str
+    description: str
+    rating: int
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class TitleCategoryData(BaseModel):
+    key: str
+    name: str
+    description: str
+    criteria: list[CategoryCriterionData]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class VisualProfileListOut(BaseModel):
+    items: list[TitleCategoryData]
+
+
+class CategoryFormIn(BaseModel):
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str
+    description_en: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class CategoryFormOut(BaseModel):
+    key: str
+    name: str
+    description: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

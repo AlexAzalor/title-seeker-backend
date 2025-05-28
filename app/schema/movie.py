@@ -13,7 +13,7 @@ from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
 
-from app.schema.user import CriterionRatingIn, TitleCategoryData
+from app.schema.visual_profile import CriterionRatingIn, TitleCategoryData
 from config import config
 
 CFG = config()
