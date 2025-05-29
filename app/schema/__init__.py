@@ -131,4 +131,8 @@ from .visual_profile import (
     VisualProfileListOut,
     CategoryFormIn,
     CategoryFormOut,
+    CriterionFormList,
+    EditCategoryFormIn,
+    VisualProfileForm,
+    VisualProfileFormOut,
 )

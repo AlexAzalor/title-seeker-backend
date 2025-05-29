@@ -73,8 +73,7 @@ class BaseConfig(BaseSettings):
 
     TEST_DATA_PATH: str = "./test_api/test_data/"
 
-    # FASTAPI_USERNAME: str
-    # FASTAPI_PASSWORD: str
+    UNIQUE_CRITERION_KEY: str = "impact"
 
     @staticmethod
     def configure(app):

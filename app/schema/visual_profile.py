@@ -150,10 +150,44 @@ class CategoryFormIn(BaseModel):
     )
 
 
+class VisualProfileForm(BaseModel):
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str
+    description_en: str
+    criteria: list[CategoryFormIn]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class EditCategoryFormIn(CategoryFormIn):
+    old_key: str
+
+
 class CategoryFormOut(BaseModel):
     key: str
     name: str
     description: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class CriterionFormList(BaseModel):
+    criteria: list[CategoryFormIn]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class VisualProfileFormOut(BaseModel):
+    impact: CategoryFormIn
+    categories: list[VisualProfileForm]
 
     model_config = ConfigDict(
         from_attributes=True,
