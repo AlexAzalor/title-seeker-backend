@@ -281,6 +281,15 @@ def init(app: Flask):
         export_title_ratings_from_google_spreadsheets()
         print("done")
 
+    # TODO: remove this command if not needed
+    @app.cli.command()
+    def create_vps():
+        """Create visual profiles for each movie - do I need it?"""
+        from .create_visual_profiles import create_visual_profiles
+
+        create_visual_profiles()
+        print("done")
+
     @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""

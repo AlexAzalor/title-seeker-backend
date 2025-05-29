@@ -221,6 +221,7 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
                 key=criterion.key,
                 rating=5,
                 name=criterion.get_name(s.Language.EN),
+                description=criterion.get_description(s.Language.EN),
             )
             for criterion in category.criteria
         ],

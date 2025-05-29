@@ -239,10 +239,13 @@ def get_movie(
 
     # separate route?
     user_rating = None
+    visual_profile = None
+
     if current_user:
         user_rating = db.scalar(
             sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
         )
+        visual_profile = movie.get_users_rating(current_user.id)
 
     owner = db.scalar(sa.select(m.User).where(m.User.role == s.UserRole.OWNER.value))
     if not owner:
@@ -256,9 +259,12 @@ def get_movie(
         log(log.ERROR, "Owner rating for movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner rating not found")
 
-    visual_profile = None
-    if current_user:
-        visual_profile = movie.get_users_rating(current_user.id)
+    if not visual_profile:
+        visual_profile = movie.get_users_rating(owner.id)
+
+    if not visual_profile:
+        log(log.ERROR, "Visual profile for movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visual profile not found")
 
     return s.MovieOut(
         created_at=movie.created_at,
@@ -286,9 +292,7 @@ def get_movie(
                 )
                 for title_rating in sorted(visual_profile.ratings, key=lambda x: x.order)
             ],
-        )
-        if visual_profile
-        else None,
+        ),
         # Rating
         # All movies ratings
         ratings=[

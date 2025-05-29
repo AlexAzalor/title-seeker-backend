@@ -288,7 +288,7 @@ class MovieOut(BaseModel):
     action_times: list[MovieFilterItem]
 
     # Visual profile
-    visual_profile: TitleVisualProfileOut | None = None
+    visual_profile: TitleVisualProfileOut
 
     # Ratings
     # All movies ratings

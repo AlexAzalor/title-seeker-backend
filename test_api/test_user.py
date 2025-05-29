@@ -121,6 +121,7 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
             name=criterion.criterion.get_name(),
             key=criterion.criterion.key,
             rating=NEW_RATING_VALUE,
+            description=criterion.criterion.get_description(),
         )
         for criterion in movie.visual_profiles[0].ratings
     ]
@@ -153,6 +154,7 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
                 name=criterion.get_name(),
                 key=criterion.key,
                 rating=NEW_RATING_VALUE,
+                description=criterion.get_description(),
             )
             for criterion in new_category.criteria
         ],
