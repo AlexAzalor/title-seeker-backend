@@ -13,7 +13,7 @@ from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
 
-from app.schema.visual_profile import CriterionRatingIn, TitleCategoryData
+from app.schema.visual_profile import VisualProfileCriterionData, VisualProfileData
 from config import config
 
 CFG = config()
@@ -497,7 +497,7 @@ class MovieOutShort(BaseModel):
 
 
 class MoviePreCreateData(BaseModel):
-    title_categories: list[TitleCategoryData]
+    visual_profile_categories: list[VisualProfileData]
     actors: list[ActorOut]
     directors: list[DirectorOut]
     genres: list[GenreOut]
@@ -553,7 +553,7 @@ class MovieFormData(BaseModel):
 
     # Visual profile
     category_key: str
-    category_criteria: list[CriterionRatingIn]
+    category_criteria: list[VisualProfileCriterionData]
 
     @model_validator(mode="before")
     @classmethod

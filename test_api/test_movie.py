@@ -152,7 +152,7 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     action_time = db.scalar(sa.select(m.ActionTime))
     assert action_time
 
-    category = db.scalar(sa.select(m.TitleCategory))
+    category = db.scalar(sa.select(m.VisualProfileCategory))
     assert category
 
     form_data = s.MovieFormData(
@@ -217,7 +217,7 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
         ),
         category_key=category.key,
         category_criteria=[
-            s.CriterionRatingIn(
+            s.VisualProfileCriterionData(
                 key=criterion.key,
                 rating=5,
                 name=criterion.get_name(s.Language.EN),

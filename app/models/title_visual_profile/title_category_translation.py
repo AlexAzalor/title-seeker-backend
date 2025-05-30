@@ -7,11 +7,13 @@ from app.schema.language import Language
 from ..utils import ModelMixin
 
 
-class TitleCategoryTranslation(db.Model, ModelMixin):
-    __tablename__ = "title_category_translations"
+class VPCategoryTranslation(db.Model, ModelMixin):
+    __tablename__ = "vp_category_translations"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    title_category_id: orm.Mapped[int] = orm.mapped_column(sa.ForeignKey("title_categories.id"), nullable=False)
+    title_category_id: orm.Mapped[int] = orm.mapped_column(
+        sa.ForeignKey("visual_profile_categories.id"), nullable=False
+    )
 
     language: orm.Mapped[str] = orm.mapped_column(sa.String(5), default=Language.UK.value)
 
@@ -19,4 +21,4 @@ class TitleCategoryTranslation(db.Model, ModelMixin):
     description: orm.Mapped[str] = orm.mapped_column(sa.Text(), nullable=False)
 
     def __repr__(self):
-        return f"<TitleCategoryTranslation [{self.id}]>"
+        return f"<VPCategoryTranslation [{self.id}]>"

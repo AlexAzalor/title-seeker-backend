@@ -20,7 +20,7 @@ visual_profile_router = APIRouter(
 
 
 @visual_profile_router.get(
-    "/categories/",
+    "/",
     status_code=status.HTTP_200_OK,
     response_model=s.VisualProfileListOut,
     responses={
@@ -28,76 +28,82 @@ visual_profile_router = APIRouter(
         status.HTTP_404_NOT_FOUND: {"description": "No categories found"},
     },
 )
-def get_categories(
+def get_visual_profiles(
     lang: s.Language = s.Language.UK,
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Get all categories"""
+    """Get visual profile list"""
+
     check_admin_permissions(current_user)
 
-    categories = db.scalars(
-        sa.select(m.TitleCategory)
-        .join(m.TitleCategory.translations)
-        .where(m.TitleCategoryTranslation.language == lang.value)
-        .order_by(m.TitleCategoryTranslation.name)
-    ).all()
+    visual_profiles = db.scalars(sa.select(m.VisualProfileCategory)).all()
+    if not visual_profiles:
+        log(log.WARNING, "No visual profiles found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No visual profiles found")
 
     categories_out = [
-        s.TitleCategoryData(
-            key=category.key,
-            name=category.get_name(lang),
-            description=category.get_description(lang),
+        s.VisualProfileData(
+            key=vp_category.key,
+            name=vp_category.get_name(lang),
+            description=vp_category.get_description(lang),
             criteria=[
-                s.CategoryCriterionData(
+                s.VisualProfileCriterionData(
                     key=criterion.key,
                     name=criterion.get_name(lang),
                     description=criterion.get_description(lang),
                     rating=0,
                 )
-                for criterion in category.criteria
+                for criterion in vp_category.criteria
             ],
         )
-        for category in categories
+        for vp_category in sorted(visual_profiles, key=lambda x: x.id)
     ]
     return s.VisualProfileListOut(items=categories_out)
 
 
 @visual_profile_router.post(
-    "/category/",
+    "/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.CategoryFormOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Category already exists"},
         status.HTTP_201_CREATED: {"description": "Category successfully created"},
     },
 )
-def create_category(
-    form_data: s.CategoryFormIn = Body(...),
-    lang: s.Language = s.Language.UK,
+def create_visual_profile(
+    form_data: s.VisualProfileFormIn = Body(...),
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Create new category"""
+    """Create new visual profile in the admin page"""
 
     check_admin_permissions(current_user)
 
-    category = db.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == form_data.key))
-
+    category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == form_data.key))
     if category:
         log(log.ERROR, "Category [%s] already exists")
         raise HTTPException(status_code=400, detail="Category already exists")
 
+    # Universal criterion for all categories
+    impact_criterion = db.scalar(
+        sa.select(m.VisualProfileCategoryCriterion).where(
+            m.VisualProfileCategoryCriterion.key == CFG.UNIQUE_CRITERION_KEY
+        )
+    )
+    if not impact_criterion:
+        log(log.ERROR, "Impact criterion not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impact criterion not found")
+
     try:
-        new_category = m.TitleCategory(
+        new_category = m.VisualProfileCategory(
             key=form_data.key,
             translations=[
-                m.TitleCategoryTranslation(
+                m.VPCategoryTranslation(
                     language=s.Language.UK.value,
                     name=form_data.name_uk,
                     description=form_data.description_uk,
                 ),
-                m.TitleCategoryTranslation(
+                m.VPCategoryTranslation(
                     language=s.Language.EN.value,
                     name=form_data.name_en,
                     description=form_data.description_en,
@@ -105,20 +111,43 @@ def create_category(
             ],
         )
 
+        new_category.criteria.append(impact_criterion)
         db.add(new_category)
+        db.flush()
+
+        for criterion in form_data.criteria:
+            criterion_db = db.scalar(
+                sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+            )
+
+            if criterion_db:
+                log(log.ERROR, "Criterion [%s] already exists", criterion.key)
+                raise HTTPException(status_code=400, detail=f"Criterion [{criterion.key}] already exists")
+
+            new_criterion = m.VisualProfileCategoryCriterion(
+                key=criterion.key,
+                translations=[
+                    m.VPCriterionTranslation(
+                        language=s.Language.UK.value,
+                        name=criterion.name_uk,
+                        description=criterion.description_uk,
+                    ),
+                    m.VPCriterionTranslation(
+                        language=s.Language.EN.value,
+                        name=criterion.name_en,
+                        description=criterion.description_en,
+                    ),
+                ],
+            )
+            db.add(new_criterion)
+            new_category.criteria.append(new_criterion)
+
         db.commit()
+
         log(log.INFO, "Category [%s] successfully created", form_data.key)
     except Exception as e:
         log(log.ERROR, "Error creating category [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating category")
-
-    db.refresh(new_category)
-
-    return s.CategoryFormOut(
-        key=new_category.key,
-        name=new_category.get_name(lang),
-        description=new_category.get_description(lang),
-    )
 
 
 @visual_profile_router.put(
@@ -130,21 +159,21 @@ def create_category(
     },
 )
 def update_category(
-    form_data: s.EditCategoryFormIn = Body(...),
+    form_data: s.VisualProfileFieldWithUUID = Body(...),
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Update existing category"""
+    """Update existing category in the admin page"""
 
     check_admin_permissions(current_user)
 
-    category = db.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == form_data.old_key))
+    category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.uuid == form_data.uuid))
     if not category:
         log(log.ERROR, "Category [%s] does not exist", form_data.key)
         raise HTTPException(status_code=400, detail="Category does not exist")
 
     try:
-        if form_data.key != form_data.old_key:
+        if category.key != form_data.key:
             category.key = form_data.key
 
         existing = {t.language: t for t in category.translations}
@@ -161,127 +190,32 @@ def update_category(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating category")
 
 
-@visual_profile_router.get(
-    "/criteria/",
-    status_code=status.HTTP_200_OK,
-    response_model=s.CriterionFormList,
-    responses={
-        status.HTTP_200_OK: {"description": "Criteria successfully retrieved"},
-        status.HTTP_404_NOT_FOUND: {"description": "No Criteria found"},
-    },
-)
-def get_criteria(
-    current_user: m.User = Depends(get_admin),
-    db: Session = Depends(get_db),
-):
-    """Get all criteria"""
-
-    check_admin_permissions(current_user)
-
-    criteria = db.scalars(sa.select(m.TitleCriterion)).all()
-
-    if not criteria:
-        log(log.WARNING, "No criteria found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Criteria found")
-
-    criteria_out = [
-        s.CategoryFormIn(
-            key=category.key,
-            name_en=category.get_name(s.Language.EN),
-            name_uk=category.get_name(s.Language.UK),
-            description_en=category.get_description(s.Language.EN),
-            description_uk=category.get_description(s.Language.UK),
-        )
-        for category in criteria
-    ]
-
-    return s.CriterionFormList(criteria=criteria_out)
-
-
-@visual_profile_router.post(
-    "/criterion/",
-    status_code=status.HTTP_201_CREATED,
-    response_model=s.CategoryFormOut,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Criterion already exists"},
-        status.HTTP_201_CREATED: {"description": "Criterion successfully created"},
-    },
-)
-def create_criterion(
-    form_data: s.CategoryFormIn = Body(...),
-    lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
-    db: Session = Depends(get_db),
-):
-    """Create new criterion"""
-
-    check_admin_permissions(current_user)
-
-    criterion = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == form_data.key))
-
-    if criterion:
-        log(log.ERROR, "Criterion [%s] already exists")
-        raise HTTPException(status_code=400, detail="Criterion already exists")
-
-    try:
-        new_criterion = m.TitleCriterion(
-            key=form_data.key,
-            translations=[
-                m.TitleCriterionTranslation(
-                    language=s.Language.UK.value,
-                    name=form_data.name_uk,
-                    description=form_data.description_uk,
-                ),
-                m.TitleCriterionTranslation(
-                    language=s.Language.EN.value,
-                    name=form_data.name_en,
-                    description=form_data.description_en,
-                ),
-            ],
-        )
-
-        db.add(new_criterion)
-        db.commit()
-        log(log.INFO, "Criterion [%s] successfully created", form_data.key)
-    except Exception as e:
-        log(log.ERROR, "Error creating criterion [%s]: %s", form_data.key, e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating criterion")
-
-    db.refresh(new_criterion)
-
-    return s.CategoryFormOut(
-        key=new_criterion.key,
-        name=new_criterion.get_name(lang),
-        description=new_criterion.get_description(lang),
-    )
-
-
 @visual_profile_router.put(
     "/criterion/",
     status_code=status.HTTP_204_NO_CONTENT,
-    # response_model=s.CategoryFormOut,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Criterion already exists"},
         status.HTTP_204_NO_CONTENT: {"description": "Criterion successfully updated"},
     },
 )
 def update_criterion(
-    form_data: s.EditCategoryFormIn = Body(...),
-    # lang: s.Language = s.Language.UK,
+    form_data: s.VisualProfileFieldWithUUID = Body(...),
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Update existing criterion"""
+    """Update existing criterion in the admin page"""
 
     check_admin_permissions(current_user)
 
-    criterion = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == form_data.old_key))
+    criterion = db.scalar(
+        sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.uuid == form_data.uuid)
+    )
     if not criterion:
         log(log.ERROR, "Criterion [%s] does not exist", form_data.key)
         raise HTTPException(status_code=400, detail="Criterion does not exist")
 
     try:
-        if form_data.key != form_data.old_key:
+        if criterion.key != form_data.key:
             criterion.key = form_data.key
 
         existing = {t.language: t for t in criterion.translations}
@@ -311,29 +245,35 @@ def get_visual_profile_forms(
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Get all categories with criteria for visual profile forms"""
+    """Get all categories with criteria for admin page (with all fields)"""
 
     check_admin_permissions(current_user)
 
-    categories = db.scalars(sa.select(m.TitleCategory)).all()
+    categories = db.scalars(sa.select(m.VisualProfileCategory)).all()
     if not categories:
         log(log.WARNING, "No categories found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No categories found")
 
-    impact = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == CFG.UNIQUE_CRITERION_KEY))
+    impact = db.scalar(
+        sa.select(m.VisualProfileCategoryCriterion).where(
+            m.VisualProfileCategoryCriterion.key == CFG.UNIQUE_CRITERION_KEY
+        )
+    )
     if not impact:
         log(log.ERROR, "Impact criterion not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impact criterion not found")
 
     categories_out = [
         s.VisualProfileForm(
+            uuid=category.uuid,
             key=category.key,
             name_en=category.get_name(s.Language.EN),
             name_uk=category.get_name(s.Language.UK),
             description_en=category.get_description(s.Language.EN),
             description_uk=category.get_description(s.Language.UK),
             criteria=[
-                s.CategoryFormIn(
+                s.VisualProfileFieldWithUUID(
+                    uuid=criterion.uuid,
                     key=criterion.key,
                     name_en=criterion.get_name(s.Language.EN),
                     name_uk=criterion.get_name(s.Language.UK),
@@ -344,10 +284,11 @@ def get_visual_profile_forms(
                 if criterion.key != CFG.UNIQUE_CRITERION_KEY
             ],
         )
-        for category in categories
+        for category in sorted(categories, key=lambda x: x.id)
     ]
     return s.VisualProfileFormOut(
-        impact=s.CategoryFormIn(
+        impact=s.VisualProfileFieldWithUUID(
+            uuid=impact.uuid,
             key=impact.key,
             name_en=impact.get_name(s.Language.EN),
             name_uk=impact.get_name(s.Language.UK),

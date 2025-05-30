@@ -27,27 +27,31 @@ LAST_SHEET_COLUMN = "H"
 TITLE_CATEGORIES_RANGE_NAME = f"Title Categories!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_title_categories_in_db(title_categories: list[s.VisualProfileExportCreate]):
+def write_title_categories_in_db(visual_profile_categories: list[s.VisualProfileExportCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.TitleCriterion)):
+        if not session.scalar(sa.select(m.VisualProfileCategoryCriterion)):
             log(log.ERROR, "Genre table is empty")
             log(log.ERROR, "Please run `flask fill-db-with-genres` first")
             raise Exception("Genre table is empty. Please run `flask fill-db-with-genres` first")
 
-        for category in title_categories:
-            new_category = m.TitleCategory(
+        for category in visual_profile_categories:
+            new_category = m.VisualProfileCategory(
                 key=category.key,
                 criteria=[
-                    session.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.id == criterion_id))
+                    session.scalar(
+                        sa.select(m.VisualProfileCategoryCriterion).where(
+                            m.VisualProfileCategoryCriterion.id == criterion_id
+                        )
+                    )
                     for criterion_id in category.criteria_ids
                 ],
                 translations=[
-                    m.TitleCategoryTranslation(
+                    m.VPCategoryTranslation(
                         language=s.Language.UK.value,
                         name=category.name_uk,
                         description=category.description_uk,
                     ),
-                    m.TitleCategoryTranslation(
+                    m.VPCategoryTranslation(
                         language=s.Language.EN.value,
                         name=category.name_en,
                         description=category.description_en,
@@ -57,7 +61,7 @@ def write_title_categories_in_db(title_categories: list[s.VisualProfileExportCre
 
             session.add(new_category)
             session.flush()
-            log(log.DEBUG, "TitleCategory [%s] created", category.name_uk)
+            log(log.DEBUG, "VisualProfileCategory [%s] created", category.name_uk)
 
         session.commit()
 
@@ -83,7 +87,7 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
     assert values, "No data found"
     print("values: ", values[:1])
 
-    title_categories: list[s.VisualProfileExportCreate] = []
+    visual_profile_categories: list[s.VisualProfileExportCreate] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -118,9 +122,8 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
         description_uk = row[DESCRIPTION_UK_INDEX]
         description_en = row[DESCRIPTION_EN_INDEX]
 
-        title_categories.append(
+        visual_profile_categories.append(
             s.VisualProfileExportCreate(
-                id=id,
                 key=key,
                 criteria_ids=criteria_ids,
                 name_uk=name_uk,
@@ -130,22 +133,24 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
             )
         )
 
-    print("Categories COUNT: ", len(title_categories))
+    print("Categories COUNT: ", len(visual_profile_categories))
 
-    with open("data/title_categories.json", "w") as file:
-        json.dump(s.VisualProfileJSONFile(visual_profiles=title_categories).model_dump(mode="json"), file, indent=4)
-        print("Title categories data saved to [data/title_categories.json] file")
+    with open("data/visual_profile_categories.json", "w") as file:
+        json.dump(
+            s.VisualProfileJSONFile(visual_profiles=visual_profile_categories).model_dump(mode="json"), file, indent=4
+        )
+        print("Title categories data saved to [data/visual_profile_categories.json] file")
 
-    write_title_categories_in_db(title_categories)
+    write_title_categories_in_db(visual_profile_categories)
 
 
 def export_title_categories_from_json_file(max_tc_limit: int | None = None):
-    """Fill title_categories with data from json file"""
+    """Fill visual_profile_categories with data from json file"""
 
-    with open("data/title_categories.json", "r") as file:
+    with open("data/visual_profile_categories.json", "r") as file:
         file_data = s.VisualProfileJSONFile.model_validate(json.load(file))
 
-    title_categories = file_data.visual_profiles
+    visual_profile_categories = file_data.visual_profiles
     if max_tc_limit:
-        title_categories = title_categories[:max_tc_limit]
-    write_title_categories_in_db(title_categories)
+        visual_profile_categories = visual_profile_categories[:max_tc_limit]
+    write_title_categories_in_db(visual_profile_categories)

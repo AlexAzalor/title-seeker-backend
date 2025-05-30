@@ -25,13 +25,13 @@ TITLE_VP_RANGE_NAME = f"Title Visual Profile!A1:{LAST_SHEET_COLUMN}"
 
 def write_title_vp_in_db(title_vp: list[s.VPRatingExportCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.TitleCategory)):
+        if not session.scalar(sa.select(m.VisualProfileCategory)):
             log(log.ERROR, "Genre table is empty")
             log(log.ERROR, "Please run `flask fill-db-with-genres` first")
             raise Exception("Genre table is empty. Please run `flask fill-db-with-genres` first")
 
         for visual_profile in title_vp:
-            new_vp = m.TitleVisualProfile(
+            new_vp = m.VisualProfile(
                 movie_id=visual_profile.movie_id,
                 user_id=visual_profile.user_id,
                 category_id=visual_profile.category_id,
@@ -40,7 +40,7 @@ def write_title_vp_in_db(title_vp: list[s.VPRatingExportCreate]):
             session.add(new_vp)
             session.flush()
 
-            log(log.DEBUG, "TitleCriterion [%s] created", visual_profile.id)
+            log(log.DEBUG, "VisualProfileCategoryCriterion created")
 
         session.commit()
 
@@ -92,7 +92,6 @@ def export_title_vp_from_google_spreadsheets(with_print: bool = True, in_json: b
 
         title_vp.append(
             s.VPRatingExportCreate(
-                id=id,
                 movie_id=int(movie_id),
                 category_id=int(category_id),
                 user_id=int(user_id),
@@ -101,9 +100,9 @@ def export_title_vp_from_google_spreadsheets(with_print: bool = True, in_json: b
 
     print("VP Ratings COUNT: ", len(title_vp))
 
-    with open("data/title_visual_profiles.json", "w") as file:
+    with open("data/visual_profiles.json", "w") as file:
         json.dump(s.VPRatingJSONFile(ratings=title_vp).model_dump(mode="json"), file, indent=4)
-        print("Title visual profile ratings data saved to [data/title_visual_profiles.json] file")
+        print("Title visual profile ratings data saved to [data/visual_profiles.json] file")
 
     write_title_vp_in_db(title_vp)
 
@@ -111,7 +110,7 @@ def export_title_vp_from_google_spreadsheets(with_print: bool = True, in_json: b
 def export_title_vp_from_json_file(max_limit: int | None = None):
     """Fill title visual profile with data from json file"""
 
-    with open("data/title_visual_profiles.json", "r") as file:
+    with open("data/visual_profiles.json", "r") as file:
         file_data = s.VPRatingJSONFile.model_validate(json.load(file))
 
     title_vp = file_data.ratings

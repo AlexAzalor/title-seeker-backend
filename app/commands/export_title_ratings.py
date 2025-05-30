@@ -24,12 +24,12 @@ LAST_SHEET_COLUMN = "F"
 TITLE_RATING_RANGE_NAME = f"Title Criterion Rating!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_title_ratings_in_db(title_criterion_ratings: list[s.TitleCriterionRatingExportCreate]):
+def write_title_ratings_in_db(visual_profile_ratings: list[s.VPCriterionRatingExportCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.TitleVisualProfile)):
-            log(log.ERROR, "TitleVisualProfile table is empty")
+        if not session.scalar(sa.select(m.VisualProfile)):
+            log(log.ERROR, "VisualProfile table is empty")
             log(log.ERROR, "Please run `flask fill-db-with-genres` first")
-            raise Exception("TitleVisualProfile table is empty. Please run `flask fill-***` first")
+            raise Exception("VisualProfile table is empty. Please run `flask fill-***` first")
 
         movies = session.scalars(sa.select(m.Movie)).all()
 
@@ -38,8 +38,8 @@ def write_title_ratings_in_db(title_criterion_ratings: list[s.TitleCriterionRati
                 print(f"Movie {movie.key} has no visual profiles")
                 continue
 
-            for rating in title_criterion_ratings:
-                new_rating = m.TitleCriterionRating(
+            for rating in visual_profile_ratings:
+                new_rating = m.VisualProfileRating(
                     title_visual_profile_id=movie.visual_profiles[0].id,
                     criterion_id=rating.criterion_id,
                     rating=rating.rating,
@@ -49,7 +49,7 @@ def write_title_ratings_in_db(title_criterion_ratings: list[s.TitleCriterionRati
                 session.add(new_rating)
                 session.flush()
 
-                log(log.DEBUG, "TitleCriterion [%s] created", rating.id)
+                log(log.DEBUG, "VisualProfileCategoryCriterion created")
 
         session.commit()
 
@@ -75,7 +75,7 @@ def export_title_ratings_from_google_spreadsheets(with_print: bool = True, in_js
     assert values, "No data found"
     print("values: ", values[:1])
 
-    title_criterion_ratings: list[s.TitleCriterionRatingExportCreate] = []
+    visual_profile_ratings: list[s.VPCriterionRatingExportCreate] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -101,9 +101,8 @@ def export_title_ratings_from_google_spreadsheets(with_print: bool = True, in_js
         order = row[ORDER_INDEX]
         assert order, f"The order {order} is missing"
 
-        title_criterion_ratings.append(
-            s.TitleCriterionRatingExportCreate(
-                id=id,
+        visual_profile_ratings.append(
+            s.VPCriterionRatingExportCreate(
                 title_visual_profile_id=title_visual_profile_id,
                 criterion_id=criterion_id,
                 rating=rating,
@@ -111,24 +110,22 @@ def export_title_ratings_from_google_spreadsheets(with_print: bool = True, in_js
             )
         )
 
-    print("Title Ratings COUNT: ", len(title_criterion_ratings))
+    print("Title Ratings COUNT: ", len(visual_profile_ratings))
 
-    with open("data/title_criterion_ratings.json", "w") as file:
-        json.dump(
-            s.TitleCriterionRatingJSONFile(ratings=title_criterion_ratings).model_dump(mode="json"), file, indent=4
-        )
-        print("Title title ratings data saved to [data/title_criterion_ratings.json] file")
+    with open("data/visual_profile_ratings.json", "w") as file:
+        json.dump(s.VPCriterionRatingJSONFile(ratings=visual_profile_ratings).model_dump(mode="json"), file, indent=4)
+        print("Title title ratings data saved to [data/visual_profile_ratings.json] file")
 
-    write_title_ratings_in_db(title_criterion_ratings)
+    write_title_ratings_in_db(visual_profile_ratings)
 
 
 def export_title_criterion_ratings_from_json_file(max_limit: int | None = None):
     """Fill title criterion ratings with data from json file"""
 
-    with open("data/title_criterion_ratings.json", "r") as file:
-        file_data = s.TitleCriterionRatingJSONFile.model_validate(json.load(file))
+    with open("data/visual_profile_ratings.json", "r") as file:
+        file_data = s.VPCriterionRatingJSONFile.model_validate(json.load(file))
 
-    title_criterion_ratings = file_data.ratings
+    visual_profile_ratings = file_data.ratings
     if max_limit:
-        title_criterion_ratings = title_criterion_ratings[:max_limit]
-    write_title_ratings_in_db(title_criterion_ratings)
+        visual_profile_ratings = visual_profile_ratings[:max_limit]
+    write_title_ratings_in_db(visual_profile_ratings)

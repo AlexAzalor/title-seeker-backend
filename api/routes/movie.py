@@ -935,22 +935,22 @@ def get_pre_create_data(
     ]
 
     categories = db.scalars(
-        sa.select(m.TitleCategory)
-        .join(m.TitleCategory.translations)
-        .where(m.TitleCategoryTranslation.language == lang.value)
-        .order_by(m.TitleCategoryTranslation.name)
+        sa.select(m.VisualProfileCategory)
+        .join(m.VisualProfileCategory.translations)
+        .where(m.VPCategoryTranslation.language == lang.value)
+        .order_by(m.VPCategoryTranslation.name)
     ).all()
     if not categories:
         log(log.ERROR, "Title categories not found")
         raise HTTPException(status_code=404, detail="Title categories not found")
 
     categories_out = [
-        s.TitleCategoryData(
+        s.VisualProfileData(
             key=category.key,
             name=category.get_name(lang),
             description=category.get_description(lang),
             criteria=[
-                s.CategoryCriterionData(
+                s.VisualProfileCriterionData(
                     key=criterion.key,
                     name=criterion.get_name(lang),
                     description=criterion.get_description(lang),
@@ -959,7 +959,7 @@ def get_pre_create_data(
                 for criterion in category.criteria
             ],
         )
-        for category in categories
+        for category in sorted(categories, key=lambda x: x.id)
     ]
 
     quick_movie = None
@@ -997,7 +997,7 @@ def get_pre_create_data(
     ]
 
     return s.MoviePreCreateData(
-        title_categories=categories_out,
+        visual_profile_categories=categories_out,
         base_movies=base_movies_out,
         actors=actors_out,
         directors=directors_out,

@@ -251,7 +251,7 @@ def init(app: Flask):
 
     @app.cli.command()
     def fill_db_with_categories():
-        """Fill TitleCategory table with data from google spreadsheets"""
+        """Fill VisualProfileCategory table with data from google spreadsheets"""
         from .export_title_categories import export_title_categories_from_google_spreadsheets
 
         export_title_categories_from_google_spreadsheets()
@@ -259,7 +259,7 @@ def init(app: Flask):
 
     @app.cli.command()
     def fill_db_with_criteria():
-        """Fill TitleCriterion table with data from google spreadsheets"""
+        """Fill VisualProfileCategoryCriterion table with data from google spreadsheets"""
         from .export_title_criterion import export_title_criteria_from_google_spreadsheets
 
         export_title_criteria_from_google_spreadsheets()
@@ -267,7 +267,7 @@ def init(app: Flask):
 
     @app.cli.command()
     def fill_db_with_title_vps():
-        """Fill TitleVisualProfile table with data from google spreadsheets"""
+        """Fill VisualProfile table with data from google spreadsheets"""
         from .export_visual_profiles import export_title_vp_from_google_spreadsheets
 
         export_title_vp_from_google_spreadsheets()
@@ -275,7 +275,7 @@ def init(app: Flask):
 
     @app.cli.command()
     def fill_db_with_title_ratings():
-        """Fill TitleCriterionRating table with data from google spreadsheets"""
+        """Fill VisualProfileRating table with data from google spreadsheets"""
         from .export_title_ratings import export_title_ratings_from_google_spreadsheets
 
         export_title_ratings_from_google_spreadsheets()

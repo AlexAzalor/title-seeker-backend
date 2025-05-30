@@ -484,17 +484,21 @@ def remove_quick_movie(movie_key: str):
 
 
 def add_visual_profile(
-    category_key: str, category_criteria: list[s.CriterionRatingIn], movie_id: int, user_id: int, session: Session
+    category_key: str,
+    category_criteria: list[s.VisualProfileCriterionData],
+    movie_id: int,
+    user_id: int,
+    session: Session,
 ):
     """Add visual profile to movie"""
 
-    category = session.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == category_key))
+    category = session.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == category_key))
     if not category:
         log(log.ERROR, "Category [%s] not found", category_key)
         raise Exception(f"Category [{category_key}] not found")
 
     try:
-        new_vp = m.TitleVisualProfile(
+        new_vp = m.VisualProfile(
             movie_id=movie_id,
             user_id=user_id,
             category_id=category.id,
@@ -508,14 +512,16 @@ def add_visual_profile(
         raise e
 
     for idx, criterion in enumerate(category_criteria):
-        criterion_db = session.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+        criterion_db = session.scalar(
+            sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+        )
 
         if not criterion_db:
             log(log.ERROR, "Criterion [%s] not found", criterion.key)
             raise Exception(f"Criterion [{criterion.key}] not found")
 
         try:
-            new_rating = m.TitleCriterionRating(
+            new_rating = m.VisualProfileRating(
                 title_visual_profile_id=new_vp.id,
                 criterion_id=criterion_db.id,
                 rating=criterion.rating,
@@ -526,5 +532,3 @@ def add_visual_profile(
             log(log.ERROR, "Error creating visual profile rating for movie [%s]: %s", movie_id, e)
             e.args = (*e.args, "Error creating visual profile rating")
             raise e
-
-    # session.commit()

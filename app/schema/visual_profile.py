@@ -6,7 +6,6 @@ CFG = config()
 
 
 class VisualProfileExportCreate(BaseModel):
-    id: int
     key: str
     criteria_ids: list[int]
     name_en: str
@@ -27,13 +26,8 @@ class VisualProfileJSONFile(BaseModel):
     )
 
 
-class TitleCriterionExportCreate(BaseModel):
-    id: int
-    # movie_id: int
-    # user_id: int
-    # rating:int
+class VisualProfileField(BaseModel):
     key: str
-    # category_id: int
     name_en: str
     name_uk: str
     description_en: str
@@ -44,8 +38,16 @@ class TitleCriterionExportCreate(BaseModel):
     )
 
 
-class TitleCriterionJSONFile(BaseModel):
-    criteria: list[TitleCriterionExportCreate]
+class VisualProfileFieldWithUUID(VisualProfileField):
+    uuid: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class VPCriterionJSONFile(BaseModel):
+    criteria: list[VisualProfileField]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -53,7 +55,6 @@ class TitleCriterionJSONFile(BaseModel):
 
 
 class VPRatingExportCreate(BaseModel):
-    id: int
     movie_id: int
     user_id: int
     category_id: int
@@ -71,8 +72,7 @@ class VPRatingJSONFile(BaseModel):
     )
 
 
-class TitleCriterionRatingExportCreate(BaseModel):
-    id: int
+class VPCriterionRatingExportCreate(BaseModel):
     title_visual_profile_id: int
     criterion_id: int
     rating: int
@@ -83,51 +83,40 @@ class TitleCriterionRatingExportCreate(BaseModel):
     )
 
 
-class TitleCriterionRatingJSONFile(BaseModel):
-    ratings: list[TitleCriterionRatingExportCreate]
+class VPCriterionRatingJSONFile(BaseModel):
+    ratings: list[VPCriterionRatingExportCreate]
 
     model_config = ConfigDict(
         from_attributes=True,
     )
 
 
-class CriterionRatingIn(BaseModel):
+class VisualProfileCriterionData(BaseModel):
     key: str
-    rating: int
     name: str
     description: str
+    rating: int
 
     model_config = ConfigDict(
         from_attributes=True,
     )
 
 
-class TitleVisualProfileIn(BaseModel):
+class VisualProfileIn(BaseModel):
     movie_key: str
     category_key: str
-    criteria: list[CriterionRatingIn]
+    criteria: list[VisualProfileCriterionData]
 
     model_config = ConfigDict(
         from_attributes=True,
     )
 
 
-class CategoryCriterionData(BaseModel):
+class VisualProfileData(BaseModel):
     key: str
     name: str
     description: str
-    rating: int
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-
-class TitleCategoryData(BaseModel):
-    key: str
-    name: str
-    description: str
-    criteria: list[CategoryCriterionData]
+    criteria: list[VisualProfileCriterionData]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -135,58 +124,31 @@ class TitleCategoryData(BaseModel):
 
 
 class VisualProfileListOut(BaseModel):
-    items: list[TitleCategoryData]
+    items: list[VisualProfileData]
 
 
-class CategoryFormIn(BaseModel):
-    key: str
-    name_uk: str
-    name_en: str
-    description_uk: str
-    description_en: str
+class VisualProfileFormIn(VisualProfileField):
+    criteria: list[VisualProfileField]
 
     model_config = ConfigDict(
         from_attributes=True,
     )
 
 
-class VisualProfileForm(BaseModel):
-    key: str
-    name_uk: str
-    name_en: str
-    description_uk: str
-    description_en: str
-    criteria: list[CategoryFormIn]
+class VisualProfileForm(VisualProfileFieldWithUUID):
+    criteria: list[VisualProfileFieldWithUUID]
 
     model_config = ConfigDict(
         from_attributes=True,
     )
 
 
-class EditCategoryFormIn(CategoryFormIn):
+class VisualProfileItemUpdateIn(VisualProfileFieldWithUUID):
     old_key: str
 
 
-class CategoryFormOut(BaseModel):
-    key: str
-    name: str
-    description: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-
-class CriterionFormList(BaseModel):
-    criteria: list[CategoryFormIn]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-
 class VisualProfileFormOut(BaseModel):
-    impact: CategoryFormIn
+    impact: VisualProfileFieldWithUUID
     categories: list[VisualProfileForm]
 
     model_config = ConfigDict(

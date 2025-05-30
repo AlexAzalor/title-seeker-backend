@@ -29,7 +29,7 @@ def create_visual_profiles():
 
         for movie in movies:
             if movie.visual_profiles:
-                print(f"Movie {movie.key} has no visual profiles")
+                print(f"Movie {movie.key} has already visual profiles")
                 continue
 
             owner = session.scalar(sa.select(m.User).where(m.User.role == s.UserRole.OWNER.value))
@@ -37,13 +37,13 @@ def create_visual_profiles():
                 log(log.ERROR, "Owner user not found")
                 raise Exception("Owner user not found")
 
-            category = session.scalar(sa.select(m.TitleCategory))
+            category = session.scalar(sa.select(m.VisualProfileCategory))
             if not category:
                 log(log.ERROR, "Category table is empty")
                 log(log.ERROR, "Please run `flask fill-db-with-genres` first")
                 raise Exception("Category table is empty. Please run `flask fill-db-with-genres` first")
 
-            new_vp = m.TitleVisualProfile(
+            new_vp = m.VisualProfile(
                 movie_id=movie.id,
                 user_id=owner.id,
                 category_id=category.id,
@@ -52,7 +52,7 @@ def create_visual_profiles():
             session.flush()
 
             for idx, criterion in enumerate(category.criteria):
-                new_rating = m.TitleCriterionRating(
+                new_rating = m.VisualProfileRating(
                     title_visual_profile_id=new_vp.id,
                     criterion_id=criterion.id,
                     rating=3,

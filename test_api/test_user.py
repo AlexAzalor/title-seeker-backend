@@ -117,7 +117,7 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
     assert movie.visual_profiles[0].ratings[0].rating == OLD_RATING_VALUE
 
     criteria = [
-        s.CriterionRatingIn(
+        s.VisualProfileCriterionData(
             name=criterion.criterion.get_name(),
             key=criterion.criterion.key,
             rating=NEW_RATING_VALUE,
@@ -126,7 +126,7 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
         for criterion in movie.visual_profiles[0].ratings
     ]
 
-    data_in = s.TitleVisualProfileIn(
+    data_in = s.VisualProfileIn(
         category_key=movie.visual_profiles[0].category.key,
         movie_key=movie.key,
         # user_uuid=auth_user_owner.uuid,
@@ -142,15 +142,15 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
 
     # Test update category with new criteria
     new_category = db.scalar(
-        sa.select(m.TitleCategory).where(m.TitleCategory.key != movie.visual_profiles[0].category.key)
+        sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key != movie.visual_profiles[0].category.key)
     )
     assert new_category
 
-    data_in = s.TitleVisualProfileIn(
+    data_in = s.VisualProfileIn(
         category_key=new_category.key,
         movie_key=movie.key,
         criteria=[
-            s.CriterionRatingIn(
+            s.VisualProfileCriterionData(
                 name=criterion.get_name(),
                 key=criterion.key,
                 rating=NEW_RATING_VALUE,

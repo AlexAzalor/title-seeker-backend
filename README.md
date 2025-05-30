@@ -238,3 +238,10 @@ movie.actors.append(actor)
 char = db.session.scalars(sa.select(m.MovieActorCharacter).where(m.MovieActorCharacter.movie_id == 10)).all()
 c = char[0]
 db.session.delete(c)
+
+Apply backup
+Create Stapshot on AWS - just in case.
+Train LOCALY! Applay backup localy and test!
+
+remove container AND volume -v
+dcdn -v db

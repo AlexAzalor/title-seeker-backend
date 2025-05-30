@@ -25,7 +25,7 @@ LAST_SHEET_COLUMN = "G"
 TITLE_CRITERIA_RANGE_NAME = f"Title Criteria!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_title_criteria_in_db(title_criteria: list[s.TitleCriterionExportCreate]):
+def write_title_criteria_in_db(vp_category_criteria: list[s.VisualProfileField]):
     with db.begin() as session:
         categories = session.scalars(sa.select(m.Movie)).all()
 
@@ -34,16 +34,16 @@ def write_title_criteria_in_db(title_criteria: list[s.TitleCriterionExportCreate
             log(log.ERROR, "Please run `flask fill-db-with-***` first")
             raise Exception("Movie table is empty. Please run `flask fill-db-with-***` first")
 
-        for criterion in title_criteria:
-            new_criterion = m.TitleCriterion(
+        for criterion in vp_category_criteria:
+            new_criterion = m.VisualProfileCategoryCriterion(
                 key=criterion.key,
                 translations=[
-                    m.TitleCriterionTranslation(
+                    m.VPCriterionTranslation(
                         language=s.Language.UK.value,
                         name=criterion.name_uk,
                         description=criterion.description_uk,
                     ),
-                    m.TitleCriterionTranslation(
+                    m.VPCriterionTranslation(
                         language=s.Language.EN.value,
                         name=criterion.name_en,
                         description=criterion.description_en,
@@ -54,7 +54,7 @@ def write_title_criteria_in_db(title_criteria: list[s.TitleCriterionExportCreate
             session.add(new_criterion)
             session.flush()
 
-            log(log.DEBUG, "TitleCriterion [%s] created", criterion.name_uk)
+            log(log.DEBUG, "VisualProfileCategoryCriterion [%s] created", criterion.name_uk)
 
         session.commit()
 
@@ -80,7 +80,7 @@ def export_title_criteria_from_google_spreadsheets(with_print: bool = True, in_j
     assert values, "No data found"
     print("values: ", values[:1])
 
-    title_criteria: list[s.TitleCriterionExportCreate] = []
+    vp_category_criteria: list[s.VisualProfileField] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -110,9 +110,8 @@ def export_title_criteria_from_google_spreadsheets(with_print: bool = True, in_j
         description_uk = row[DESCRIPTION_UK_INDEX]
         description_en = row[DESCRIPTION_EN_INDEX]
 
-        title_criteria.append(
-            s.TitleCriterionExportCreate(
-                id=id,
+        vp_category_criteria.append(
+            s.VisualProfileField(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,
@@ -121,22 +120,22 @@ def export_title_criteria_from_google_spreadsheets(with_print: bool = True, in_j
             )
         )
 
-    print("Criteria COUNT: ", len(title_criteria))
+    print("Criteria COUNT: ", len(vp_category_criteria))
 
-    with open("data/title_criteria.json", "w") as file:
-        json.dump(s.TitleCriterionJSONFile(criteria=title_criteria).model_dump(mode="json"), file, indent=4)
-        print("Title criteria data saved to [data/title_criteria.json] file")
+    with open("data/vp_category_criteria.json", "w") as file:
+        json.dump(s.VPCriterionJSONFile(criteria=vp_category_criteria).model_dump(mode="json"), file, indent=4)
+        print("Title criteria data saved to [data/vp_category_criteria.json] file")
 
-    write_title_criteria_in_db(title_criteria)
+    write_title_criteria_in_db(vp_category_criteria)
 
 
 def export_title_criteria_from_json_file(max_limit: int | None = None):
-    """Fill title_criteria with data from json file"""
+    """Fill vp_category_criteria with data from json file"""
 
-    with open("data/title_criteria.json", "r") as file:
-        file_data = s.TitleCriterionJSONFile.model_validate(json.load(file))
+    with open("data/vp_category_criteria.json", "r") as file:
+        file_data = s.VPCriterionJSONFile.model_validate(json.load(file))
 
-    title_criteria = file_data.criteria
+    vp_category_criteria = file_data.criteria
     if max_limit:
-        title_criteria = title_criteria[:max_limit]
-    write_title_criteria_in_db(title_criteria)
+        vp_category_criteria = vp_category_criteria[:max_limit]
+    write_title_criteria_in_db(vp_category_criteria)

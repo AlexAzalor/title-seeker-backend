@@ -283,7 +283,7 @@ def set_language(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def update_title_visual_profile(
-    data: s.TitleVisualProfileIn,
+    data: s.VisualProfileIn,
     current_user: m.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -301,7 +301,7 @@ def update_title_visual_profile(
 
     # Change category and its criteria
     if user_vp.category.key != data.category_key:
-        category = db.scalar(sa.select(m.TitleCategory).where(m.TitleCategory.key == data.category_key))
+        category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == data.category_key))
         if not category:
             log(log.ERROR, "Category [%s] not found", data.category_key)
             raise HTTPException(status_code=404, detail="Category not found")
@@ -310,13 +310,15 @@ def update_title_visual_profile(
         user_vp.ratings.clear()
 
         for idx, criterion in enumerate(data.criteria):
-            criterion_db = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+            criterion_db = db.scalar(
+                sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+            )
 
             if not criterion_db:
                 log(log.ERROR, "Criterion [%s] not found", criterion.key)
                 raise HTTPException(status_code=404, detail="Criterion not found")
 
-            new_rating = m.TitleCriterionRating(
+            new_rating = m.VisualProfileRating(
                 title_visual_profile_id=user_vp.id,
                 criterion_id=criterion_db.id,
                 rating=criterion.rating,
@@ -330,16 +332,18 @@ def update_title_visual_profile(
     else:
         # enumerate for order
         for idx, criterion in enumerate(data.criteria):
-            criterion_db = db.scalar(sa.select(m.TitleCriterion).where(m.TitleCriterion.key == criterion.key))
+            criterion_db = db.scalar(
+                sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+            )
 
             if not criterion_db:
                 log(log.ERROR, "Criterion [%s] not found", criterion.key)
                 raise HTTPException(status_code=404, detail="Criterion not found")
 
             criterion_rating = db.scalar(
-                sa.select(m.TitleCriterionRating).where(
-                    m.TitleCriterionRating.title_visual_profile_id == user_vp.id,
-                    m.TitleCriterionRating.criterion_id == criterion_db.id,
+                sa.select(m.VisualProfileRating).where(
+                    m.VisualProfileRating.title_visual_profile_id == user_vp.id,
+                    m.VisualProfileRating.criterion_id == criterion_db.id,
                 )
             )
 

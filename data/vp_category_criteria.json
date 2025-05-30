@@ -1,7 +1,6 @@
 {
     "criteria": [
         {
-            "id": 1,
             "key": "impact",
             "name_en": "Impact",
             "name_uk": "\u0412\u043f\u043b\u0438\u0432\u043e\u0432\u0456\u0441\u0442\u044c",
@@ -9,7 +8,6 @@
             "description_uk": "\u041d\u0430\u0441\u043a\u0456\u043b\u044c\u043a\u0438 \u0444\u0456\u043b\u044c\u043c \u0437\u0430\u043b\u0438\u0448\u0438\u0432 \u0441\u043b\u0456\u0434 \u0443 \u0442\u0432\u043e\u0457\u0439 \u0441\u0432\u0456\u0434\u043e\u043c\u043e\u0441\u0442\u0456 \u043f\u0456\u0441\u043b\u044f \u043f\u0435\u0440\u0435\u0433\u043b\u044f\u0434\u0443? \u0427\u0438 \u0437\u043c\u0443\u0441\u0438\u0432 \u0437\u0430\u0434\u0443\u043c\u0430\u0442\u0438\u0441\u044f, \u0432\u0456\u0434\u0447\u0443\u0432\u0430\u0442\u0438, \u0437\u0433\u0430\u0434\u0443\u0432\u0430\u0442\u0438? \u041c\u043e\u0436\u0435 \u0431\u0443\u0442\u0438 \u044f\u043a \u0456\u043d\u0442\u0435\u043b\u0435\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u0438\u0439 (\u0428\u043e\u0443\u0448\u0435\u043d\u043a), \u0442\u0430\u043a \u0456 \u0435\u043c\u043e\u0446\u0456\u0439\u043d\u0438\u0439 (The Notebook) \u0447\u0438 \u043d\u0430\u0432\u0456\u0442\u044c \u0435\u0441\u0442\u0435\u0442\u0438\u0447\u043d\u0438\u0439 (Blade Runner)."
         },
         {
-            "id": 2,
             "key": "easy-to-understand",
             "name_en": "Easy to understand",
             "name_uk": "\u041b\u0435\u0433\u043a\u0456\u0441\u0442\u044c \u0441\u043f\u0440\u0438\u0439\u043d\u044f\u0442\u0442\u044f",
@@ -17,7 +15,6 @@
             "description_uk": "text"
         },
         {
-            "id": 3,
             "key": "pace-dynamics",
             "name_en": "Pace / Dynamics",
             "name_uk": "\u0422\u0435\u043c\u043f / \u0414\u0438\u043d\u0430\u043c\u0456\u043a\u0430",
@@ -25,7 +22,6 @@
             "description_uk": "text"
         },
         {
-            "id": 4,
             "key": "charisma-of-the-main-character",
             "name_en": "Charisma of the main character",
             "name_uk": "\u0425\u0430\u0440\u0438\u0437\u043c\u0430 \u0433\u043e\u043b\u043e\u0432\u043d\u043e\u0433\u043e \u0433\u0435\u0440\u043e\u044f",
@@ -33,7 +29,6 @@
             "description_uk": "text"
         },
         {
-            "id": 5,
             "key": "action-fighting-shooting",
             "name_en": "Action / Fighting / Shooting",
             "name_uk": "\u0415\u043a\u0448\u043d / \u0411\u0456\u0439\u043a\u0438 / \u0421\u0442\u0440\u0456\u043b\u044f\u043d\u0438\u043d\u0430",
@@ -41,7 +36,6 @@
             "description_uk": "text"
         },
         {
-            "id": 6,
             "key": "pleasure-to-watch",
             "name_en": "Pleasure to watch",
             "name_uk": "\u0417\u0430\u0434\u043e\u0432\u043e\u043b\u0435\u043d\u043d\u044f \u0432\u0456\u0434 \u043f\u0435\u0440\u0435\u0433\u043b\u044f\u0434\u0443",
@@ -49,7 +43,6 @@
             "description_uk": "text"
         },
         {
-            "id": 7,
             "key": "worldbuilding-lore",
             "name_en": "Worldbuilding / Lore",
             "name_uk": "\u0421\u0432\u0456\u0442\u043e\u0431\u0443\u0434\u043e\u0432\u0430 / \u041b\u043e\u0440",
@@ -57,7 +50,6 @@
             "description_uk": "text"
         },
         {
-            "id": 8,
             "key": "depth-of-characters",
             "name_en": "Depth of characters",
             "name_uk": "\u0413\u043b\u0438\u0431\u0438\u043d\u0430 \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456\u0432",
@@ -65,7 +57,6 @@
             "description_uk": "text"
         },
         {
-            "id": 9,
             "key": "epicness-scale",
             "name_en": "Epicness / Scale",
             "name_uk": "\u0415\u043f\u0456\u0447\u043d\u0456\u0441\u0442\u044c / \u041c\u0430\u0441\u0448\u0442\u0430\u0431",
@@ -73,7 +64,6 @@
             "description_uk": "text"
         },
         {
-            "id": 10,
             "key": "musical-accompaniment",
             "name_en": "Musical accompaniment",
             "name_uk": "\u041c\u0443\u0437\u0438\u0447\u043d\u0438\u0439 \u0441\u0443\u043f\u0440\u043e\u0432\u0456\u0434",
@@ -81,7 +71,6 @@
             "description_uk": "text"
         },
         {
-            "id": 11,
             "key": "length-vs-involvement",
             "name_en": "Length vs Involvement",
             "name_uk": "\u0414\u043e\u0432\u0436\u0438\u043d\u0430 vs \u0412\u0442\u044f\u0433\u043d\u0435\u043d\u0456\u0441\u0442\u044c",
@@ -89,7 +78,6 @@
             "description_uk": "text"
         },
         {
-            "id": 12,
             "key": "emotional-depth",
             "name_en": "Emotional depth",
             "name_uk": "\u0415\u043c\u043e\u0446\u0456\u0439\u043d\u0430 \u0433\u043b\u0438\u0431\u0438\u043d\u0430",
@@ -97,7 +85,6 @@
             "description_uk": "text"
         },
         {
-            "id": 13,
             "key": "the-plausibility-of-the-acting",
             "name_en": "The plausibility of the acting",
             "name_uk": "\u041f\u0440\u0430\u0432\u0434\u043e\u043f\u043e\u0434\u0456\u0431\u043d\u0456\u0441\u0442\u044c \u0430\u043a\u0442\u043e\u0440\u0441\u044c\u043a\u043e\u0457 \u0433\u0440\u0438",
@@ -105,7 +92,6 @@
             "description_uk": "text"
         },
         {
-            "id": 14,
             "key": "the-vitality-of-conflicts",
             "name_en": "The vitality of conflicts",
             "name_uk": "\u0416\u0438\u0442\u0442\u0454\u0432\u0456\u0441\u0442\u044c \u043a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0456\u0432",
@@ -113,7 +99,6 @@
             "description_uk": "text"
         },
         {
-            "id": 15,
             "key": "moral-implication",
             "name_en": "Moral implication",
             "name_uk": "\u041c\u043e\u0440\u0430\u043b\u044c\u043d\u0438\u0439 \u043f\u0456\u0434\u0442\u0435\u043a\u0441\u0442",
@@ -121,7 +106,6 @@
             "description_uk": "text"
         },
         {
-            "id": 16,
             "key": "aftertaste-reflections-after-watching",
             "name_en": "Aftertaste / Reflections after watching",
             "name_uk": "\u041f\u0456\u0441\u043b\u044f\u0441\u043c\u0430\u043a / \u041e\u0441\u043c\u0438\u0441\u043b\u0435\u043d\u043d\u044f \u043f\u0456\u0441\u043b\u044f \u043f\u0435\u0440\u0435\u0433\u043b\u044f\u0434\u0443",
@@ -129,7 +113,6 @@
             "description_uk": "text"
         },
         {
-            "id": 17,
             "key": "humor-wit",
             "name_en": "Humor / Wit",
             "name_uk": "\u0413\u0443\u043c\u043e\u0440 / \u0414\u043e\u0442\u0435\u043f\u043d\u0456\u0441\u0442\u044c",
@@ -137,7 +120,6 @@
             "description_uk": "text"
         },
         {
-            "id": 18,
             "key": "chemistry-between-the-characters",
             "name_en": "Chemistry between the characters",
             "name_uk": "\u0425\u0456\u043c\u0456\u044f \u043c\u0456\u0436 \u0433\u0435\u0440\u043e\u044f\u043c\u0438",
@@ -145,7 +127,6 @@
             "description_uk": "text"
         },
         {
-            "id": 19,
             "key": "actors-improvisation",
             "name_en": "Actor's improvisation",
             "name_uk": "\u0410\u043a\u0442\u043e\u0440\u0441\u044c\u043a\u0430 \u0456\u043c\u043f\u0440\u043e\u0432\u0456\u0437\u0430\u0446\u0456\u044f",
@@ -153,7 +134,6 @@
             "description_uk": "text"
         },
         {
-            "id": 20,
             "key": "lightness-of-the-plot",
             "name_en": "Lightness of the plot",
             "name_uk": "\u041b\u0435\u0433\u043a\u0456\u0441\u0442\u044c \u0441\u044e\u0436\u0435\u0442\u0443",
@@ -161,7 +141,6 @@
             "description_uk": "text"
         },
         {
-            "id": 21,
             "key": "replayability-do-you-want-to-watch-it-again",
             "name_en": "Replayability (do you want to watch it again)",
             "name_uk": "\u0420\u0435\u043f\u043b\u0435\u0439\u0431\u0456\u043b\u0456\u0442\u0456 (\u0447\u0438 \u0445\u043e\u0447\u0435\u0442\u044c\u0441\u044f \u043f\u0435\u0440\u0435\u0433\u043b\u044f\u043d\u0443\u0442\u0438 \u0449\u0435)",
@@ -169,7 +148,6 @@
             "description_uk": "text"
         },
         {
-            "id": 22,
             "key": "cinematography-frame-composition",
             "name_en": "Cinematography / Frame Composition",
             "name_uk": "\u041a\u0456\u043d\u0435\u043c\u0430\u0442\u043e\u0433\u0440\u0430\u0444\u0456\u044f / \u041a\u043e\u043c\u043f\u043e\u0437\u0438\u0446\u0456\u044f \u043a\u0430\u0434\u0440\u0443",
@@ -177,7 +155,6 @@
             "description_uk": "text"
         },
         {
-            "id": 23,
             "key": "philosophical-depth",
             "name_en": "Philosophical depth",
             "name_uk": "\u0424\u0456\u043b\u043e\u0441\u043e\u0444\u0441\u044c\u043a\u0430 \u0433\u043b\u0438\u0431\u0438\u043d\u0430",
@@ -185,7 +162,6 @@
             "description_uk": "text"
         },
         {
-            "id": 24,
             "key": "atmosphere-tempo",
             "name_en": "Atmosphere / Tempo",
             "name_uk": "\u0410\u0442\u043c\u043e\u0441\u0444\u0435\u0440\u0430 / \u0422\u0435\u043c\u043f",
@@ -193,7 +169,6 @@
             "description_uk": "text"
         },
         {
-            "id": 25,
             "key": "minimalism-vs-sense",
             "name_en": "Minimalism vs Sense",
             "name_uk": "\u041c\u0456\u043d\u0456\u043c\u0430\u043b\u0456\u0437\u043c vs \u0421\u0435\u043d\u0441",
@@ -201,7 +176,6 @@
             "description_uk": "text"
         },
         {
-            "id": 26,
             "key": "emotional-introspection",
             "name_en": "Emotional introspection",
             "name_uk": "\u0415\u043c\u043e\u0446\u0456\u0439\u043d\u0430 \u0456\u043d\u0442\u0440\u043e\u0441\u043f\u0435\u043a\u0446\u0456\u044f",
@@ -209,7 +183,6 @@
             "description_uk": "text"
         },
         {
-            "id": 27,
             "key": "styling-visual",
             "name_en": "Styling / Visual",
             "name_uk": "\u0421\u0442\u0430\u0439\u043b\u0456\u043d\u0433 / \u0412\u0456\u0437\u0443\u0430\u043b",
@@ -217,7 +190,6 @@
             "description_uk": "text"
         },
         {
-            "id": 28,
             "key": "soundtrack",
             "name_en": "Soundtrack",
             "name_uk": "\u0421\u0430\u0443\u043d\u0434\u0442\u0440\u0435\u043a",
@@ -225,7 +197,6 @@
             "description_uk": "text"
         },
         {
-            "id": 29,
             "key": "film-editing-rhythm",
             "name_en": "Film Editing / Rhythm",
             "name_uk": "\u041a\u0456\u043d\u043e\u043c\u043e\u043d\u0442\u0430\u0436 / \u0420\u0438\u0442\u043c",
@@ -233,7 +204,6 @@
             "description_uk": "text"
         },
         {
-            "id": 30,
             "key": "physical-drive-chases-fights",
             "name_en": "Physical drive (chases, fights)",
             "name_uk": "\u0424\u0456\u0437\u0438\u0447\u043d\u0438\u0439 \u0434\u0440\u0430\u0439\u0432 (\u043f\u043e\u0433\u043e\u043d\u0456, \u0431\u0456\u0439\u043a\u0438)",
@@ -241,7 +211,6 @@
             "description_uk": "text"
         },
         {
-            "id": 31,
             "key": "energy-of-the-scenes",
             "name_en": "Energy of the scenes",
             "name_uk": "\u0415\u043d\u0435\u0440\u0433\u0456\u044f \u0441\u0446\u0435\u043d",
@@ -249,7 +218,6 @@
             "description_uk": "text"
         },
         {
-            "id": 32,
             "key": "suspense-thriller",
             "name_en": "Suspense / Thriller",
             "name_uk": "\u041d\u0430\u043f\u0440\u0443\u0433\u0430 / \u0422\u0440\u0438\u043b\u0435\u0440\u043d\u0456\u0441\u0442\u044c",
@@ -257,7 +225,6 @@
             "description_uk": "text"
         },
         {
-            "id": 33,
             "key": "uncertainty-psychological-game",
             "name_en": "Uncertainty / Psychological game",
             "name_uk": "\u041d\u0435\u0432\u0438\u0437\u043d\u0430\u0447\u0435\u043d\u0456\u0441\u0442\u044c / \u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0430 \u0433\u0440\u0430",
@@ -265,7 +232,6 @@
             "description_uk": "text"
         },
         {
-            "id": 34,
             "key": "character-motivation",
             "name_en": "Character motivation",
             "name_uk": "\u041c\u043e\u0442\u0438\u0432\u0430\u0446\u0456\u044f \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456\u0432",
@@ -273,7 +239,6 @@
             "description_uk": "text"
         },
         {
-            "id": 35,
             "key": "realism-logic",
             "name_en": "Realism / Logic",
             "name_uk": "\u0420\u0435\u0430\u043b\u0456\u0437\u043c / \u041b\u043e\u0433\u0456\u043a\u0430",
@@ -281,7 +246,6 @@
             "description_uk": "text"
         },
         {
-            "id": 36,
             "key": "unexpected-twists",
             "name_en": "Unexpected twists",
             "name_uk": "\u041d\u0435\u043e\u0447\u0456\u043a\u0443\u0432\u0430\u043d\u0456 \u043f\u043e\u0432\u043e\u0440\u043e\u0442\u0438",
@@ -289,7 +253,6 @@
             "description_uk": "text"
         },
         {
-            "id": 37,
             "key": "social-topics",
             "name_en": "Social topics",
             "name_uk": "\u0421\u043e\u0446\u0456\u0430\u043b\u044c\u043d\u0430 \u0442\u0435\u043c\u0430\u0442\u0438\u043a\u0430",
@@ -297,7 +260,6 @@
             "description_uk": "text"
         },
         {
-            "id": 38,
             "key": "intelligent-content",
             "name_en": "Intelligent content",
             "name_uk": "\u0406\u043d\u0442\u0435\u043b\u0435\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u0435 \u043d\u0430\u043f\u043e\u0432\u043d\u0435\u043d\u043d\u044f",
@@ -305,7 +267,6 @@
             "description_uk": "text"
         },
         {
-            "id": 39,
             "key": "disclosure-of-the-conflict",
             "name_en": "Disclosure of the conflict",
             "name_uk": "\u0420\u043e\u0437\u043a\u0440\u0438\u0442\u0442\u044f \u043a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0443",
@@ -313,7 +274,6 @@
             "description_uk": "text"
         },
         {
-            "id": 40,
             "key": "language-dialogues",
             "name_en": "Language / Dialogues",
             "name_uk": "\u041c\u043e\u0432\u0430 / \u0414\u0456\u0430\u043b\u043e\u0433\u0438",
@@ -321,7 +281,6 @@
             "description_uk": "text"
         },
         {
-            "id": 41,
             "key": "influence-does-it-change-the-way-you-look-at-something",
             "name_en": "Influence (does it change the way you look at something)",
             "name_uk": "\u0412\u043f\u043b\u0438\u0432\u043e\u0432\u0456\u0441\u0442\u044c (\u0447\u0438 \u0437\u043c\u0456\u043d\u044e\u0454 \u043f\u043e\u0433\u043b\u044f\u0434 \u043d\u0430 \u0449\u043e\u0441\u044c)",
@@ -329,7 +288,6 @@
             "description_uk": "text"
         },
         {
-            "id": 42,
             "key": "ease-of-perception",
             "name_en": "Ease of perception",
             "name_uk": "\u041b\u0435\u0433\u043a\u0456\u0441\u0442\u044c \u0441\u043f\u0440\u0438\u0439\u043d\u044f\u0442\u0442\u044f",
@@ -337,7 +295,6 @@
             "description_uk": "text"
         },
         {
-            "id": 43,
             "key": "friendly-characters",
             "name_en": "Friendly characters",
             "name_uk": "\u0414\u0440\u0443\u0436\u0435\u043b\u044e\u0431\u043d\u0456 \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u0436\u0456",
@@ -345,7 +302,6 @@
             "description_uk": "text"
         },
         {
-            "id": 44,
             "key": "simple-plot",
             "name_en": "Simple plot",
             "name_uk": "\u041f\u0440\u043e\u0441\u0442\u0438\u0439 \u0441\u044e\u0436\u0435\u0442",
@@ -353,7 +309,6 @@
             "description_uk": "text"
         },
         {
-            "id": 45,
             "key": "comfort-of-the-atmosphere",
             "name_en": "Comfort of the atmosphere",
             "name_uk": "\u041a\u043e\u043c\u0444\u043e\u0440\u0442\u043d\u0456\u0441\u0442\u044c \u0430\u0442\u043c\u043e\u0441\u0444\u0435\u0440\u0438",
@@ -361,7 +316,6 @@
             "description_uk": "text"
         },
         {
-            "id": 46,
             "key": "moral-warmth",
             "name_en": "Moral \u201cwarmth\u201d",
             "name_uk": "\u041c\u043e\u0440\u0430\u043b\u044c\u043d\u0430 \u201c\u0442\u0435\u043f\u043b\u043e\u0442\u0430\u201d",
@@ -369,7 +323,6 @@
             "description_uk": "text"
         },
         {
-            "id": 47,
             "key": "metaphors-symbolism",
             "name_en": "Metaphors / Symbolism",
             "name_uk": "\u041c\u0435\u0442\u0430\u0444\u043e\u0440\u0438 / \u0421\u0438\u043c\u0432\u043e\u043b\u0456\u0437\u043c",
@@ -377,7 +330,6 @@
             "description_uk": "text"
         },
         {
-            "id": 48,
             "key": "incomprehensibility-mysteriousness",
             "name_en": "Incomprehensibility / Mysteriousness",
             "name_uk": "\u041d\u0435\u0437\u0440\u043e\u0437\u0443\u043c\u0456\u043b\u0456\u0441\u0442\u044c / \u0417\u0430\u0433\u0430\u0434\u043a\u043e\u0432\u0456\u0441\u0442\u044c",
@@ -385,7 +337,6 @@
             "description_uk": "text"
         },
         {
-            "id": 49,
             "key": "music-aura",
             "name_en": "Music / Aura",
             "name_uk": "\u041c\u0443\u0437\u0438\u043a\u0430 / \u0410\u0443\u0440\u0430",
@@ -393,7 +344,6 @@
             "description_uk": "text"
         },
         {
-            "id": 50,
             "key": "ideas-movie-theme",
             "name_en": "Ideas / Movie Theme",
             "name_uk": "\u0406\u0434\u0435\u0457 / \u0422\u0435\u043c\u0430 \u0444\u0456\u043b\u044c\u043c\u0443",
@@ -401,7 +351,6 @@
             "description_uk": "text"
         },
         {
-            "id": 51,
             "key": "subjective-interpretation",
             "name_en": "Subjective interpretation",
             "name_uk": "\u0421\u0443\u0431\u2019\u0454\u043a\u0442\u0438\u0432\u043d\u0430 \u0442\u0440\u0430\u043a\u0442\u043e\u0432\u043a\u0430",
