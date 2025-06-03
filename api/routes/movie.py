@@ -270,6 +270,7 @@ def get_movie(
         created_at=movie.created_at,
         key=movie.key,
         title=movie.get_title(lang),
+        title_en=movie.get_title(s.Language.EN) if lang == s.Language.UK else None,
         description=movie.get_description(lang),
         location=movie.get_location(lang),
         poster=movie.poster,

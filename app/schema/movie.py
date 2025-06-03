@@ -267,6 +267,7 @@ class TitleVisualProfileOut(BaseModel):
 class MovieOut(BaseModel):
     key: str
     title: str
+    title_en: str | None = None
 
     # Info
     description: str

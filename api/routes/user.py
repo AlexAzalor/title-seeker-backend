@@ -249,6 +249,10 @@ def get_all_users(
             email=user.email,
             role=s.UserRole(user.role),
             created_at=user.created_at,
+            ratings_count=len(user.ratings),
+            last_movie_rate_date=max(
+                (rating.created_at for rating in user.ratings), default=None, key=lambda x: x or 0
+            ),
         )
         for user in users
         if user.role != s.UserRole.OWNER.value
