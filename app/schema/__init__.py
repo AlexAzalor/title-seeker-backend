@@ -77,6 +77,8 @@ from .movie import (
     SimilarMovieOutList,
     QuickMovieList,
     PaginationDataOut,
+    Criterion,
+    TitleVisualProfileOut,
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
@@ -112,4 +114,23 @@ from .filters import (
     FilterItemField,
     FilterItem,
     MovieFilterItem,
+)
+from .visual_profile import (
+    VisualProfileExportCreate,
+    VisualProfileJSONFile,
+    VisualProfileField,
+    VisualProfileFieldWithUUID,
+    VPCriterionJSONFile,
+    VPRatingExportCreate,
+    VPRatingJSONFile,
+    VPCriterionRatingExportCreate,
+    VPCriterionRatingJSONFile,
+    VisualProfileIn,
+    VisualProfileCriterionData,
+    VisualProfileData,
+    VisualProfileListOut,
+    VisualProfileFormIn,
+    VisualProfileItemUpdateIn,
+    VisualProfileForm,
+    VisualProfileFormOut,
 )

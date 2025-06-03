@@ -249,6 +249,10 @@ def get_all_users(
             email=user.email,
             role=s.UserRole(user.role),
             created_at=user.created_at,
+            ratings_count=len(user.ratings),
+            last_movie_rate_date=max(
+                (rating.created_at for rating in user.ratings), default=None, key=lambda x: x or 0
+            ),
         )
         for user in users
         if user.role != s.UserRole.OWNER.value
@@ -275,3 +279,84 @@ def set_language(
 
     current_user.preferred_language = lang.value
     db.commit()
+
+
+@user_router.put(
+    "/title-visual-profile/{user_uuid}",
+    status_code=status.HTTP_200_OK,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+)
+def update_title_visual_profile(
+    data: s.VisualProfileIn,
+    current_user: m.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update user's title visual profile"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == data.movie_key))
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    user_vp = next((vp for vp in movie.visual_profiles if vp.user_id == current_user.id), None)
+    if not user_vp:
+        log(log.ERROR, "User [%s] has no visual profile for movie [%s]", current_user.email, data.movie_key)
+        raise HTTPException(status_code=404, detail="User has no visual profile for this movie")
+
+    # Change category and its criteria
+    if user_vp.category.key != data.category_key:
+        category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == data.category_key))
+        if not category:
+            log(log.ERROR, "Category [%s] not found", data.category_key)
+            raise HTTPException(status_code=404, detail="Category not found")
+
+        user_vp.category_id = category.id
+        user_vp.ratings.clear()
+
+        for idx, criterion in enumerate(data.criteria):
+            criterion_db = db.scalar(
+                sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+            )
+
+            if not criterion_db:
+                log(log.ERROR, "Criterion [%s] not found", criterion.key)
+                raise HTTPException(status_code=404, detail="Criterion not found")
+
+            new_rating = m.VisualProfileRating(
+                title_visual_profile_id=user_vp.id,
+                criterion_id=criterion_db.id,
+                rating=criterion.rating,
+                order=idx + 1,
+            )
+            db.add(new_rating)
+        db.commit()
+        log(log.DEBUG, "Title visual profile for movie [%s] updated with new category", data.movie_key)
+
+    # Update existing criteria ratings
+    else:
+        # enumerate for order
+        for idx, criterion in enumerate(data.criteria):
+            criterion_db = db.scalar(
+                sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.key == criterion.key)
+            )
+
+            if not criterion_db:
+                log(log.ERROR, "Criterion [%s] not found", criterion.key)
+                raise HTTPException(status_code=404, detail="Criterion not found")
+
+            criterion_rating = db.scalar(
+                sa.select(m.VisualProfileRating).where(
+                    m.VisualProfileRating.title_visual_profile_id == user_vp.id,
+                    m.VisualProfileRating.criterion_id == criterion_db.id,
+                )
+            )
+
+            if not criterion_rating:
+                log(log.ERROR, "Criterion rating for movie [%s] not found", data.movie_key)
+                raise HTTPException(status_code=404, detail="Criterion rating not found")
+
+            criterion_rating.rating = criterion.rating
+            criterion_rating.order = idx + 1
+            db.commit()
+
+    log(log.DEBUG, "Title visual profile for movie [%s] updated", data.movie_key)

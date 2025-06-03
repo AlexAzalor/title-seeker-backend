@@ -29,15 +29,30 @@ def test_get_movies(client: TestClient, db: Session):
     assert data.pages
 
 
-def test_get_movie(client: TestClient, db: Session):
+def test_get_movie(client: TestClient, db: Session, auth_simple_user: m.User, auth_user_owner: m.User):
     movie = db.scalar(sa.select(m.Movie))
     assert movie
 
+    # Test anonymous user
     response = client.get(f"/api/movies/{movie.key}")
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieOut.model_validate(response.json())
     assert data
     assert data.key == movie.key
+
+    # Test authorized user
+    response = client.get(f"/api/movies/{movie.key}", params={"user_uuid": auth_simple_user.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    simple_user_data = s.MovieOut.model_validate(response.json())
+    assert simple_user_data
+    assert simple_user_data.key == movie.key
+
+    # Test owner user
+    response = client.get(f"/api/movies/{movie.key}", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    owner_data = s.MovieOut.model_validate(response.json())
+    assert owner_data
+    assert owner_data.key == movie.key
 
 
 def test_super_search(client: TestClient, db: Session):
@@ -137,6 +152,9 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     action_time = db.scalar(sa.select(m.ActionTime))
     assert action_time
 
+    category = db.scalar(sa.select(m.VisualProfileCategory))
+    assert category
+
     form_data = s.MovieFormData(
         key="test-create-key",
         title_uk="Test create UK",
@@ -197,6 +215,16 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
             humor=5,
             animation_cartoon=5,
         ),
+        category_key=category.key,
+        category_criteria=[
+            s.VisualProfileCriterionData(
+                key=criterion.key,
+                rating=5,
+                name=criterion.get_name(s.Language.EN),
+                description=criterion.get_description(s.Language.EN),
+            )
+            for criterion in category.criteria
+        ],
     )
 
     poster_name = "1_The Shawshank Redemption.png"
@@ -211,6 +239,10 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
         )
 
     assert response.status_code == status.HTTP_201_CREATED
+    new_movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
+    assert new_movie
+    assert new_movie.ratings
+    assert new_movie.visual_profiles
 
     # Test create with existing key - should fail
     with open(poster_path, "rb") as image:

@@ -112,6 +112,8 @@ class UserOut(BaseModel):
     email: str
     role: UserRole
     created_at: datetime
+    ratings_count: int
+    last_movie_rate_date: datetime | None
 
     model_config = ConfigDict(
         from_attributes=True,

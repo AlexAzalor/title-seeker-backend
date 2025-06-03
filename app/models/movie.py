@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .movie_filters.action_time import ActionTime
     from .shared_universe import SharedUniverse
     from .movie_actor_character import MovieActorCharacter
+    from .title_visual_profile.title_visual_profile import VisualProfile
 
 
 # Questions/Ideas:
@@ -108,6 +109,8 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     ratings_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
     rating_criterion: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=s.RatingCriterion.BASIC.value)
     average_by_criteria: orm.Mapped[dict[str, float | None]] = orm.mapped_column(sa.JSON, nullable=True)
+
+    visual_profiles: orm.Mapped[list["VisualProfile"]] = orm.relationship("VisualProfile", back_populates="movie")
 
     collection_order: orm.Mapped[int | None] = orm.mapped_column(sa.Integer, nullable=True)  # Order in collection
 
@@ -191,3 +194,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
             raise ValueError(f"Character not found for actor_id: {actor_id}")
 
         return character.get_name(lang)
+
+    def get_users_rating(self, user_id: int) -> "VisualProfile | None":
+        """Get the rating for a specific user."""
+        return next((v_profile for v_profile in self.visual_profiles if v_profile.user_id == user_id), None)

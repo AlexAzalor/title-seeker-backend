@@ -17,6 +17,7 @@ from api.controllers.create_movie import (
     add_poster_to_new_movie,
     add_new_characters,
     add_new_movie_rating,
+    add_visual_profile,
     create_new_movie,
     get_movies_data_from_file,
     remove_quick_movie,
@@ -238,10 +239,13 @@ def get_movie(
 
     # separate route?
     user_rating = None
+    visual_profile = None
+
     if current_user:
         user_rating = db.scalar(
             sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
         )
+        visual_profile = movie.get_users_rating(current_user.id)
 
     owner = db.scalar(sa.select(m.User).where(m.User.role == s.UserRole.OWNER.value))
     if not owner:
@@ -255,10 +259,18 @@ def get_movie(
         log(log.ERROR, "Owner rating for movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner rating not found")
 
+    if not visual_profile:
+        visual_profile = movie.get_users_rating(owner.id)
+
+    if not visual_profile:
+        log(log.ERROR, "Visual profile for movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visual profile not found")
+
     return s.MovieOut(
         created_at=movie.created_at,
         key=movie.key,
         title=movie.get_title(lang),
+        title_en=movie.get_title(s.Language.EN) if lang == s.Language.UK else None,
         description=movie.get_description(lang),
         location=movie.get_location(lang),
         poster=movie.poster,
@@ -267,6 +279,21 @@ def get_movie(
         domestic_gross=movie.formatted_domestic_gross,
         worldwide_gross=movie.formatted_worldwide_gross,
         release_date=movie.release_date if movie.release_date else datetime.now(),
+        # Visual Profile
+        visual_profile=s.TitleVisualProfileOut(
+            key=visual_profile.category.key,
+            name=visual_profile.category.get_name(lang),
+            description=visual_profile.category.get_description(lang),
+            criteria=[
+                s.Criterion(
+                    key=title_rating.criterion.key,
+                    name=title_rating.criterion.get_name(lang),
+                    description=title_rating.criterion.get_description(lang),
+                    rating=title_rating.rating,
+                )
+                for title_rating in sorted(visual_profile.ratings, key=lambda x: x.order)
+            ],
+        ),
         # Rating
         # All movies ratings
         ratings=[
@@ -908,6 +935,34 @@ def get_pre_create_data(
         for base_movie in base_movies
     ]
 
+    categories = db.scalars(
+        sa.select(m.VisualProfileCategory)
+        .join(m.VisualProfileCategory.translations)
+        .where(m.VPCategoryTranslation.language == lang.value)
+        .order_by(m.VPCategoryTranslation.name)
+    ).all()
+    if not categories:
+        log(log.ERROR, "Title categories not found")
+        raise HTTPException(status_code=404, detail="Title categories not found")
+
+    categories_out = [
+        s.VisualProfileData(
+            key=category.key,
+            name=category.get_name(lang),
+            description=category.get_description(lang),
+            criteria=[
+                s.VisualProfileCriterionData(
+                    key=criterion.key,
+                    name=criterion.get_name(lang),
+                    description=criterion.get_description(lang),
+                    rating=0,
+                )
+                for criterion in category.criteria
+            ],
+        )
+        for category in sorted(categories, key=lambda x: x.id)
+    ]
+
     quick_movie = None
 
     if quick_movie_key:
@@ -943,6 +998,7 @@ def get_pre_create_data(
     ]
 
     return s.MoviePreCreateData(
+        visual_profile_categories=categories_out,
         base_movies=base_movies_out,
         actors=actors_out,
         directors=directors_out,
@@ -1000,6 +1056,14 @@ def create_movie(
         add_new_characters(new_movie.id, db, form_data.actors_keys)
 
         add_new_movie_rating(new_movie, db, current_user.id, form_data)
+
+        add_visual_profile(
+            form_data.category_key,
+            form_data.category_criteria,
+            new_movie.id,
+            current_user.id,
+            db,
+        )
 
         if is_quick_movie:
             remove_quick_movie(form_data.key)

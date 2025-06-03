@@ -104,3 +104,62 @@ def test_set_language(client: TestClient, auth_simple_user: m.User):
     response = client.put(f"/api/users/language/{auth_simple_user.uuid}", params={"lang": lang})
     assert response.status_code == status.HTTP_200_OK
     assert auth_simple_user.preferred_language == lang
+
+
+def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_owner: m.User):
+    OLD_RATING_VALUE = 3
+    NEW_RATING_VALUE = 5
+
+    movie = db.scalar(sa.select(m.Movie))
+    assert movie
+    assert movie.visual_profiles
+    assert movie.visual_profiles[0].ratings
+    assert movie.visual_profiles[0].ratings[0].rating == OLD_RATING_VALUE
+
+    criteria = [
+        s.VisualProfileCriterionData(
+            name=criterion.criterion.get_name(),
+            key=criterion.criterion.key,
+            rating=NEW_RATING_VALUE,
+            description=criterion.criterion.get_description(),
+        )
+        for criterion in movie.visual_profiles[0].ratings
+    ]
+
+    data_in = s.VisualProfileIn(
+        category_key=movie.visual_profiles[0].category.key,
+        movie_key=movie.key,
+        # user_uuid=auth_user_owner.uuid,
+        criteria=criteria[::-1],  # Reverse the order to match the expected input
+    )
+
+    response = client.put(f"/api/users/title-visual-profile/{auth_user_owner.uuid}", json=data_in.model_dump())
+    assert response.status_code == status.HTTP_200_OK
+    assert movie.visual_profiles[0].ratings
+    assert movie.visual_profiles[0].ratings[0].rating == NEW_RATING_VALUE
+    # Check that the order is preserved (max 6)
+    assert movie.visual_profiles[0].ratings[0].order == 6
+
+    # Test update category with new criteria
+    new_category = db.scalar(
+        sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key != movie.visual_profiles[0].category.key)
+    )
+    assert new_category
+
+    data_in = s.VisualProfileIn(
+        category_key=new_category.key,
+        movie_key=movie.key,
+        criteria=[
+            s.VisualProfileCriterionData(
+                name=criterion.get_name(),
+                key=criterion.key,
+                rating=NEW_RATING_VALUE,
+                description=criterion.get_description(),
+            )
+            for criterion in new_category.criteria
+        ],
+    )
+
+    response = client.put(f"/api/users/title-visual-profile/{auth_user_owner.uuid}", json=data_in.model_dump())
+    assert response.status_code == status.HTTP_200_OK
+    assert movie.visual_profiles[0].category.key == new_category.key
