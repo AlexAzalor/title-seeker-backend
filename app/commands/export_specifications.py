@@ -25,7 +25,7 @@ LAST_SHEET_COLUMN = "G"
 SPEC_RANGE_NAME = f"Specifications!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_specifications_in_db(specifications: list[s.SpecificationExportCreate]):
+def write_specifications_in_db(specifications: list[s.FilterFields]):
     with db.begin() as session:
         if not session.scalar(sa.select(m.Genre)):
             log(log.ERROR, "Genre table is empty")
@@ -78,7 +78,7 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
     assert values, "No data found"
     print("values: ", values[:1])
 
-    specifications: list[s.SpecificationExportCreate] = []
+    specifications: list[s.FilterFields] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -109,8 +109,7 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
         description_en = row[DESCRIPTION_EN_INDEX]
 
         specifications.append(
-            s.SpecificationExportCreate(
-                id=id,
+            s.FilterFields(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,

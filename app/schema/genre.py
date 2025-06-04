@@ -5,13 +5,20 @@ from config import config
 CFG = config()
 
 
-class GenreExportCreate(BaseModel):
-    id: int
+class GenreFormFields(BaseModel):
     key: str
     name_uk: str
     name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
+    description_uk: str
+    description_en: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenreFormFieldsWithUUID(GenreFormFields):
+    uuid: str
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -19,7 +26,7 @@ class GenreExportCreate(BaseModel):
 
 
 class GenresJSONFile(BaseModel):
-    genres: list[GenreExportCreate]
+    genres: list[GenreFormFields]
 
     model_config = ConfigDict(
         from_attributes=True,

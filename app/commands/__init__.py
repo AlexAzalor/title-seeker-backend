@@ -291,6 +291,14 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
+    def add_uuid():
+        """Add UUID to all filters in the database."""
+        from .update_filters_with_uuid import update_filters_with_uuid
+
+        update_filters_with_uuid()
+        print("done")
+
+    @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""
         from .export_users import export_users_from_google_spreadsheets

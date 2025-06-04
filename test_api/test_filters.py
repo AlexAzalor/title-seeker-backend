@@ -77,7 +77,7 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     assert data
     assert data.key == NEW_SPEC_KEY
 
-    # Test update specification for movie
+    # Test add specification to movie
     movie = db.scalar(sa.select(m.Movie))
     assert movie
     assert not [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
@@ -107,6 +107,40 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     )
     assert response.status_code == status.HTTP_200_OK
     assert [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
+
+    # Test update specification with existing key
+    specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == NEW_SPEC_KEY))
+    assert specification
+
+    update_form_data = s.FilterFieldsWithUUID(
+        uuid=specification.uuid,
+        key="new-test-specification-2",
+        name_uk="Тестовий специфікація 2",
+        name_en="Test specification 2",
+        description_uk="Тестовий опис специфікації 2",
+        description_en="Test specification description 2",
+    )
+    response = client.put(
+        "/api/filters/",
+        json=update_form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid, "type": s.FilterEnum.SPECIFICATION.value},
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert specification.key == update_form_data.key
+
+    # Test get filters fields for form
+    response = client.get(
+        "/api/filters/form-fields/",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+            "item_key": specification.key,
+            "type": s.FilterEnum.SPECIFICATION.value,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    form_data_out = s.FilterFieldsWithUUID.model_validate(response.json())
+    assert form_data_out
+    assert form_data_out.key == specification.key
 
 
 def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User):

@@ -27,13 +27,13 @@ def import_genres_to_google_spreadsheets():
 
     values = [
         [
-            genre.id,
+            1,
             genre.key,
             genre.name_uk,
             genre.name_en,
             genre.description_uk,
             genre.description_en,
-            genre.id,
+            1,
         ]
     ]
 

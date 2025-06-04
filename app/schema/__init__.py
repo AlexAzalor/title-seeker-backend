@@ -82,7 +82,15 @@ from .movie import (
 )
 from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
 from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
-from .genre import GenreExportCreate, GenresJSONFile, GenreListOut, GenreOut, SubgenreOut, GenreIn
+from .genre import (
+    GenreFormFields,
+    GenreFormFieldsWithUUID,
+    GenresJSONFile,
+    GenreListOut,
+    GenreOut,
+    SubgenreOut,
+    GenreIn,
+)
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import (
     UserExportCreate,
@@ -102,7 +110,10 @@ from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
 from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut, CharacterFormIn
 from .shared_universe import SharedUniverseExportCreate, SharedUniversesJSONFile, SharedUniversePreCreateOut
 from .filters import (
-    SpecificationExportCreate,
+    FilterEnum,
+    FilterFields,
+    FilterFieldsWithUUID,
+    FilterFieldList,
     SpecificationsJSONFile,
     KeywordExportCreate,
     KeywordsJSONFile,

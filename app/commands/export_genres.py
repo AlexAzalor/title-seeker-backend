@@ -24,7 +24,7 @@ LAST_SHEET_COLUMN = "G"
 GENRES_RANGE_NAME = f"Genres!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_genres_in_db(genres: list[s.GenreExportCreate]):
+def write_genres_in_db(genres: list[s.GenreFormFields]):
     with db.begin() as session:
         for genre in genres:
             new_genre = m.Genre(
@@ -71,7 +71,7 @@ def export_genres_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     assert values, "No data found"
 
-    genres: list[s.GenreExportCreate] = []
+    genres: list[s.GenreFormFields] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -103,8 +103,7 @@ def export_genres_from_google_spreadsheets(with_print: bool = True, in_json: boo
         description_en = row[DESCRIPTION_EN_INDEX]
 
         genres.append(
-            s.GenreExportCreate(
-                id=id,
+            s.GenreFormFields(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,

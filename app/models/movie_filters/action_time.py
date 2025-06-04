@@ -1,3 +1,4 @@
+from uuid import uuid4
 from app.database import db
 from sqlalchemy import orm
 import sqlalchemy as sa
@@ -17,6 +18,7 @@ class ActionTime(db.Model, ModelMixin):
     __tablename__ = "action_times"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+    uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()), nullable=True)
     key: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=False, unique=True, index=True)
 
     translations: orm.Mapped[list["ActionTimeTranslation"]] = orm.relationship()

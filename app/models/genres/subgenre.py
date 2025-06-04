@@ -1,3 +1,4 @@
+from uuid import uuid4
 import sqlalchemy as sa
 from sqlalchemy import orm
 import app.schema as s
@@ -19,6 +20,7 @@ class Subgenre(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     __tablename__ = "subgenres"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+    uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()), nullable=True)
     key: orm.Mapped[str] = orm.mapped_column(sa.String(36), nullable=False, unique=True)
     genre_id: orm.Mapped[int] = orm.mapped_column(sa.ForeignKey("genres.id"), nullable=False)
 

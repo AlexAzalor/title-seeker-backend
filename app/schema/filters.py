@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 from config import config
@@ -5,13 +6,36 @@ from config import config
 CFG = config()
 
 
-class SpecificationExportCreate(BaseModel):
-    id: int
+class FilterEnum(Enum):
+    GENRE = "genre"
+    SUBGENRE = "subgenre"
+    SPECIFICATION = "specification"
+    KEYWORD = "keyword"
+    ACTION_TIME = "action_time"
+
+
+class FilterFields(BaseModel):
     key: str
     name_uk: str
     name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
+    description_uk: str
+    description_en: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class FilterFieldsWithUUID(FilterFields):
+    uuid: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class FilterFieldList(BaseModel):
+    items: list[FilterFieldsWithUUID]
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -19,7 +43,7 @@ class SpecificationExportCreate(BaseModel):
 
 
 class SpecificationsJSONFile(BaseModel):
-    specifications: list[SpecificationExportCreate]
+    specifications: list[FilterFields]
 
     model_config = ConfigDict(
         from_attributes=True,

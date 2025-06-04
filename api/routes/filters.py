@@ -275,3 +275,112 @@ def create_action_time(
         description=new_action_time.get_description(lang),
         percentage_match=0.0,
     )
+
+
+@filter_router.put(
+    "/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Specification does not found"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating specification"},
+        status.HTTP_204_NO_CONTENT: {"description": "Specification successfully updated"},
+    },
+)
+def update_filter_item(
+    type: s.FilterEnum,
+    form_data: s.FilterFieldsWithUUID = Body(...),
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Update filter item in the admin page"""
+
+    check_admin_permissions(current_user)
+
+    filter_item = None
+
+    if type == s.FilterEnum.SPECIFICATION:
+        filter_item = db.scalar(sa.select(m.Specification).where(m.Specification.uuid == form_data.uuid))
+        if not filter_item:
+            log(log.ERROR, "Specification [%s] does not exist", form_data.key)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Specification does not exist")
+
+    if type == s.FilterEnum.KEYWORD:
+        filter_item = db.scalar(sa.select(m.Keyword).where(m.Keyword.uuid == form_data.uuid))
+        if not filter_item:
+            log(log.ERROR, "Keyword [%s] does not exist", form_data.key)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Keyword does not exist")
+
+    if type == s.FilterEnum.ACTION_TIME:
+        filter_item = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.uuid == form_data.uuid))
+        if not filter_item:
+            log(log.ERROR, "ActionTime [%s] does not exist", form_data.key)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ActionTime does not exist")
+
+    if not filter_item:
+        log(log.ERROR, "Filter item [%s] does not exist", form_data.key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Filter item does not exist")
+
+    try:
+        if filter_item.key != form_data.key:
+            filter_item.key = form_data.key
+
+        existing = {t.language: t for t in filter_item.translations}
+
+        existing[s.Language.EN.value].name = form_data.name_en
+        existing[s.Language.EN.value].description = form_data.description_en
+        existing[s.Language.UK.value].name = form_data.name_uk
+        existing[s.Language.UK.value].description = form_data.description_uk
+
+        db.commit()
+        log(log.INFO, "Filter item [%s] successfully updated", form_data.key)
+    except Exception as e:
+        log(log.ERROR, "Error updating filter item [%s]: %s", form_data.key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating filter item")
+
+
+@filter_router.get(
+    "/form-fields/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.FilterFieldsWithUUID,
+    responses={
+        status.HTTP_200_OK: {"description": "Filter forms successfully retrieved"},
+        status.HTTP_404_NOT_FOUND: {"description": "No items found"},
+    },
+)
+def get_filter_form_fields(
+    item_key: str,
+    type: s.FilterEnum | None = None,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get filter form field for admin page (with all fields)"""
+
+    check_admin_permissions(current_user)
+
+    item_out = None
+    item = None
+
+    if type == s.FilterEnum.SPECIFICATION:
+        item = db.scalar(sa.select(m.Specification).where(m.Specification.key == item_key))
+    if type == s.FilterEnum.KEYWORD:
+        item = db.scalar(sa.select(m.Keyword).where(m.Keyword.key == item_key))
+    if type == s.FilterEnum.ACTION_TIME:
+        item = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.key == item_key))
+
+    if not item:
+        log(log.WARNING, "No item found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No item found")
+
+    item_out = s.FilterFieldsWithUUID(
+        uuid=item.uuid,
+        key=item.key,
+        name_en=item.get_name(s.Language.EN),
+        name_uk=item.get_name(s.Language.UK),
+        description_en=item.get_description(s.Language.EN),
+        description_uk=item.get_description(s.Language.UK),
+    )
+
+    if not item_out:
+        log(log.WARNING, "No item found for key: %s", item_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No item found")
+    return item_out

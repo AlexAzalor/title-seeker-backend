@@ -27,13 +27,13 @@ def import_specifications_to_google_spreadsheets():
 
     values = [
         [
-            specification.id,
+            1,
             specification.key,
             specification.name_uk,
             specification.name_en,
             specification.description_uk,
             specification.description_en,
-            specification.id,
+            1,
         ]
     ]
 

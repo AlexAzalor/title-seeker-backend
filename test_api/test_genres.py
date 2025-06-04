@@ -11,6 +11,38 @@ from config import config
 CFG = config()
 
 
+def test_get_genres(client: TestClient, db: Session, auth_user_owner: m.User):
+    genres = db.scalars(sa.select(m.Genre)).all()
+    assert genres
+
+    response = client.get(
+        "/api/genres/",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.FilterList.model_validate(response.json())
+    assert data
+    assert data.items
+
+
+def test_get_subgenres(client: TestClient, db: Session, auth_user_owner: m.User):
+    subgenres = db.scalars(sa.select(m.Subgenre)).all()
+    assert subgenres
+
+    response = client.get(
+        "/api/genres/subgenres/",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.FilterList.model_validate(response.json())
+    assert data
+    assert data.items
+
+
 def test_create_genre(client: TestClient, db: Session, auth_user_owner: m.User):
     genres = db.scalars(sa.select(m.Genre)).all()
     assert genres
@@ -37,6 +69,40 @@ def test_create_genre(client: TestClient, db: Session, auth_user_owner: m.User):
     data = s.GenreFormOut.model_validate(response.json())
     assert data
     assert data.key == NEW_GENRE_KEY
+
+    # Test update genre item
+    genre = db.scalar(sa.select(m.Genre).where(m.Genre.key == NEW_GENRE_KEY))
+    assert genre
+
+    update_form_data = s.GenreFormFieldsWithUUID(
+        uuid=genre.uuid,
+        key=NEW_GENRE_KEY + "-2",
+        name_uk="Тестовий жанр 2",
+        name_en="Test genre 2",
+        description_uk="Тестовий опис жанру 2",
+        description_en="Test genre description 2",
+    )
+    response = client.put(
+        "/api/genres/",
+        json=update_form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid, "type": s.FilterEnum.GENRE.value},
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert genre.key == update_form_data.key
+
+    # Test get genre fields for form
+    response = client.get(
+        "/api/genres/form-fields/",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+            "item_key": genre.key,
+            "type": s.FilterEnum.GENRE.value,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    form_data_out = s.GenreFormFieldsWithUUID.model_validate(response.json())
+    assert form_data_out
+    assert form_data_out.key == genre.key
 
 
 def test_create_subgenre(client: TestClient, db: Session, auth_user_owner: m.User):
