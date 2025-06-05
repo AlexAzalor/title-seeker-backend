@@ -318,3 +318,55 @@ def test_get_similar_movies(client: TestClient, db: Session):
     data = s.SimilarMovieOutList.model_validate(response.json())
     assert data
     assert data.similar_movies
+
+
+def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_owner: m.User):
+    genres = db.scalars(sa.select(m.Genre)).all()
+    assert genres
+    subgenres = db.scalars(sa.select(m.Subgenre)).all()
+    assert subgenres
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-dark-knight"))
+    assert movie
+    assert movie.genres
+    assert movie.subgenres
+
+    response = client.get(
+        "/api/movies/genres-subgenres/", params={"movie_key": movie.key, "user_uuid": auth_user_owner.uuid}
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.GenresSubgenresOut.model_validate(response.json())
+    assert data
+    assert data.genres
+
+    test_genre = s.GenreItemFieldEditIn(key=genres[0].key, name="Test Genre", percentage_match=70)
+    test_subgenre = s.GenreItemFieldEditIn(key=subgenres[0].key, name="Test Subgenre", percentage_match=30)
+    form_data = s.GenreItemFieldEditFormIn(
+        genres=[test_genre],
+        subgenres=[test_subgenre],
+    )
+    response = client.put(
+        "/api/movies/genres-subgenres/",
+        json=form_data.model_dump(),
+        params={"movie_key": movie.key, "user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert movie.genres[0].key == test_genre.key
+    assert movie.subgenres[0].key == test_subgenre.key
+    # Check percentage match
+    genre_pm = next(
+        (
+            mg.percentage_match
+            for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=movie.genres[0].id)
+        ),
+        0.0,
+    )
+    subgenre_pm = next(
+        (
+            mg.percentage_match
+            for mg in db.query(m.movie_subgenres).filter_by(movie_id=movie.id, subgenre_id=movie.subgenres[0].id)
+        ),
+        0.0,
+    )
+    assert genre_pm == test_genre.percentage_match
+    assert subgenre_pm == test_subgenre.percentage_match

@@ -73,3 +73,42 @@ class GenreIn(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
+
+
+class GenreItemOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    percentage_match: float
+    parent_genre_key: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenresSubgenresOut(BaseModel):
+    genres: list[GenreOut]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenreItemFieldEditIn(BaseModel):
+    key: str
+    name: str
+    percentage_match: float
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class GenreItemFieldEditFormIn(BaseModel):
+    genres: list[GenreItemFieldEditIn]
+    subgenres: list[GenreItemFieldEditIn]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )

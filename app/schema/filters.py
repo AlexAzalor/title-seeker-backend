@@ -142,7 +142,8 @@ class FilterItem(BaseModel):
 
 
 class MovieFilterItem(FilterItem):
-    parent_genre: FilterItem | None = None
+    # Equivalent to TypeScript subgenre_parent_key?: string;
+    subgenre_parent_key: str = ""
 
     model_config = ConfigDict(
         from_attributes=True,

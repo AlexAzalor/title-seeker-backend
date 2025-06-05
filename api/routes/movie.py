@@ -383,18 +383,7 @@ def get_movie(
         subgenres=[
             s.MovieFilterItem(
                 key=subgenre.key,
-                parent_genre=s.MovieFilterItem(
-                    key=subgenre.genre.key,
-                    name=subgenre.genre.get_name(lang),
-                    description=subgenre.genre.get_description(lang),
-                    percentage_match=next(
-                        (
-                            mg.percentage_match
-                            for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=subgenre.genre.id)
-                        ),
-                        0.0,
-                    ),
-                ),
+                subgenre_parent_key=subgenre.genre.key,
                 name=subgenre.get_name(lang),
                 description=subgenre.get_description(lang),
                 percentage_match=next(
@@ -1270,18 +1259,7 @@ def get_similar_movies(
     subgenres_list = [
         s.MovieFilterItem(
             key=subgenre.key,
-            parent_genre=s.MovieFilterItem(
-                key=subgenre.genre.key,
-                name=next((t.name for t in subgenre.genre.translations if t.language == lang.value)),
-                description=next((t.description for t in subgenre.genre.translations if t.language == lang.value)),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=subgenre.genre.id)
-                    ),
-                    0.0,
-                ),
-            ),
+            subgenre_parent_key=subgenre.genre.key,
             name=next((t.name for t in subgenre.translations if t.language == lang.value)),
             description=next((t.description for t in subgenre.translations if t.language == lang.value)),
             percentage_match=next(
@@ -1574,6 +1552,147 @@ def movies_to_add(
                 )
 
     return s.QuickMovieList(quick_movies=quick_movies_out)
+
+
+@movie_router.get(
+    "/genres-subgenres/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.GenresSubgenresOut,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error getting genres and subgenres"},
+        status.HTTP_200_OK: {"description": "Genres and subgenres successfully retrieved"},
+    },
+)
+def get_genres_subgenres(
+    movie_key: str,
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all genres and related subgenres for a movie"""
+    check_admin_permissions(current_user)
+
+    genres = db.scalars(sa.select(m.Genre)).all()
+
+    if not genres:
+        log(log.ERROR, "Genres [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Genres not found")
+
+    try:
+        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+
+        if not movie:
+            log(log.ERROR, "Movie [%s] not found", movie_key)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+        return s.GenresSubgenresOut(
+            genres=[
+                s.GenreOut(
+                    key=genre.key,
+                    name=genre.get_name(lang),
+                    description=genre.get_description(lang),
+                    subgenres=sorted(
+                        [
+                            s.SubgenreOut(
+                                key=subgenre.key,
+                                name=subgenre.get_name(lang),
+                                description=subgenre.get_description(lang),
+                                parent_genre_key=subgenre.genre.key,
+                            )
+                            for subgenre in genre.subgenres
+                        ],
+                        key=lambda x: x.name,
+                    ),
+                )
+                for genre in genres
+            ],
+        )
+
+    except Exception as e:
+        log(log.ERROR, "Error getting genres and subgenres: %s", e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error getting genres and subgenres")
+
+
+@movie_router.put(
+    "/genres-subgenres/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating genres"},
+        status.HTTP_204_NO_CONTENT: {"description": "Genres successfully updated"},
+    },
+)
+def edit_genres_subgenres(
+    movie_key: str,
+    form_data: s.GenreItemFieldEditFormIn,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit genres of a movie"""
+
+    check_admin_permissions(current_user)
+
+    items_keys = [item.key for item in form_data.genres]
+    genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(items_keys))).all()
+
+    if not genres:
+        log(log.ERROR, "Genres [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Genres not found")
+
+    items_keys = [item.key for item in form_data.subgenres]
+    # Subenres can be empty, so we don't raise an error if not found
+    subgenres = db.scalars(sa.select(m.Subgenre).where(m.Subgenre.key.in_(items_keys))).all()
+
+    try:
+        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+
+        if not movie:
+            log(log.ERROR, "Movie [%s] not found", movie_key)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+        # Clear existing old genres and subgenres
+        movie.genres.clear()
+        movie.subgenres.clear()
+        # Extend with new genres and subgenres
+        movie.genres.extend(genres)
+        movie.subgenres.extend(subgenres)
+        db.commit()
+
+        for item in form_data.genres:
+            genre = db.scalar(sa.select(m.Genre).where(m.Genre.key == item.key))
+            if not genre:
+                log(log.ERROR, "Genre [%s] not found", item.key)
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Genre not found")
+            movie_genre = (
+                m.movie_genres.update()
+                .values({"percentage_match": item.percentage_match})
+                .where(
+                    m.movie_genres.c.movie_id == movie.id,
+                    m.movie_genres.c.genre_id == genre.id,
+                )
+            )
+            db.execute(movie_genre)
+
+        if subgenres:
+            for item in form_data.subgenres:
+                subgenre = db.scalar(sa.select(m.Subgenre).where(m.Subgenre.key == item.key))
+                if not subgenre:
+                    log(log.ERROR, "Subgenre [%s] not found", item.key)
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subgenre not found")
+                movie_subgenre = (
+                    m.movie_subgenres.update()
+                    .values({"percentage_match": item.percentage_match})
+                    .where(
+                        m.movie_subgenres.c.movie_id == movie.id,
+                        m.movie_subgenres.c.subgenre_id == subgenre.id,
+                    )
+                )
+                db.execute(movie_subgenre)
+        db.commit()
+
+        log(log.INFO, "Genre [%s] successfully updated", movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating genre [%s]: %s", movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating genre")
 
 
 @movie_router.put(

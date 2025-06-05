@@ -90,6 +90,10 @@ from .genre import (
     GenreOut,
     SubgenreOut,
     GenreIn,
+    GenreItemOut,
+    GenresSubgenresOut,
+    GenreItemFieldEditIn,
+    GenreItemFieldEditFormIn,
 )
 from .subgenre import SubgenreExportCreate, SubgenresJSONFile
 from .user import (
