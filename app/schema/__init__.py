@@ -148,4 +148,5 @@ from .visual_profile import (
     VisualProfileItemUpdateIn,
     VisualProfileForm,
     VisualProfileFormOut,
+    VisualProfileCategoryOut,
 )

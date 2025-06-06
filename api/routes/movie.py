@@ -491,7 +491,8 @@ def super_search_movies(
     action_time: Annotated[list[str], Query()] = [],
     actor: Annotated[list[str], Query()] = [],
     director: Annotated[list[str], Query()] = [],
-    universe: Annotated[list[str], Query()] = [],
+    shared_universe: Annotated[list[str], Query()] = [],
+    visual_profile: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
     sort_order: s.SortOrder = s.SortOrder.DESC,
@@ -590,10 +591,10 @@ def super_search_movies(
             log(log.ERROR, "Action times [%s] not found", action_times_keys)
             raise HTTPException(status_code=404, detail="Action times not found")
 
-    if universe:
-        db_su_keys = db.scalars(sa.select(m.SharedUniverse.key).where(m.SharedUniverse.key.in_(universe))).all()
+    if shared_universe:
+        db_su_keys = db.scalars(sa.select(m.SharedUniverse.key).where(m.SharedUniverse.key.in_(shared_universe))).all()
         if not db_su_keys:
-            log(log.ERROR, "Shared Universe(s) [%s] not found", universe)
+            log(log.ERROR, "Shared Universe(s) [%s] not found", shared_universe)
             raise HTTPException(status_code=404, detail="Shared Universe(s) not found")
 
     # What Happens to the Query at Each Filter Step?
@@ -718,9 +719,21 @@ def super_search_movies(
     if director:
         query = query.where(m.Movie.directors.any(m.Director.key.in_(director)))
 
-    if universe:
+    if shared_universe:
         query = query.where(
-            logical_op(*[m.Movie.shared_universe.has(m.SharedUniverse.key == su_key) for su_key in universe])
+            logical_op(*[m.Movie.shared_universe.has(m.SharedUniverse.key == su_key) for su_key in shared_universe])
+        )
+
+    if visual_profile:
+        vp_ids = db.scalars(
+            sa.select(m.VisualProfileCategory.id).where(m.VisualProfileCategory.key.in_(visual_profile))
+        ).all()
+
+        owner_id = 1
+
+        query = query.where(
+            m.Movie.visual_profiles.any(m.VisualProfile.user_id == owner_id),
+            logical_op(*[m.Movie.visual_profiles.any(m.VisualProfile.category_id == vp_id) for vp_id in vp_ids]),
         )
 
     is_reverse = sort_order == s.SortOrder.DESC
@@ -838,6 +851,26 @@ def get_movie_filters(
         log(log.ERROR, "Subgenre [%s] not found")
         raise HTTPException(status_code=404, detail="Subgenre not found")
 
+    shared_universes = db.scalars(
+        sa.select(m.SharedUniverse)
+        .join(m.SharedUniverse.translations)
+        .where(m.SharedUniverseTranslation.language == lang.value)
+        .order_by(m.SharedUniverseTranslation.name)
+    ).all()
+    if not shared_universes:
+        log(log.ERROR, "Shared universes [%s] not found")
+        raise HTTPException(status_code=404, detail="Shared universes not found")
+
+    visual_profile_categories = db.scalars(
+        sa.select(m.VisualProfileCategory)
+        .join(m.VisualProfileCategory.translations)
+        .where(m.VPCategoryTranslation.language == lang.value)
+        .order_by(m.VPCategoryTranslation.name)
+    ).all()
+    if not visual_profile_categories:
+        log(log.ERROR, "Visual profile categories [%s] not found")
+        raise HTTPException(status_code=404, detail="Visual profile categories not found")
+
     subgenres_out = [
         s.SubgenreOut(
             key=subgenre.key,
@@ -848,6 +881,24 @@ def get_movie_filters(
         for subgenre in subgenres
     ]
 
+    su_out = [
+        s.SharedUniversePreCreateOut(
+            key=su.key,
+            name=su.get_name(lang),
+            description=su.get_description(lang),
+        )
+        for su in shared_universes
+    ]
+
+    vp_categories_out = [
+        s.VisualProfileCategoryOut(
+            key=category.key,
+            name=category.get_name(lang),
+            description=category.get_description(lang),
+        )
+        for category in visual_profile_categories
+    ]
+
     return s.MovieFiltersListOut(
         genres=genres_out,
         subgenres=subgenres_out,
@@ -856,6 +907,8 @@ def get_movie_filters(
         specifications=specifications_out,
         keywords=keywords_out,
         action_times=action_times_out,
+        visual_profile_categories=vp_categories_out,
+        shared_universes=su_out,
     )
 
 

@@ -137,4 +137,11 @@ def get_filters(db: Session, lang: s.Language):
         for action_time in action_times
     ]
 
-    return genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out
+    return (
+        genres_out,
+        specifications_out,
+        keywords_out,
+        action_times_out,
+        actors_out,
+        directors_out,
+    )

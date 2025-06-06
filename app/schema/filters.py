@@ -12,6 +12,10 @@ class FilterEnum(Enum):
     SPECIFICATION = "specification"
     KEYWORD = "keyword"
     ACTION_TIME = "action_time"
+    ACTOR = "actor"
+    DIRECTOR = "director"
+    VISUAL_PROFILE = "visual_profile"
+    SHARED_UNIVERSE = "shared_universe"
 
 
 class FilterFields(BaseModel):

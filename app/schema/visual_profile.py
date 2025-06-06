@@ -112,6 +112,16 @@ class VisualProfileIn(BaseModel):
     )
 
 
+class VisualProfileCategoryOut(BaseModel):
+    key: str
+    name: str
+    description: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class VisualProfileData(BaseModel):
     key: str
     name: str

@@ -88,6 +88,26 @@ def test_super_search(client: TestClient, db: Session):
     assert data
     assert [m for m in data.items if m.key == movie.key]
 
+    # Test shared universe search
+    shared_universe = db.scalar(sa.select(m.SharedUniverse))
+    assert shared_universe
+
+    response = client.get("/api/movies/super-search/", params={"shared_universe": shared_universe.key})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+
+    # Test visual profile search
+    # For now only owner has visual profile
+    visual_profile = db.scalar(sa.select(m.VisualProfile).where(m.VisualProfile.movie_id == movie.id))
+    assert visual_profile
+
+    response = client.get("/api/movies/super-search/", params={"visual_profile": movie.visual_profiles[0].category.key})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert [m for m in data.items if m.key == movie.key]
+
 
 def test_search(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
@@ -107,8 +127,14 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert response.status_code == status.HTTP_200_OK
     data = s.MovieFiltersListOut.model_validate(response.json())
     assert data.genres
+    assert data.subgenres
+    assert data.specifications
+    assert data.keywords
+    assert data.action_times
     assert data.actors
     assert data.directors
+    assert data.shared_universes
+    assert data.visual_profile_categories
 
 
 def test_pre_create_movie_data(client: TestClient, auth_user_owner: m.User):

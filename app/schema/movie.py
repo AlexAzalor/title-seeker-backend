@@ -13,7 +13,7 @@ from app.schema.genre import GenreOut, SubgenreOut
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
 
-from app.schema.visual_profile import VisualProfileCriterionData, VisualProfileData
+from app.schema.visual_profile import VisualProfileCategoryOut, VisualProfileCriterionData, VisualProfileData
 from config import config
 
 CFG = config()
@@ -426,6 +426,8 @@ class MovieFiltersListOut(BaseModel):
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
+    visual_profile_categories: list[VisualProfileCategoryOut]
+    shared_universes: list[SharedUniversePreCreateOut]
 
     model_config = ConfigDict(
         from_attributes=True,
