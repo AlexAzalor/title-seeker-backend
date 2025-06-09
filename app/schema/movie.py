@@ -99,6 +99,10 @@ class MovieActor(BaseModel):
     full_name: str
     character_name: str
     avatar_url: str | None = None
+    born_location: str
+    age: int
+    born: datetime
+    died: datetime | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -109,6 +113,10 @@ class MovieDirector(BaseModel):
     key: str
     full_name: str
     avatar_url: str | None = None
+    born_location: str
+    age: int
+    born: datetime
+    died: datetime | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

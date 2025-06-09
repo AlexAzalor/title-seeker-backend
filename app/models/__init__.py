@@ -34,9 +34,9 @@ from .movie_filters.movie_action_times import movie_action_times
 from .shared_universe import SharedUniverse
 from .shared_universe_i18n import SharedUniverseTranslation
 from .movie_actor_character import MovieActorCharacter
-from .title_visual_profile.title_category import VisualProfileCategory
-from .title_visual_profile.title_category_translation import VPCategoryTranslation
-from .title_visual_profile.title_criterion import VisualProfileCategoryCriterion
-from .title_visual_profile.title_criterion_translation import VPCriterionTranslation
-from .title_visual_profile.title_visual_profile import VisualProfile
-from .title_visual_profile.title_rating import VisualProfileRating
+from .title_visual_profile.visual_profile_category import VisualProfileCategory
+from .title_visual_profile.vp_category_translation import VPCategoryTranslation
+from .title_visual_profile.visual_profile_category_criterion import VisualProfileCategoryCriterion
+from .title_visual_profile.vp_criterion_translation import VPCriterionTranslation
+from .title_visual_profile.visual_profile import VisualProfile
+from .title_visual_profile.visual_profile_rating import VisualProfileRating

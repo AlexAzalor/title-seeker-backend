@@ -18,7 +18,7 @@ CFG = config()
 
 if TYPE_CHECKING:
     from .rating import Rating
-    from .title_visual_profile.title_visual_profile import VisualProfile
+    from .title_visual_profile.visual_profile import VisualProfile
 
 
 class User(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):

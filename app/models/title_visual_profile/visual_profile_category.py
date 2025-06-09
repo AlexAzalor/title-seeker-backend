@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from .category_criteria import category_criteria
 
 if TYPE_CHECKING:
-    from .title_category_translation import VPCategoryTranslation
-    from .title_criterion import VisualProfileCategoryCriterion
+    from .vp_category_translation import VPCategoryTranslation
+    from .visual_profile_category_criterion import VisualProfileCategoryCriterion
 
 
 class VisualProfileCategory(db.Model, ModelMixin):

@@ -11,8 +11,8 @@ from ..utils import ModelMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .title_criterion_translation import VPCriterionTranslation
-    from .title_category import VisualProfileCategory
+    from .vp_criterion_translation import VPCriterionTranslation
+    from .visual_profile_category import VisualProfileCategory
 
 
 class VisualProfileCategoryCriterion(db.Model, ModelMixin):

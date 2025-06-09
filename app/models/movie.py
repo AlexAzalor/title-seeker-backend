@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from .movie_filters.action_time import ActionTime
     from .shared_universe import SharedUniverse
     from .movie_actor_character import MovieActorCharacter
-    from .title_visual_profile.title_visual_profile import VisualProfile
+    from .title_visual_profile.visual_profile import VisualProfile
 
 
 # Questions/Ideas:

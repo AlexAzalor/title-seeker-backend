@@ -38,8 +38,17 @@ class Director(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         back_populates="directors",
     )
 
+    def __repr__(self):
+        return f"<Director [{self.id}]: {self.translations[0].full_name}>"
+
     def full_name(self, lang: Language = Language.UK) -> str:
         return next((t.full_name for t in self.translations if t.language == lang.value))
 
-    def __repr__(self):
-        return f"<Director [{self.id}]: {self.translations[0].full_name}>"
+    def get_born_location(self, lang: Language = Language.UK) -> str:
+        return next((t.born_in for t in self.translations if t.language == lang.value), "")
+
+    @property
+    def age(self) -> int:
+        if self.died:
+            return (self.died - self.born).days // 365
+        return (datetime.now() - self.born).days // 365

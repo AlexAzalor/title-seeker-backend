@@ -9,10 +9,10 @@ from ..utils import ModelMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .title_category import VisualProfileCategory
+    from .visual_profile_category import VisualProfileCategory
     from ..movie import Movie
     from ..user import User
-    from .title_rating import VisualProfileRating
+    from .visual_profile_rating import VisualProfileRating
 
 
 class VisualProfile(db.Model, ModelMixin):

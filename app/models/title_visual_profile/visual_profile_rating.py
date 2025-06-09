@@ -8,7 +8,7 @@ from ..utils import ModelMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .title_criterion import VisualProfileCategoryCriterion
+    from .visual_profile_category_criterion import VisualProfileCategoryCriterion
 
 
 class VisualProfileRating(db.Model, ModelMixin):

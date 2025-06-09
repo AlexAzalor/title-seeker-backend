@@ -63,8 +63,6 @@ def get_movies(
 
     is_reverse = sort_order == s.SortOrder.DESC
 
-    print("------TEST------")
-
     def get_main_genre(movie: m.Movie) -> str:
         biggest_genre = db.scalar(
             sa.select(m.Genre)
@@ -230,6 +228,7 @@ def get_movie(
             joinedload(m.Movie.action_times),
             joinedload(m.Movie.ratings),
             joinedload(m.Movie.shared_universe),
+            joinedload(m.Movie.characters),
         )
     )
 
@@ -354,6 +353,10 @@ def get_movie(
                 full_name=char.actor.full_name(lang),
                 character_name=char.character.get_name(lang),
                 avatar_url=char.actor.avatar,
+                born_location=char.actor.get_born_location(lang),
+                age=char.actor.age,
+                born=char.actor.born,
+                died=char.actor.died,
             )
             for char in sorted(movie.characters, key=lambda x: x.order)
         ],
@@ -362,6 +365,10 @@ def get_movie(
                 key=director.key,
                 full_name=director.full_name(lang),
                 avatar_url=director.avatar,
+                born_location=director.get_born_location(lang),
+                age=director.age,
+                born=director.born,
+                died=director.died,
             )
             for director in movie.directors
         ],
