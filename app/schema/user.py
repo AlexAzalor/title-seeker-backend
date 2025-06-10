@@ -97,7 +97,7 @@ class TopMyMoviesOut(BaseModel):
     )
 
 
-class GenreChartDataList(BaseModel):
+class UserInfoReport(BaseModel):
     genre_data: list[GenreChartDataOut]
     top_rated_movies: list[TopMyMoviesOut]
     joined_date: datetime

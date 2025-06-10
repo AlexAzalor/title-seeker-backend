@@ -153,17 +153,17 @@ def time_rate_movie(
 
 
 @user_router.get(
-    "/genre-radar-chart",
+    "/info-report/",
     status_code=status.HTTP_200_OK,
-    response_model=s.GenreChartDataList,
+    response_model=s.UserInfoReport,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
-def genre_radar_chart(
+def get_info_report(
     current_user: m.User = Depends(get_current_user),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
-    """Get top users genres for radar chart"""
+    """Get user info report"""
 
     ratings = sorted(current_user.ratings, key=lambda x: x.rating, reverse=True)[:3]
 
@@ -213,7 +213,7 @@ def genre_radar_chart(
     if current_user.role == s.UserRole.OWNER.value:
         actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
 
-    return s.GenreChartDataList(
+    return s.UserInfoReport(
         genre_data=genre_counts,
         top_rated_movies=top_rated_movies,
         joined_date=current_user.created_at,

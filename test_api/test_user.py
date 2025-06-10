@@ -77,9 +77,9 @@ def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User)
 def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User):
     assert auth_user_owner.ratings
 
-    response = client.get("/api/users/genre-radar-chart/", params={"user_uuid": auth_user_owner.uuid})
+    response = client.get("/api/users/info-report/", params={"user_uuid": auth_user_owner.uuid})
     assert response.status_code == status.HTTP_200_OK
-    data = s.GenreChartDataList.model_validate(response.json())
+    data = s.UserInfoReport.model_validate(response.json())
     assert data
     assert data.genre_data
     assert data.top_rated_movies

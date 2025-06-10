@@ -107,7 +107,7 @@ from .user import (
     TimeRateMovieOut,
     MovieChartData,
     GenreChartDataOut,
-    GenreChartDataList,
+    UserInfoReport,
     TopMyMoviesOut,
     UserOut,
     UsersListOut,
