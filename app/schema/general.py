@@ -6,11 +6,14 @@ from config import config
 CFG = config()
 
 
-class TitleType(Enum):
+class SearchType(Enum):
     MOVIES = "movies"
     TVSERIES = "tvseries"
     ANIME = "anime"
     GAMES = "games"
+    ACTORS = "actors"
+    DIRECTORS = "directors"
+    CHARACTERS = "characters"
 
 
 class SortOrder(Enum):
@@ -92,6 +95,26 @@ class GenreFormOut(BaseModel):
     name: str
     description: str
     parent_genre_key: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class SearchResult(BaseModel):
+    key: str
+    name: str
+    type: SearchType
+    image: str | None = None
+    extra_info: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
+class SearchResults(BaseModel):
+    results: list[SearchResult]
 
     model_config = ConfigDict(
         from_attributes=True,

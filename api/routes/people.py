@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import Annotated
-from fastapi import APIRouter, Body, File, HTTPException, Depends, UploadFile, status
+from fastapi import APIRouter, Body, File, HTTPException, Depends, Query, UploadFile, status
 from api.controllers.people import add_avatar_to_new_actor, add_avatar_to_new_director
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions
+from api.utils import check_admin_permissions, normalize_query
 import app.models as m
 import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from config import config
 
@@ -244,4 +244,160 @@ def create_director(
     return s.DirectorOut(
         key=new_director.key,
         name=new_director.full_name(lang),
+    )
+
+
+@people_router.get(
+    "/search-actors/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.SearchResults,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Actors not found"}},
+)
+def search_actors(
+    query: str = Query(default="", max_length=128),
+    db: Session = Depends(get_db),
+):
+    """Search actor by name"""
+
+    if not query:
+        log(log.ERROR, "Query is empty")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query is empty")
+
+    normalized_query = normalize_query(query)
+    print(1)
+
+    name_search_pattern = (
+        sa.func.lower(m.ActorTranslation.first_name) + " " + sa.func.lower(m.ActorTranslation.last_name)
+    )
+
+    actors = (
+        db.scalars(
+            sa.select(m.Actor)
+            .where(
+                m.Actor.translations.any(
+                    sa.func.regexp_replace(name_search_pattern, r"[^a-zA-Zа-яА-Я0-9 ]", "", "g").ilike(
+                        f"%{normalized_query}%"
+                    )
+                )
+            )
+            .limit(5)
+            .options(joinedload(m.Actor.translations))
+        )
+        .unique()
+        .all()
+    )
+
+    return s.SearchResults(
+        results=[
+            s.SearchResult(
+                key=actor.key,
+                name=actor.full_name(s.Language.EN) + f" ({actor.full_name(s.Language.UK)})",
+                image=actor.avatar,
+                extra_info=f"Movies: {len(actor.movies)}",
+                type=s.SearchType.ACTORS,
+            )
+            for actor in actors
+        ]
+    )
+
+
+@people_router.get(
+    "/search-directors/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.SearchResults,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Directors not found"}},
+)
+def search_directors(
+    query: str = Query(default="", max_length=128),
+    db: Session = Depends(get_db),
+):
+    """Search directors by name"""
+
+    if not query:
+        log(log.ERROR, "Query is empty")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query is empty")
+
+    normalized_query = normalize_query(query)
+
+    name_search_pattern = (
+        sa.func.lower(m.DirectorTranslation.first_name) + " " + sa.func.lower(m.DirectorTranslation.last_name)
+    )
+
+    directors = (
+        db.scalars(
+            sa.select(m.Director)
+            .where(
+                m.Director.translations.any(
+                    sa.func.regexp_replace(name_search_pattern, r"[^a-zA-Zа-яА-Я0-9 ]", "", "g").ilike(
+                        f"%{normalized_query}%"
+                    )
+                )
+            )
+            .limit(5)
+            .options(joinedload(m.Director.translations))
+        )
+        .unique()
+        .all()
+    )
+
+    return s.SearchResults(
+        results=[
+            s.SearchResult(
+                key=director.key,
+                name=director.full_name(s.Language.EN) + f" ({director.full_name(s.Language.UK)})",
+                image=director.avatar,
+                extra_info=f"Movies: {len(director.movies)}",
+                type=s.SearchType.DIRECTORS,
+            )
+            for director in directors
+        ]
+    )
+
+
+@people_router.get(
+    "/search-characters/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.SearchResults,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Characters not found"}},
+)
+def search_characters(
+    query: str = Query(default="", max_length=128),
+    db: Session = Depends(get_db),
+):
+    """Search characters by name"""
+
+    if not query:
+        log(log.ERROR, "Query is empty")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query is empty")
+
+    normalized_query = normalize_query(query)
+
+    name_search_pattern = sa.func.lower(m.CharacterTranslation.name)
+
+    characters = (
+        db.scalars(
+            sa.select(m.Character)
+            .where(
+                m.Character.translations.any(
+                    sa.func.regexp_replace(name_search_pattern, r"[^a-zA-Zа-яА-Я0-9 ]", "", "g").ilike(
+                        f"%{normalized_query}%"
+                    )
+                )
+            )
+            .limit(5)
+            .options(joinedload(m.Character.translations))
+        )
+        .unique()
+        .all()
+    )
+
+    return s.SearchResults(
+        results=[
+            s.SearchResult(
+                key=char.key,
+                name=char.get_name(s.Language.EN) + f" ({char.get_name(s.Language.UK)})",
+                type=s.SearchType.CHARACTERS,
+            )
+            for char in characters
+        ]
     )

@@ -498,6 +498,7 @@ def super_search_movies(
     action_time: Annotated[list[str], Query()] = [],
     actor: Annotated[list[str], Query()] = [],
     director: Annotated[list[str], Query()] = [],
+    character: Annotated[list[str], Query()] = [],
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
@@ -680,7 +681,7 @@ def super_search_movies(
             logical_op(*[m.Movie.keywords.any(m.Keyword.key == keyword_key) for keyword_key in keywords_keys])
         )
 
-        if keywords_keys:
+        if keywords_values:
             conditions = [
                 m.Movie.keywords.any(
                     sa.and_(
@@ -724,7 +725,19 @@ def super_search_movies(
         query = query.where(logical_op(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor]))
 
     if director:
-        query = query.where(m.Movie.directors.any(m.Director.key.in_(director)))
+        query = query.where(
+            logical_op(*[m.Movie.directors.any(m.Director.key == director_key) for director_key in director])
+        )
+
+    if character:
+        query = query.where(
+            logical_op(
+                *[
+                    m.Movie.characters.any(m.MovieActorCharacter.character.has(m.Character.key == character_key))
+                    for character_key in character
+                ]
+            )
+        )
 
     if shared_universe:
         query = query.where(
@@ -765,18 +778,18 @@ def super_search_movies(
 @movie_router.get(
     "/search/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieSearchResult,
+    response_model=s.SearchResults,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def search(
     query: str = Query(default="", max_length=128),
-    title_type: s.TitleType = s.TitleType.MOVIES,
+    title_type: s.SearchType = s.SearchType.MOVIES,
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Search titles by query"""
 
-    if title_type != s.TitleType.MOVIES:
+    if title_type != s.SearchType.MOVIES:
         log(log.ERROR, "Title type [%s] not supported", title_type)
         raise HTTPException(status_code=404, detail="Title type not supported")
 
@@ -821,20 +834,22 @@ def search(
                     0.0,
                 )
                 main_genre = f"{genre_name} ({percentage_match}%)"
+
+            release_date = movie.release_date.year if movie.release_date else "No release date"
+            duration = movie.formatted_duration(lang.value)
+
             movies_out.append(
-                s.MovieSearchOut(
+                s.SearchResult(
                     key=movie.key,
-                    title_en=movie.get_title(s.Language.EN),
-                    title_uk=movie.get_title(s.Language.UK),
-                    poster=movie.poster,
-                    release_date=movie.release_date if movie.release_date else datetime.now(),
-                    duration=movie.formatted_duration(lang.value),
-                    main_genre=main_genre,
+                    name=movie.get_title(s.Language.EN) + f" ({movie.get_title(s.Language.UK)})",
+                    image=movie.poster,
+                    extra_info=f"{duration} | {release_date} | {main_genre}",
+                    type=s.SearchType.MOVIES,
                 )
             )
 
-    return s.MovieSearchResult(
-        movies=movies_out,
+    return s.SearchResults(
+        results=movies_out,
     )
 
 

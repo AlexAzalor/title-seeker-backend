@@ -117,9 +117,9 @@ def test_search(client: TestClient, db: Session):
 
     response = client.get("/api/movies/search/", params={"query": SEARCH_QUERY})
     assert response.status_code == status.HTTP_200_OK
-    data = s.MovieSearchResult.model_validate(response.json())
+    data = s.SearchResults.model_validate(response.json())
     assert data
-    assert [m for m in data.movies if m.key == movie.key]
+    assert [m for m in data.results if m.key == movie.key]
 
 
 def test_get_movie_filters(client: TestClient, db: Session):

@@ -2,7 +2,7 @@
 from .admin import Admin
 
 from .general import (
-    TitleType,
+    SearchType,
     SortOrder,
     SortBy,
     PersonForm,
@@ -10,6 +10,8 @@ from .general import (
     MovieFilterFormOut,
     GenreFormIn,
     GenreFormOut,
+    SearchResult,
+    SearchResults,
 )
 
 from .token import Token, TokenData

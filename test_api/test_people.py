@@ -124,3 +124,39 @@ def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_search_actors(client: TestClient, db: Session):
+    actor = db.scalar(sa.select(m.Actor))
+    assert actor
+
+    response = client.get("/api/people/search-actors/", params={"query": actor.full_name(s.Language.EN)})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.SearchResults.model_validate(response.json())
+    assert data
+    assert len(data.results) > 0
+    assert data.results[0].key == actor.key
+
+
+def test_search_directors(client: TestClient, db: Session):
+    director = db.scalar(sa.select(m.Director))
+    assert director
+
+    response = client.get("/api/people/search-directors/", params={"query": director.full_name(s.Language.EN)})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.SearchResults.model_validate(response.json())
+    assert data
+    assert len(data.results) > 0
+    assert data.results[0].key == director.key
+
+
+def test_search_characters(client: TestClient, db: Session):
+    character = db.scalar(sa.select(m.Character))
+    assert character
+
+    response = client.get("/api/people/search-characters/", params={"query": character.get_name(s.Language.EN)})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.SearchResults.model_validate(response.json())
+    assert data
+    assert len(data.results) > 0
+    assert data.results[0].key == character.key
