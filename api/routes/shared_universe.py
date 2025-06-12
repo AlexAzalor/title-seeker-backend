@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions
 import app.models as m
 import sqlalchemy as sa
 
@@ -31,8 +30,6 @@ def create_shared_universe(
 ):
     """Create new shared universe"""
 
-    check_admin_permissions(current_user)
-
     shared_universe = db.scalar(sa.select(m.SharedUniverse.key).where(m.SharedUniverse.key == form_data.key))
 
     if shared_universe:
@@ -58,7 +55,7 @@ def create_shared_universe(
 
         db.add(new_su)
         db.commit()
-        log(log.INFO, "Shared universe [%s] successfully created", form_data.key)
+        log(log.INFO, "Shared universe [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating Shared universe [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating Shared universe")

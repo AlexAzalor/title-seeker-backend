@@ -25,8 +25,8 @@ from api.controllers.create_movie import (
 )
 
 from api.controllers.movie_filters import get_filters
-from api.dependency.user import get_admin, get_current_user
-from api.utils import check_admin_permissions, extract_values, extract_word, get_error_message, normalize_query
+from api.dependency.user import get_admin, get_current_user, get_owner
+from api.utils import extract_values, extract_word, get_error_message, normalize_query
 import app.models as m
 import app.schema as s
 from app.database import get_db
@@ -612,6 +612,8 @@ def super_search_movies(
 
     logical_op = sa.and_ if exact_match else sa.or_
 
+    # Try printing generated SQL with print(str(query.compile(compile_kwargs={"literal_binds": True})))
+
     if genres_keys:
         query = query.where(logical_op(*[m.Movie.genres.any(m.Genre.key == genre_key) for genre_key in genres_keys]))
 
@@ -943,14 +945,10 @@ def get_movie_filters(
 def get_pre_create_data(
     quick_movie_key: str | None = None,
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_current_user),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get pre-create data for a new movie"""
-
-    if current_user.role != s.UserRole.OWNER.value:
-        log(log.ERROR, "Only owner allowed to add movie")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out = get_filters(db, lang)
 
@@ -1089,14 +1087,10 @@ def create_movie(
     file: UploadFile = File(None),
     lang: s.Language = s.Language.UK,
     is_quick_movie: bool = Query(default=False),
-    current_user: m.User = Depends(get_current_user),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Create a new movie"""
-
-    if current_user.role != s.UserRole.OWNER.value:
-        log(log.ERROR, "Only owner allowed to add movie")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
@@ -1152,15 +1146,11 @@ def create_movie(
 def quick_add_movie(
     form_data: s.QuickMovieFormData,
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_current_user),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """For quick and temporary adding of new movies in a JSON file.
     Then these data will be used to fully add the movie to the database."""
-
-    if current_user.role != s.UserRole.OWNER.value:
-        log(log.ERROR, "Only owner allowed to add movie")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owner allowed to add movie")
 
     if db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key)):
         message = get_error_message(lang, "Фільм вже існує", "Movie already exists")
@@ -1185,7 +1175,7 @@ def quick_add_movie(
         with open(QUICK_MOVIES_FILE, "w") as file:
             json.dump(s.QuickMovieJSON(movies=movies_to_file).model_dump(mode="json"), file, indent=4)
 
-        log(log.INFO, "Movie [%s] successfully created", form_data.key)
+        log(log.INFO, "Movie [%s] successfully added by [%s]", form_data.key, current_user.email)
 
     except Exception as e:
         log(log.ERROR, "Error adding movie to JSON [%s]: %s", form_data.key, e)
@@ -1645,7 +1635,6 @@ def get_genres_subgenres(
     db: Session = Depends(get_db),
 ):
     """Get all genres and related subgenres for a movie"""
-    check_admin_permissions(current_user)
 
     genres = db.scalars(sa.select(m.Genre)).all()
 
@@ -1703,8 +1692,6 @@ def edit_genres_subgenres(
     db: Session = Depends(get_db),
 ):
     """Edit genres of a movie"""
-
-    check_admin_permissions(current_user)
 
     items_keys = [item.key for item in form_data.genres]
     genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(items_keys))).all()
@@ -1785,8 +1772,6 @@ def edit_specifications(
 ):
     """Edit movie specifications"""
 
-    check_admin_permissions(current_user)
-
     items_keys = [item.key for item in form_data.items]
     specifications = db.scalars(sa.select(m.Specification).where(m.Specification.key.in_(items_keys))).all()
 
@@ -1842,7 +1827,6 @@ def edit_Keywords(
 ):
     """Edit movie keywords"""
 
-    check_admin_permissions(current_user)
     items_keys = [item.key for item in form_data.items]
     keywords = db.scalars(sa.select(m.Keyword).where(m.Keyword.key.in_(items_keys))).all()
 
@@ -1898,7 +1882,6 @@ def edit_action_times(
 ):
     """Edit movie action times"""
 
-    check_admin_permissions(current_user)
     items_keys = [item.key for item in form_data.items]
     action_times = db.scalars(sa.select(m.ActionTime).where(m.ActionTime.key.in_(items_keys))).all()
 

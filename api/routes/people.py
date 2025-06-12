@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, File, HTTPException, Depends, Query, UploadFile, status
 from api.controllers.people import add_avatar_to_new_actor, add_avatar_to_new_director
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions, normalize_query
+from api.utils import normalize_query
 import app.models as m
 import sqlalchemy as sa
 
@@ -37,8 +37,6 @@ def create_actor(
 ):
     """Create new actor"""
 
-    check_admin_permissions(current_user)
-
     actor = db.scalar(sa.select(m.Actor).where(m.Actor.key == form_data.key))
 
     if actor:
@@ -69,7 +67,7 @@ def create_actor(
         db.add(new_actor)
         # TODO: need rolback if error
         db.commit()
-        log(log.INFO, "Actor [%s] successfully created", form_data.key)
+        log(log.INFO, "Actor [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating actor [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating actor")
@@ -140,8 +138,6 @@ def create_character(
 ):
     """Create new character"""
 
-    check_admin_permissions(current_user)
-
     character = db.scalar(sa.select(m.Character).where(m.Character.key == form_data.key))
 
     if character:
@@ -165,7 +161,7 @@ def create_character(
 
         db.add(new_character)
         db.commit()
-        log(log.INFO, "Character [%s] successfully created", form_data.key)
+        log(log.INFO, "Character [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating Character [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating character")
@@ -196,8 +192,6 @@ def create_director(
 ):
     """Create new director"""
 
-    check_admin_permissions(current_user)
-
     director = db.scalar(sa.select(m.Director).where(m.Director.key == form_data.key))
 
     if director:
@@ -227,7 +221,7 @@ def create_director(
 
         db.add(new_director)
         db.commit()
-        log(log.INFO, "Director [%s] successfully created", form_data.key)
+        log(log.INFO, "Director [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating director [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating director")

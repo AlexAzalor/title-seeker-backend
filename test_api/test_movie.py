@@ -137,7 +137,7 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert data.visual_profile_categories
 
 
-def test_pre_create_movie_data(client: TestClient, auth_user_owner: m.User):
+def test_pre_create_movie_data(client: TestClient, auth_user_owner: m.User, auth_simple_user: m.User):
     """Should return all data needed for movie creation"""
 
     response = client.get(
@@ -157,8 +157,15 @@ def test_pre_create_movie_data(client: TestClient, auth_user_owner: m.User):
     assert data.base_movies
     assert data.characters
 
+    # Test pre-create movie data with simple user - should fail
+    response = client.get(
+        "/api/movies/pre-create/",
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
+
+def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
     actor = db.scalar(sa.select(m.Actor))
     assert actor
     director = db.scalar(sa.select(m.Director))
@@ -283,8 +290,18 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.key))
     assert movie
 
+    # Test create movie with simple user - should fail
+    with open(poster_path, "rb") as image:
+        response = client.post(
+            "/api/movies",
+            data={"form_data": form_data.model_dump_json()},
+            files={"file": (poster_name, image, "image/png")},
+            params={"lang": s.Language.EN.value, "user_uuid": auth_simple_user.uuid},
+        )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-def test_quick_movies(client: TestClient, auth_user_owner: m.User):
+
+def test_quick_movies(client: TestClient, auth_user_owner: m.User, auth_simple_user: m.User):
     form_data = s.QuickMovieFormData(
         key="test-quick-add-key",
         title_en="Test quick EN",
@@ -325,6 +342,12 @@ def test_quick_movies(client: TestClient, auth_user_owner: m.User):
     current_movies = get_movies_data_from_file()
     assert len(initial_movie_data) == len(current_movies)
 
+    # Test quick add with simple user - should fail
+    response = client.post(
+        "/api/movies/quick-add/", json=form_data.model_dump(), params={"user_uuid": auth_simple_user.uuid}
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
 
 def test_get_random_movies(client: TestClient):
     """Test 10 random movies"""
@@ -346,7 +369,7 @@ def test_get_similar_movies(client: TestClient, db: Session):
     assert data.similar_movies
 
 
-def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_owner: m.User):
+def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
     genres = db.scalars(sa.select(m.Genre)).all()
     assert genres
     subgenres = db.scalars(sa.select(m.Subgenre)).all()
@@ -396,3 +419,9 @@ def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_o
     )
     assert genre_pm == test_genre.percentage_match
     assert subgenre_pm == test_subgenre.percentage_match
+
+    # Test with simple user - should fail
+    response = client.get(
+        "/api/movies/genres-subgenres/", params={"movie_key": movie.key, "user_uuid": auth_simple_user.uuid}
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN

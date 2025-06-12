@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
-from api.dependency.user import get_admin
-from api.utils import check_admin_permissions
+from api.dependency.user import get_admin, get_owner
 import app.models as m
 import sqlalchemy as sa
 
@@ -30,12 +29,10 @@ visual_profile_router = APIRouter(
 )
 def get_visual_profiles(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
+    # current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get visual profile list"""
-
-    check_admin_permissions(current_user)
 
     visual_profiles = db.scalars(sa.select(m.VisualProfileCategory)).all()
     if not visual_profiles:
@@ -72,12 +69,10 @@ def get_visual_profiles(
 )
 def create_visual_profile(
     form_data: s.VisualProfileFormIn = Body(...),
-    current_user: m.User = Depends(get_admin),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Create new visual profile in the admin page"""
-
-    check_admin_permissions(current_user)
 
     category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == form_data.key))
     if category:
@@ -144,7 +139,7 @@ def create_visual_profile(
 
         db.commit()
 
-        log(log.INFO, "Category [%s] successfully created", form_data.key)
+        log(log.INFO, "Category [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating category [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating category")
@@ -160,12 +155,10 @@ def create_visual_profile(
 )
 def update_category(
     form_data: s.VisualProfileFieldWithUUID = Body(...),
-    current_user: m.User = Depends(get_admin),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Update existing category in the admin page"""
-
-    check_admin_permissions(current_user)
 
     category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.uuid == form_data.uuid))
     if not category:
@@ -184,7 +177,7 @@ def update_category(
         existing[s.Language.UK.value].description = form_data.description_uk
 
         db.commit()
-        log(log.INFO, "Category [%s] successfully updated", form_data.key)
+        log(log.INFO, "Category [%s] successfully updated by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error updating category [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating category")
@@ -200,12 +193,10 @@ def update_category(
 )
 def update_criterion(
     form_data: s.VisualProfileFieldWithUUID = Body(...),
-    current_user: m.User = Depends(get_admin),
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Update existing criterion in the admin page"""
-
-    check_admin_permissions(current_user)
 
     criterion = db.scalar(
         sa.select(m.VisualProfileCategoryCriterion).where(m.VisualProfileCategoryCriterion.uuid == form_data.uuid)
@@ -226,7 +217,7 @@ def update_criterion(
         existing[s.Language.UK.value].description = form_data.description_uk
 
         db.commit()
-        log(log.INFO, "Criterion [%s] successfully updated", form_data.key)
+        log(log.INFO, "Criterion [%s] successfully updated by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error updating criterion [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating criterion")
@@ -246,8 +237,6 @@ def get_visual_profile_forms(
     db: Session = Depends(get_db),
 ):
     """Get all categories with criteria for admin page (with all fields)"""
-
-    check_admin_permissions(current_user)
 
     categories = db.scalars(sa.select(m.VisualProfileCategory)).all()
     if not categories:

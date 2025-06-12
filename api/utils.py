@@ -112,17 +112,6 @@ def process_movie_rating(movie: m.Movie):
     }
 
 
-def check_admin_permissions(
-    current_user: m.User,
-):
-    """
-    Check if the user has admin permissions
-    """
-    if current_user.role not in [s.UserRole.ADMIN.value, s.UserRole.OWNER.value]:
-        log(log.ERROR, "User [%s] is not admin or owner", current_user.uuid)
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-
-
 def get_all_items(db: Session, items_select: sa.Select, lang: s.Language):
     items = db.scalars(items_select).all()
 

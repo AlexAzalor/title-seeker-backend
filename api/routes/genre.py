@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions, get_all_items
+from api.utils import get_all_items
 import app.models as m
 import sqlalchemy as sa
 
@@ -24,12 +24,9 @@ genre_router = APIRouter(prefix="/genres", tags=["Genres"])
 )
 def get_genres(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get all genres"""
-
-    check_admin_permissions(current_user)
 
     genre_selection_query = (
         sa.select(m.Genre)
@@ -53,12 +50,9 @@ def get_genres(
 )
 def get_subgenres(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get all subgenres"""
-
-    check_admin_permissions(current_user)
 
     subgenre_selection_query = (
         sa.select(m.Subgenre)
@@ -88,8 +82,6 @@ def create_genre(
 ):
     """Create new genre"""
 
-    check_admin_permissions(current_user)
-
     genre = db.scalar(sa.select(m.Genre).where(m.Genre.key == form_data.key))
 
     if genre:
@@ -115,7 +107,7 @@ def create_genre(
 
         db.add(new_genre)
         db.commit()
-        log(log.INFO, "Genre [%s] successfully created", form_data.key)
+        log(log.INFO, "Genre [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating genre [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating genre")
@@ -145,8 +137,6 @@ def create_subgenre(
     db: Session = Depends(get_db),
 ):
     """Create new subgenre"""
-
-    check_admin_permissions(current_user)
 
     subgenre = db.scalar(sa.select(m.Subgenre).where(m.Subgenre.key == form_data.key))
 
@@ -179,7 +169,7 @@ def create_subgenre(
 
         db.add(new_subgenre)
         db.commit()
-        log(log.INFO, "Subgenre [%s] successfully created", form_data.key)
+        log(log.INFO, "Subgenre [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating subgenre [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating subgenre")
@@ -211,8 +201,6 @@ def update_genre_item(
 ):
     """Update genre item in the admin page"""
 
-    check_admin_permissions(current_user)
-
     genre_item = None
 
     if type == s.FilterEnum.GENRE:
@@ -243,7 +231,7 @@ def update_genre_item(
         existing[s.Language.UK.value].description = form_data.description_uk
 
         db.commit()
-        log(log.INFO, "Genre item [%s] successfully updated", form_data.key)
+        log(log.INFO, "Genre item [%s] successfully updated by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error updating genre item [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating genre item")
@@ -265,8 +253,6 @@ def get_genre_form_fields(
     db: Session = Depends(get_db),
 ):
     """Get genre form field for admin page (with all fields)"""
-
-    check_admin_permissions(current_user)
 
     item_out = None
     item = None

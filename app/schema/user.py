@@ -12,6 +12,16 @@ class UserRole(Enum):
     ADMIN = "admin"
     OWNER = "owner"
 
+    def has_permissions(self):
+        return self in {UserRole.OWNER, UserRole.ADMIN}
+
+    def is_owner(self):
+        return self == UserRole.OWNER
+
+    @staticmethod
+    def get_admin_roles():
+        return [UserRole.ADMIN.value, UserRole.OWNER.value]
+
 
 class UserExportCreate(BaseModel):
     id: int

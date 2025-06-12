@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from api.dependency.user import get_admin
-from api.utils import check_admin_permissions, get_all_items
+from api.utils import get_all_items
 import app.models as m
 import sqlalchemy as sa
 
@@ -27,11 +27,9 @@ filter_router = APIRouter(
 )
 def get_specifications(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get all specifications"""
-    check_admin_permissions(current_user)
 
     specification_select = (
         sa.select(m.Specification)
@@ -55,11 +53,9 @@ def get_specifications(
 )
 def get_keywords(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get all keywords"""
-    check_admin_permissions(current_user)
 
     keyword_select = (
         sa.select(m.Keyword)
@@ -83,11 +79,9 @@ def get_keywords(
 )
 def get_action_times(
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
     """Get all action times"""
-    check_admin_permissions(current_user)
 
     action_time_select = (
         sa.select(m.ActionTime)
@@ -117,8 +111,6 @@ def create_specification(
 ):
     """Create new specification"""
 
-    check_admin_permissions(current_user)
-
     specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == form_data.key))
 
     if specification:
@@ -144,7 +136,7 @@ def create_specification(
 
         db.add(new_specification)
         db.commit()
-        log(log.INFO, "Specification [%s] successfully created", form_data.key)
+        log(log.INFO, "Specification [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating specification [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating specification")
@@ -176,8 +168,6 @@ def create_keyword(
 ):
     """Create new keyword"""
 
-    check_admin_permissions(current_user)
-
     keyword = db.scalar(sa.select(m.Keyword).where(m.Keyword.key == form_data.key))
 
     if keyword:
@@ -203,7 +193,7 @@ def create_keyword(
 
         db.add(new_keyword)
         db.commit()
-        log(log.INFO, "Keyword [%s] successfully created", form_data.key)
+        log(log.INFO, "Keyword [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating keyword [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating keyword")
@@ -235,8 +225,6 @@ def create_action_time(
 ):
     """Create new action time"""
 
-    check_admin_permissions(current_user)
-
     action_time = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.key == form_data.key))
 
     if action_time:
@@ -262,7 +250,7 @@ def create_action_time(
 
         db.add(new_action_time)
         db.commit()
-        log(log.INFO, "ActionTime [%s] successfully created", form_data.key)
+        log(log.INFO, "ActionTime [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error creating action time [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating action time")
@@ -293,8 +281,6 @@ def update_filter_item(
     db: Session = Depends(get_db),
 ):
     """Update filter item in the admin page"""
-
-    check_admin_permissions(current_user)
 
     filter_item = None
 
@@ -332,7 +318,7 @@ def update_filter_item(
         existing[s.Language.UK.value].description = form_data.description_uk
 
         db.commit()
-        log(log.INFO, "Filter item [%s] successfully updated", form_data.key)
+        log(log.INFO, "Filter item [%s] successfully updated by user [%s]", form_data.key, current_user.email)
     except Exception as e:
         log(log.ERROR, "Error updating filter item [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating filter item")
@@ -354,8 +340,6 @@ def get_filter_form_fields(
     db: Session = Depends(get_db),
 ):
     """Get filter form field for admin page (with all fields)"""
-
-    check_admin_permissions(current_user)
 
     item_out = None
     item = None

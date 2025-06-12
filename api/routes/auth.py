@@ -49,7 +49,7 @@ def google_auth(
 
     new_movies_to_add_count = 0
 
-    if user.role == s.UserRole.OWNER.value:
+    if s.UserRole(user.role).is_owner():
         if os.path.exists(QUICK_MOVIES_FILE):
             quick_movies = get_movies_data_from_file()
 
@@ -77,7 +77,7 @@ def delete_google_profile(
 ):
     """Delete user profile"""
 
-    if current_user.role == s.UserRole.OWNER.value:
+    if s.UserRole(current_user.role).is_owner():
         log(log.ERROR, "Owner profile cannot be deleted")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner profile cannot be deleted")
 

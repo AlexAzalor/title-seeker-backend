@@ -53,7 +53,7 @@ def test_get_action_times(client: TestClient, db: Session, auth_user_owner: m.Us
     assert data.items
 
 
-def test_create_specification(client: TestClient, db: Session, auth_user_owner: m.User):
+def test_create_specification(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
     NEW_SPEC_KEY = "test_specification"
 
     specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == NEW_SPEC_KEY))
@@ -107,6 +107,16 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     )
     assert response.status_code == status.HTTP_200_OK
     assert [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
+
+    # Test edit specification by simple user
+    response = client.put(
+        "/api/movies/specifications/",
+        json=add_form_data.model_dump(),
+        params={
+            "user_uuid": auth_simple_user.uuid,
+        },
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # Test update specification with existing key
     specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == NEW_SPEC_KEY))

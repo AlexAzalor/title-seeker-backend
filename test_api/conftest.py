@@ -157,7 +157,7 @@ def auth_simple_user(
     db: orm.Session,
 ):
     """Returns an authorized test user"""
-    user = db.scalar(select(m.User).where(m.User.role.not_in([s.UserRole.ADMIN.value, s.UserRole.OWNER.value])))
+    user = db.scalar(select(m.User).where(m.User.role.not_in(s.UserRole.get_admin_roles())))
     assert user
     yield user
 

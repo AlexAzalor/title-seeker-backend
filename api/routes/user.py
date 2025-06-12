@@ -210,7 +210,7 @@ def get_info_report(
 
     actors_count = None
 
-    if current_user.role == s.UserRole.OWNER.value:
+    if s.UserRole(current_user.role).has_permissions():
         actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
 
     return s.UserInfoReport(
@@ -255,7 +255,7 @@ def get_all_users(
             ),
         )
         for user in users
-        if user.role != s.UserRole.OWNER.value
+        if s.UserRole(user.role).has_permissions()
     ]
 
     return s.UsersListOut(users=users_out)
