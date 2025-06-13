@@ -71,7 +71,7 @@ def get_filters(db: Session, lang: s.Language):
         raise HTTPException(status_code=404, detail="Action times not found")
 
     actors_out = [
-        s.ActorOut(
+        s.PersonBase(
             key=actor.key,
             name=actor.full_name(lang),
         )
@@ -79,7 +79,7 @@ def get_filters(db: Session, lang: s.Language):
     ]
 
     directors_out = [
-        s.DirectorOut(
+        s.PersonBase(
             key=director.key,
             name=director.full_name(lang),
         )

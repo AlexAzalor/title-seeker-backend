@@ -5,11 +5,10 @@ import json
 from fastapi import File, UploadFile
 from pydantic import BaseModel, Field, model_validator
 
-from app.schema.actor import ActorOut
 from app.schema.characters import CharacterOut
-from app.schema.director import DirectorOut
 from app.schema.filters import FilterItemOut, MovieFilterItem
 from app.schema.genre import GenreOut, SubgenreOut
+from app.schema.people import PersonBase
 from app.schema.rating import RatingCriterion
 from app.schema.shared_universe import SharedUniversePreCreateOut
 
@@ -329,8 +328,8 @@ class MovieByActorsList(BaseModel):
 class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
     subgenres: list[SubgenreOut]
-    actors: list[ActorOut]
-    directors: list[DirectorOut]
+    actors: list[PersonBase]
+    directors: list[PersonBase]
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
@@ -397,8 +396,8 @@ class MovieOutShort(BaseModel):
 
 class MoviePreCreateData(BaseModel):
     visual_profile_categories: list[VisualProfileData]
-    actors: list[ActorOut]
-    directors: list[DirectorOut]
+    actors: list[PersonBase]
+    directors: list[PersonBase]
     genres: list[GenreOut]
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]

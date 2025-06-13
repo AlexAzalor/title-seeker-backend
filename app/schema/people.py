@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from fastapi import UploadFile
 from pydantic import BaseModel
 
 from config import config
@@ -8,8 +7,9 @@ from config import config
 CFG = config()
 
 
-class ActorExportCreate(BaseModel):
-    id: int
+class PersonExportCreate(BaseModel):
+    """Schema for exporting person data from google sheet."""
+
     key: str
     first_name_uk: str
     last_name_uk: str
@@ -22,40 +22,20 @@ class ActorExportCreate(BaseModel):
     avatar: str | None = None
 
 
-class ActorsJSONFile(BaseModel):
-    actors: list[ActorExportCreate]
+class PersonJSONFile(BaseModel):
+    people: list[PersonExportCreate]
 
 
-class ActorOut(BaseModel):
+class PersonBase(BaseModel):
     key: str
     name: str
 
 
-class ActorListOut(BaseModel):
-    actors: list[ActorOut]
-
-
-# This use for the direcors too
-# Not used in router, how to validate?
-class ActorIn(BaseModel):
-    key: str
-    first_name_uk: str
-    last_name_uk: str
-    first_name_en: str
-    last_name_en: str
-    born: str
-    died: str | None = None
-    born_in_uk: str
-    born_in_en: str
-    avatar: UploadFile
-
-
-class Actor(BaseModel):
-    key: str
-    name: str
+# Only one place
+class Actor(PersonBase):
     avatar_url: str
     movie_count: int
 
-
+# Only one place
 class ActorsList(BaseModel):
     actors: list[Actor]

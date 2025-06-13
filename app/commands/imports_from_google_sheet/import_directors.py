@@ -17,9 +17,9 @@ def import_directors_to_google_spreadsheets():
     """Import directors to google spreadsheets"""
 
     with open("data/directors.json", "r") as file:
-        file_data = s.DirectorsJSONFile.model_validate(json.load(file))
+        file_data = s.PersonJSONFile.model_validate(json.load(file))
 
-    directors = file_data.directors
+    directors = file_data.people
     assert directors, "dDirectors are empty!"
     print("Directors COUNT: ", len(directors))
 
@@ -28,7 +28,7 @@ def import_directors_to_google_spreadsheets():
 
     values = [
         [
-            director.id,
+            1,
             director.key,
             director.first_name_uk,
             director.last_name_uk,
@@ -39,7 +39,7 @@ def import_directors_to_google_spreadsheets():
             director.born_in_uk,
             director.born_in_en,
             director.avatar,
-            director.id,
+            1,
         ]
     ]
 

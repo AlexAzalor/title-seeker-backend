@@ -30,7 +30,7 @@ LAST_SHEET_COLUMN = "L"
 ACTORS_RANGE_NAME = f"Actors!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_actors_in_db(actors: list[s.ActorExportCreate]):
+def write_actors_in_db(actors: list[s.PersonExportCreate]):
     with db.begin() as session:
         for actor in actors:
             if session.scalar(sa.select(m.Actor).where(m.Actor.key == actor.key)):
@@ -80,7 +80,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     assert values, "No data found"
 
-    actors: list[s.ActorExportCreate] = []
+    actors: list[s.PersonExportCreate] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -132,8 +132,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
         avatar = row[AVATAR_INDEX]
 
         actors.append(
-            s.ActorExportCreate(
-                id=id,
+            s.PersonExportCreate(
                 key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,
@@ -150,7 +149,7 @@ def export_actors_from_google_spreadsheets(with_print: bool = True, in_json: boo
     print("Actors COUNT: ", len(actors))
 
     with open("data/actors.json", "w") as file:
-        json.dump(s.ActorsJSONFile(actors=actors).model_dump(mode="json"), file, indent=4)
+        json.dump(s.PersonJSONFile(people=actors).model_dump(mode="json"), file, indent=4)
         print("Actors data saved to [data/actors.json] file")
 
     write_actors_in_db(actors)
@@ -160,9 +159,9 @@ def export_actors_from_json_file(max_actors_limit: int | None = None):
     """Fill actors with data from json file"""
 
     with open("data/actors.json", "r") as file:
-        file_data = s.ActorsJSONFile.model_validate(json.load(file))
+        file_data = s.PersonJSONFile.model_validate(json.load(file))
 
-    actors = file_data.actors
+    actors = file_data.people
     if max_actors_limit:
         actors = actors[:max_actors_limit]
     write_actors_in_db(actors)

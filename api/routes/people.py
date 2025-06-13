@@ -22,7 +22,7 @@ people_router = APIRouter(prefix="/people", tags=["People"])
 @people_router.post(
     "/actors/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.ActorOut,
+    response_model=s.PersonBase,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Actor already exists"},
         status.HTTP_201_CREATED: {"description": "Actor successfully created"},
@@ -80,7 +80,7 @@ def create_actor(
         new_actor=new_actor,
         db=db,
     )
-    return s.ActorOut(
+    return s.PersonBase(
         key=new_actor.key,
         name=new_actor.full_name(lang),
     )
@@ -177,7 +177,7 @@ def create_character(
 @people_router.post(
     "/directors/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.DirectorOut,
+    response_model=s.PersonBase,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Director already exists"},
         status.HTTP_201_CREATED: {"description": "Director successfully created"},
@@ -235,7 +235,7 @@ def create_director(
         db=db,
     )
 
-    return s.DirectorOut(
+    return s.PersonBase(
         key=new_director.key,
         name=new_director.full_name(lang),
     )

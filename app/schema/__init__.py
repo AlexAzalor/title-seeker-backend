@@ -82,8 +82,7 @@ from .movie import (
     Criterion,
     TitleVisualProfileOut,
 )
-from .actor import ActorExportCreate, ActorsJSONFile, ActorOut, ActorListOut, ActorIn, Actor, ActorsList
-from .director import DirectorExportCreate, DirectorsJSONFile, DirectorOut, DirectorListOut, DirectorIn
+from .people import PersonExportCreate, PersonJSONFile, PersonBase, Actor, ActorsList
 from .genre import (
     GenreFormFields,
     GenreFormFieldsWithUUID,

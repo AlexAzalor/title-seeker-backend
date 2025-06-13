@@ -30,7 +30,7 @@ LAST_SHEET_COLUMN = "L"
 DIRECTORS_RANGE_NAME = f"Directors!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_directors_in_db(directors: list[s.DirectorExportCreate]):
+def write_directors_in_db(directors: list[s.PersonExportCreate]):
     with db.begin() as session:
         for director in directors:
             if session.scalar(sa.select(m.Director).where(m.Director.key == director.key)):
@@ -80,7 +80,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
 
     assert values, "No data found"
 
-    directors: list[s.DirectorExportCreate] = []
+    directors: list[s.PersonExportCreate] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -132,8 +132,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
         avatar = row[AVATAR_INDEX]
 
         directors.append(
-            s.DirectorExportCreate(
-                id=id,
+            s.PersonExportCreate(
                 key=key,
                 first_name_uk=first_name_uk,
                 last_name_uk=last_name_uk,
@@ -150,7 +149,7 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     print("Directors COUNT: ", len(directors))
 
     with open("data/directors.json", "w") as file:
-        json.dump(s.DirectorsJSONFile(directors=directors).model_dump(mode="json"), file, indent=4)
+        json.dump(s.PersonJSONFile(people=directors).model_dump(mode="json"), file, indent=4)
         print("Directors data saved to [data/directors.json] file")
 
     write_directors_in_db(directors)
@@ -160,9 +159,9 @@ def export_directors_from_json_file(max_directors_limit: int | None = None):
     """Fill directors with data from json file"""
 
     with open("data/directors.json", "r") as file:
-        file_data = s.DirectorsJSONFile.model_validate(json.load(file))
+        file_data = s.PersonJSONFile.model_validate(json.load(file))
 
-    directors = file_data.directors
+    directors = file_data.people
     if max_directors_limit:
         directors = directors[:max_directors_limit]
     write_directors_in_db(directors)

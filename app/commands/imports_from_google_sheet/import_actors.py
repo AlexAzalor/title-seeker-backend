@@ -17,9 +17,9 @@ def import_actors_to_google_spreadsheets():
     """Import actors to google spreadsheets"""
 
     with open("data/actors.json", "r") as file:
-        file_data = s.ActorsJSONFile.model_validate(json.load(file))
+        file_data = s.PersonJSONFile.model_validate(json.load(file))
 
-    actors = file_data.actors
+    actors = file_data.people
     assert actors, "Actors are empty!"
     print("Actors COUNT: ", len(actors))
 
@@ -28,7 +28,7 @@ def import_actors_to_google_spreadsheets():
 
     values = [
         [
-            actor.id,
+            1,
             actor.key,
             actor.first_name_uk,
             actor.last_name_uk,
@@ -39,7 +39,7 @@ def import_actors_to_google_spreadsheets():
             actor.born_in_uk,
             actor.born_in_en,
             actor.avatar,
-            actor.id,
+            1,
         ]
     ]
 

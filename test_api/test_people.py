@@ -41,7 +41,7 @@ def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.ActorOut.model_validate(response.json())
+    data = s.PersonBase.model_validate(response.json())
     assert data
     assert data.key == form_data.key
 
@@ -111,7 +111,7 @@ def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.DirectorOut.model_validate(response.json())
+    data = s.PersonBase.model_validate(response.json())
     assert data
     assert data.key == form_data.key
 
