@@ -1,7 +1,6 @@
 {
     "specifications": [
         {
-            "id": 1,
             "key": "psychological",
             "name_uk": "\u041f\u0441\u0438\u0445\u043e\u043b\u043e\u0433\u0456\u0447\u043d\u0435",
             "name_en": "Psychological",
@@ -9,7 +8,6 @@
             "description_en": "Films that explore the inner world of characters, their fears, traumas, and mental challenges. Often make the viewer think about the nature of the human psyche. Example: \"The Island of the Damned\" (2010), \"Fight Club\" (1999)."
         },
         {
-            "id": 2,
             "key": "based-on-the-game",
             "name_uk": "\u041d\u0430 \u043e\u0441\u043d\u043e\u0432\u0456 \u0433\u0440\u0438",
             "name_en": "Based on the game",
@@ -17,7 +15,6 @@
             "description_en": "Adaptations of video games or board games into film format. Often include beloved characters and key game mechanics. Example: \"The Last of Us\" (2023), \"Mortal Kombat\" (2021)."
         },
         {
-            "id": 3,
             "key": "parody",
             "name_uk": "\u041f\u0430\u0440\u043e\u0434\u0456\u0439\u043d\u0435",
             "name_en": "Parody",
@@ -25,7 +22,6 @@
             "description_en": "Comedy films that poke fun at genre clich\u00e9s or specific films. Often contain grotesque humor. Example: Scary Movie (2000), The Naked Gun (1988)."
         },
         {
-            "id": 4,
             "key": "with-a-clear-love-line",
             "name_uk": "\u0417 \u044f\u0441\u043a\u0440\u0430\u0432\u043e \u0432\u0438\u0440\u0430\u0436\u0435\u043d\u043e\u044e \u043b\u044e\u0431\u043e\u0432\u043d\u043e\u044e \u043b\u0456\u043d\u0456\u0454\u044e",
             "name_en": "With a clear love line",
@@ -33,7 +29,6 @@
             "description_en": "Films where romantic relationships are a key component of the plot, regardless of genre. Example: Titanic (1997), The Diary of a Wimpy Kid (2004)."
         },
         {
-            "id": 5,
             "key": "social",
             "name_uk": "\u0421\u043e\u0446\u0456\u0430\u043b\u044c\u043d\u0435",
             "name_en": "Social",
@@ -41,7 +36,6 @@
             "description_en": "A film that explores societal issues: inequality, poverty, generational conflicts, injustice. Example: Parasite (2019), Joker (2019)."
         },
         {
-            "id": 6,
             "key": "philosophical",
             "name_uk": "\u0424\u0456\u043b\u043e\u0441\u043e\u0444\u0441\u044c\u043a\u0435",
             "name_en": "Philosophical",
@@ -49,7 +43,6 @@
             "description_en": "Films that raise deep questions about the meaning of life, moral choices, and the nature of reality. Example: The Matrix (1999), The Tree of Life (2011)."
         },
         {
-            "id": 7,
             "key": "epic",
             "name_uk": "\u0415\u043f\u0456\u0447\u043d\u0435",
             "name_en": "Epic",
@@ -57,7 +50,6 @@
             "description_en": "Large-scale films with large battles, long running times, and deep plots that cover major historical or fictional events. Example: The Lord of the Rings (2001\u20132003), Gladiator (2000)."
         },
         {
-            "id": 8,
             "key": "political",
             "name_uk": "\u041f\u043e\u043b\u0456\u0442\u0438\u0447\u043d\u0435",
             "name_en": "Political",
@@ -65,7 +57,6 @@
             "description_en": "Films that reveal the mechanisms of power, conspiracies, elections, or historical events related to politics. Example: House of Cards (2013\u20132018), The Whole President's Army (1976)."
         },
         {
-            "id": 9,
             "key": "prison",
             "name_uk": "\u0412'\u044f\u0437\u043d\u0438\u0446\u044f",
             "name_en": "Prison",
@@ -73,7 +64,6 @@
             "description_en": "Plots set in or around prison often focus on survival, escape, or re-education. Examples: The Shawshank Redemption (1994), The Green Mile (1999)."
         },
         {
-            "id": 10,
             "key": "animal",
             "name_uk": "\u0422\u0432\u0430\u0440\u0438\u043d\u0438",
             "name_en": "Animal",
@@ -81,7 +71,6 @@
             "description_en": "Films where animals play a key role in the plot, often telling about the friendship between them and humans. Example: \"Hachiko\" (2009), \"The Lion King\" (1994)."
         },
         {
-            "id": 11,
             "key": "short",
             "name_uk": "\u041a\u043e\u0440\u043e\u0442\u043a\u043e\u043c\u0435\u0442\u0440\u0430\u0436\u043d\u0435",
             "name_en": "Short",
@@ -89,7 +78,6 @@
             "description_en": "Films with a duration of up to 40 minutes that focus on a single idea or emotion. Example: \"Piper\" (2016), \"Father and Daughter\" (2000)."
         },
         {
-            "id": 12,
             "key": "survival",
             "name_uk": "\u0412\u0438\u0436\u0438\u0432\u0430\u043d\u043d\u044f",
             "name_en": "Survival",
@@ -97,7 +85,6 @@
             "description_en": "Stories about man's struggle with nature or extreme circumstances. Example: \"Life of Pi\" (2012), \"127 Hours\" (2010)."
         },
         {
-            "id": 13,
             "key": "fairy-Tale",
             "name_uk": "\u041a\u0430\u0437\u043a\u0430",
             "name_en": "Fairy Tale",
@@ -105,7 +92,6 @@
             "description_en": "Films with a magical atmosphere, fantastic creatures, and morals. Example: \"Alice in Wonderland\" (2010), \"Pan's Labyrinth\" (2006)."
         },
         {
-            "id": 14,
             "key": "road-movie",
             "name_uk": "\u0414\u043e\u0440\u043e\u0436\u043d\u0454 \u043a\u0456\u043d\u043e",
             "name_en": "Road Movie",
@@ -113,7 +99,6 @@
             "description_en": "Characters travel, change, and find themselves. Example: \"Into the Wild\" (2007), \"The Carefree Rider\" (1969)."
         },
         {
-            "id": 15,
             "key": "about-zombies",
             "name_uk": "\u041f\u0440\u043e \u0437\u043e\u043c\u0431\u0456",
             "name_en": "About zombies",
@@ -121,7 +106,6 @@
             "description_en": "Movies about the living dead and the struggle for survival in a post-apocalyptic world. Example: Dawn of the Dead (2004), I Am Legend (2007)."
         },
         {
-            "id": 16,
             "key": "espionage",
             "name_uk": "\u0428\u043f\u0438\u0433\u0443\u043d\u0441\u0442\u0432\u043e",
             "name_en": "Espionage",
@@ -129,7 +113,6 @@
             "description_en": "Plots about secret agents, conspiracies, and international intrigues. Example: \"James Bond\" (series), \"Mission Impossible\" (series)."
         },
         {
-            "id": 17,
             "key": "revenge",
             "name_uk": "\u041f\u043e\u043c\u0441\u0442\u0430",
             "name_en": "Revenge",
@@ -137,7 +120,6 @@
             "description_en": "Retribution stories where the hero seeks justice or retribution. Example: Kill Bill (2003), Oldboy (2003)."
         },
         {
-            "id": 18,
             "key": "placeholder",
             "name_uk": "placeholder",
             "name_en": "placeholder",
@@ -145,7 +127,6 @@
             "description_en": "placeholder"
         },
         {
-            "id": 19,
             "key": "time-related",
             "name_uk": "\u041f\u043e\u0432'\u044f\u0437\u0430\u043d\u0435 \u0437 \u0447\u0430\u0441\u043e\u043c",
             "name_en": "Time-related",
@@ -153,7 +134,6 @@
             "description_en": "Anything related to time, time manipulation, moving to the past or future, etc. It can be in the form of technology or magic."
         },
         {
-            "id": 20,
             "key": "\u0441onfrontation",
             "name_uk": "\u041f\u0440\u043e\u0442\u0438\u0441\u0442\u043e\u044f\u043d\u043d\u044f",
             "name_en": "Confrontation",
@@ -161,7 +141,6 @@
             "description_en": "The confrontation between the protagonist and the antagonist. It is not about a concrete duel, but about the spiritual, intellectual, where there is a whole complex of moves and actions. Physical duels can also be, but in the form of small rounds or as a final point in this. The scale can be different, where even entire countries can participate in the fight."
         },
         {
-            "id": 21,
             "key": "solo-struggle",
             "name_uk": "\u041e\u0434\u0438\u043d\u043e\u0447\u043d\u0430 \u0431\u043e\u0440\u043e\u0442\u044c\u0431\u0430",
             "name_en": "Solo struggle",
@@ -169,7 +148,6 @@
             "description_en": "This is when the main character solves problems on his own, fights evil, restores balance and justice. Usually responds to violence with violence. Other characters may help in some way, but in the end he is left alone against evil."
         },
         {
-            "id": 22,
             "key": "conversational",
             "name_uk": "\u0420\u043e\u0437\u043c\u043e\u0432\u043d\u0435",
             "name_en": "Conversational",
@@ -177,7 +155,6 @@
             "description_en": "The film is built on conversations between characters. There can be a lot of dialogues and even more than other actions. The main feature is that the dialogues are very lively and high-quality, where many topics can be raised, especially philosophical and social. This also applies to the type of stories where the character or narrator tells."
         },
         {
-            "id": 23,
             "key": "technology-magical-thing",
             "name_uk": "\u0422\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0456\u044f/\u041c\u0430\u0433\u0456\u0447\u043d\u0430 \u0440\u0456\u0447",
             "name_en": "Technology/Magical thing",
@@ -185,7 +162,6 @@
             "description_en": "An invention or simply a thing with the help of which the main event takes place. It can be either closer to reality or fictional. The thing may not be the main thing in the story, but only as an assistant."
         },
         {
-            "id": 24,
             "key": "enslaved-humanity",
             "name_uk": "\u041f\u043e\u043d\u0435\u0432\u043e\u043b\u0435\u043d\u0435 \u043b\u044e\u0434\u0441\u0442\u0432\u043e",
             "name_en": "Enslaved humanity",
@@ -193,7 +169,6 @@
             "description_en": "Humanity has lost a war against another enemy and is now doomed to submission. This may be before the events of the movie or during. It may also not be all of humanity to be submitted, but some part, for example, the enemy may be the people themselves who enslaved others."
         },
         {
-            "id": 25,
             "key": "the-harsh-reality",
             "name_uk": "\u0416\u043e\u0440\u0441\u0442\u043e\u043a\u0430 \u0440\u0435\u0430\u043b\u044c\u043d\u0456\u0441\u0442\u044c",
             "name_en": "The harsh reality",
@@ -201,7 +176,6 @@
             "description_en": "Events in the film are shown without softening and even with an emphasis on something that is not usually talked about. Serious questions are raised and the consequences of thoughtless or indifferent actions are shown."
         },
         {
-            "id": 26,
             "key": "exploring",
             "name_uk": "\u0414\u043e\u0441\u043b\u0456\u0434\u0436\u0435\u043d\u043d\u044f",
             "name_en": "Exploring",
@@ -209,7 +183,6 @@
             "description_en": "The main characters explore different locations to find something. Usually it's about new and unusual places."
         },
         {
-            "id": 27,
             "key": "in-one-place",
             "name_uk": "\u0412 \u043e\u0434\u043d\u043e\u043c\u0443 \u043c\u0456\u0441\u0446\u0456",
             "name_en": "In one place",
@@ -217,7 +190,6 @@
             "description_en": "All the main events of the plot take place in one place. There may also be others."
         },
         {
-            "id": 28,
             "key": "powerful-villain",
             "name_uk": "\u041c\u043e\u0433\u0443\u0442\u043d\u0456\u0439 \u043b\u0438\u0445\u043e\u0434\u0456\u0439",
             "name_en": "Powerful villain",
@@ -225,7 +197,6 @@
             "description_en": "At the center of the plot is an antagonist who, with the help of his (or someone else's) power, has become strong enough to conquer the world or create an absolute threat to all other beings. The % of suitability indicates how involved he is in the plot itself, because it happens that he can only exist \"behind the scenes\" and simply wait for the main characters for the final battle. The percentage can also determine strength, for example, if he has little airtime and manages to show his strength better, then a higher percentage."
         },
         {
-            "id": 29,
             "key": "christmas-time",
             "name_uk": "\u0420\u0456\u0437\u0434\u0432\u044f\u043d\u0435",
             "name_en": "Christmas time",

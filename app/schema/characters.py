@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -13,17 +13,9 @@ class CharacterExportCreate(BaseModel):
     actors_ids: list[int]
     movies_ids: list[int]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class CharactersJSONFile(BaseModel):
     characters: list[CharacterExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class CharacterFormIn(BaseModel):
@@ -32,10 +24,6 @@ class CharacterFormIn(BaseModel):
     key: str
     name_uk: str
     name_en: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class CharacterOut(BaseModel):

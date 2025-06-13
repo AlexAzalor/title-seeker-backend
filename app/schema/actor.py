@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -21,34 +21,18 @@ class ActorExportCreate(BaseModel):
     born_in_en: str
     avatar: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class ActorsJSONFile(BaseModel):
     actors: list[ActorExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class ActorOut(BaseModel):
     key: str
     name: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class ActorListOut(BaseModel):
     actors: list[ActorOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 # This use for the direcors too
@@ -65,10 +49,6 @@ class ActorIn(BaseModel):
     born_in_en: str
     avatar: UploadFile
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class Actor(BaseModel):
     key: str
@@ -76,14 +56,6 @@ class Actor(BaseModel):
     avatar_url: str
     movie_count: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class ActorsList(BaseModel):
     actors: list[Actor]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

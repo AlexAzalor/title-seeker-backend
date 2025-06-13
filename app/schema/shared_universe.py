@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -13,24 +13,12 @@ class SharedUniverseExportCreate(BaseModel):
     description_uk: str | None = None
     description_en: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class SharedUniversesJSONFile(BaseModel):
     shared_universes: list[SharedUniverseExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class SharedUniversePreCreateOut(BaseModel):
     key: str
     name: str
     description: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

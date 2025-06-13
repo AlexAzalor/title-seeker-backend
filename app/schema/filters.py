@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -25,33 +25,17 @@ class FilterFields(BaseModel):
     description_uk: str
     description_en: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class FilterFieldsWithUUID(FilterFields):
     uuid: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class FilterFieldList(BaseModel):
     items: list[FilterFieldsWithUUID]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class SpecificationsJSONFile(BaseModel):
     specifications: list[FilterFields]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class KeywordExportCreate(BaseModel):
@@ -62,17 +46,9 @@ class KeywordExportCreate(BaseModel):
     description_uk: str | None = None
     description_en: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class KeywordsJSONFile(BaseModel):
     keywords: list[KeywordExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class ActionTimeExportCreate(BaseModel):
@@ -83,17 +59,9 @@ class ActionTimeExportCreate(BaseModel):
     description_uk: str | None = None
     description_en: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class ActionTimesJSONFile(BaseModel):
     action_times: list[ActionTimeExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class FilterItemOut(BaseModel):
@@ -102,17 +70,9 @@ class FilterItemOut(BaseModel):
     description: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class FilterList(BaseModel):
     items: list[FilterItemOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class FilterItemField(BaseModel):
@@ -120,18 +80,10 @@ class FilterItemField(BaseModel):
     name: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class FilterFormIn(BaseModel):
     movie_key: str
     items: list[FilterItemField]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class FilterItem(BaseModel):
@@ -140,15 +92,7 @@ class FilterItem(BaseModel):
     description: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieFilterItem(FilterItem):
     # Equivalent to TypeScript subgenre_parent_key?: string;
     subgenre_parent_key: str = ""
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

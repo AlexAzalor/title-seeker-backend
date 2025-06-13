@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -30,17 +30,9 @@ class UserExportCreate(BaseModel):
     role: UserRole
     email: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class UsersJSONFile(BaseModel):
     users: list[UserExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 # TODO: Enum?
@@ -57,10 +49,6 @@ class RatingCriteria(BaseModel):
     humor: float | None = None
     animation_cartoon: float | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class UserRateMovieIn(BaseModel):
     uuid: str
@@ -68,19 +56,11 @@ class UserRateMovieIn(BaseModel):
     rating: float
     rating_criteria: RatingCriteria
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class TimeRateMovieOut(BaseModel):
     created_at: datetime
     rating: float
     movie_title: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieChartData(BaseModel):
@@ -91,20 +71,12 @@ class GenreChartDataOut(BaseModel):
     name: str
     count: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class TopMyMoviesOut(BaseModel):
     key: str
     title: str
     rating: float
     poster: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class UserInfoReport(BaseModel):
@@ -125,14 +97,6 @@ class UserOut(BaseModel):
     ratings_count: int
     last_movie_rate_date: datetime | None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class UsersListOut(BaseModel):
     users: list[UserOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

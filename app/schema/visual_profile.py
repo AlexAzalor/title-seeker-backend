@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -13,17 +13,9 @@ class VisualProfileExportCreate(BaseModel):
     description_en: str
     description_uk: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VisualProfileJSONFile(BaseModel):
     visual_profiles: list[VisualProfileExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VisualProfileField(BaseModel):
@@ -33,25 +25,13 @@ class VisualProfileField(BaseModel):
     description_en: str
     description_uk: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VisualProfileFieldWithUUID(VisualProfileField):
     uuid: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VPCriterionJSONFile(BaseModel):
     criteria: list[VisualProfileField]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VPRatingExportCreate(BaseModel):
@@ -59,17 +39,9 @@ class VPRatingExportCreate(BaseModel):
     user_id: int
     category_id: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VPRatingJSONFile(BaseModel):
     ratings: list[VPRatingExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VPCriterionRatingExportCreate(BaseModel):
@@ -78,17 +50,9 @@ class VPCriterionRatingExportCreate(BaseModel):
     rating: int
     order: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VPCriterionRatingJSONFile(BaseModel):
     ratings: list[VPCriterionRatingExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VisualProfileCriterionData(BaseModel):
@@ -97,19 +61,11 @@ class VisualProfileCriterionData(BaseModel):
     description: str
     rating: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VisualProfileIn(BaseModel):
     movie_key: str
     category_key: str
     criteria: list[VisualProfileCriterionData]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VisualProfileCategoryOut(BaseModel):
@@ -117,20 +73,12 @@ class VisualProfileCategoryOut(BaseModel):
     name: str
     description: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VisualProfileData(BaseModel):
     key: str
     name: str
     description: str
     criteria: list[VisualProfileCriterionData]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VisualProfileListOut(BaseModel):
@@ -140,17 +88,9 @@ class VisualProfileListOut(BaseModel):
 class VisualProfileFormIn(VisualProfileField):
     criteria: list[VisualProfileField]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class VisualProfileForm(VisualProfileFieldWithUUID):
     criteria: list[VisualProfileFieldWithUUID]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class VisualProfileItemUpdateIn(VisualProfileFieldWithUUID):
@@ -160,7 +100,3 @@ class VisualProfileItemUpdateIn(VisualProfileFieldWithUUID):
 class VisualProfileFormOut(BaseModel):
     impact: VisualProfileFieldWithUUID
     categories: list[VisualProfileForm]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

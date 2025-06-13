@@ -250,14 +250,6 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
-    def fill_db_with_categories():
-        """Fill VisualProfileCategory table with data from google spreadsheets"""
-        from .export_title_categories import export_title_categories_from_google_spreadsheets
-
-        export_title_categories_from_google_spreadsheets()
-        print("done")
-
-    @app.cli.command()
     def fill_db_with_criteria():
         """Fill VisualProfileCategoryCriterion table with data from google spreadsheets"""
         from .export_title_criterion import export_title_criteria_from_google_spreadsheets
@@ -266,22 +258,31 @@ def init(app: Flask):
         print("done")
 
     @app.cli.command()
-    def fill_db_with_title_vps():
-        """Fill VisualProfile table with data from google spreadsheets"""
-        from .export_visual_profiles import export_title_vp_from_google_spreadsheets
+    def fill_db_with_categories():
+        """Fill VisualProfileCategory table with data from google spreadsheets"""
+        from .export_title_categories import export_title_categories_from_google_spreadsheets
 
-        export_title_vp_from_google_spreadsheets()
-        print("done")
-
-    @app.cli.command()
-    def fill_db_with_title_ratings():
-        """Fill VisualProfileRating table with data from google spreadsheets"""
-        from .export_title_ratings import export_title_ratings_from_google_spreadsheets
-
-        export_title_ratings_from_google_spreadsheets()
+        export_title_categories_from_google_spreadsheets()
         print("done")
 
     # TODO: remove this command if not needed
+    # @app.cli.command()
+    # def fill_db_with_title_vps():
+    #     """Fill VisualProfile table with data from google spreadsheets"""
+    #     from .export_visual_profiles import export_title_vp_from_google_spreadsheets
+
+    #     export_title_vp_from_google_spreadsheets()
+    #     print("done")
+
+    # TODO: remove this command if not needed
+    # @app.cli.command()
+    # def fill_db_with_title_ratings():
+    #     """Fill VisualProfileRating table with data from google spreadsheets"""
+    #     from .export_title_ratings import export_title_ratings_from_google_spreadsheets
+
+    #     export_title_ratings_from_google_spreadsheets()
+    #     print("done")
+
     @app.cli.command()
     def create_vps():
         """Create visual profiles for each movie - do I need it?"""
@@ -290,13 +291,14 @@ def init(app: Flask):
         create_visual_profiles()
         print("done")
 
-    @app.cli.command()
-    def add_uuid():
-        """Add UUID to all filters in the database."""
-        from .update_filters_with_uuid import update_filters_with_uuid
+    # TODO: remove this command if not needed
+    # @app.cli.command()
+    # def add_uuid():
+    #     """Add UUID to all filters in the database."""
+    #     from .update_filters_with_uuid import update_filters_with_uuid
 
-        update_filters_with_uuid()
-        print("done")
+    #     update_filters_with_uuid()
+    #     print("done")
 
     @app.cli.command()
     def execute_all():
@@ -313,6 +315,9 @@ def init(app: Flask):
         from .export_movies import export_movies_from_google_spreadsheets
         from .export_rating import export_ratings_from_google_spreadsheets
         from .export_characters import export_characters_from_google_spreadsheets
+        from .export_title_criterion import export_title_criteria_from_google_spreadsheets
+        from .export_title_categories import export_title_categories_from_google_spreadsheets
+        from .create_visual_profiles import create_visual_profiles
 
         export_users_from_google_spreadsheets()
         export_actors_from_google_spreadsheets()
@@ -326,6 +331,12 @@ def init(app: Flask):
         export_movies_from_google_spreadsheets()
         export_ratings_from_google_spreadsheets()
         export_characters_from_google_spreadsheets()
+        export_title_criteria_from_google_spreadsheets()
+        export_title_categories_from_google_spreadsheets()
+        create_visual_profiles()
+        # flask fill-db-with-criteria
+        # flask fill-db-with-categories
+        # flask create-vps
         print("===============================================================")
         print("DATABASE SUCCESSFULLY FILLED WITH DATA FROM GOOGLE SPREADSHEETS")
         print("===============================================================")

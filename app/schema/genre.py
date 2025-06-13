@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -12,25 +12,13 @@ class GenreFormFields(BaseModel):
     description_uk: str
     description_en: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreFormFieldsWithUUID(GenreFormFields):
     uuid: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenresJSONFile(BaseModel):
     genres: list[GenreFormFields]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class SubgenreOut(BaseModel):
@@ -39,10 +27,6 @@ class SubgenreOut(BaseModel):
     description: str
     parent_genre_key: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreOut(BaseModel):
     key: str
@@ -50,17 +34,9 @@ class GenreOut(BaseModel):
     description: str
     subgenres: list[SubgenreOut]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreListOut(BaseModel):
     genres: list[GenreOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class GenreIn(BaseModel):
@@ -70,10 +46,6 @@ class GenreIn(BaseModel):
     description_uk: str | None = None
     description_en: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreItemOut(BaseModel):
     key: str
@@ -82,17 +54,9 @@ class GenreItemOut(BaseModel):
     percentage_match: float
     parent_genre_key: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenresSubgenresOut(BaseModel):
     genres: list[GenreOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class GenreItemFieldEditIn(BaseModel):
@@ -100,15 +64,7 @@ class GenreItemFieldEditIn(BaseModel):
     name: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreItemFieldEditFormIn(BaseModel):
     genres: list[GenreItemFieldEditIn]
     subgenres: list[GenreItemFieldEditIn]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

@@ -20,8 +20,10 @@ TODO.md
 **/*.sqlite3
 **/package.json
 **/yarn.lock
+
 **/backups
 **/uploads
+**/data
 
 **/*.pem
 **/*.sql

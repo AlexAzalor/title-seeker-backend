@@ -1,7 +1,6 @@
 {
     "genres": [
         {
-            "id": 1,
             "key": "action",
             "name_uk": "\u0415\u043a\u0448\u043d",
             "name_en": "Action",
@@ -9,7 +8,6 @@
             "description_en": "In movies of this genre, there are usually many events, such as chases, battles, duels, some global threats, etc. The key features are the dynamics and imbivity of the main characters (including antagonists) in comparison with ordinary people (NPCs). If the movie has 80% or more, then it is mainly aimed at entertaining the audience with vivid events that are difficult to present in reality. 50% - for the movie it is important not only to show the dynamics, but also to tell an interesting story. Less than 20% - events can have a more down-to-earth character, or pseudo-real, where fantasy is shown from the point of view of science. But at the same time there may be 1 or 2 scenes where rapid moments will be shown, for example, rescuing someone from a burning house or having time to catch a transport to return home."
         },
         {
-            "id": 2,
             "key": "adventure",
             "name_uk": "\u041f\u0440\u0438\u0433\u043e\u0434\u0438",
             "name_en": "Adventure",
@@ -17,7 +15,6 @@
             "description_en": "The events of the movie can be in many locations or countries. The main characters never sit still, they strive to find something or save the world. Especially it is about chasing the antagonist around the world. The features of this genre are that it allows you to enjoy adventures and visit exotic places, presents quests for lost treasures, ancient artifacts or survival in uncharted lands. 100% - this is when the whole movie is built on an adventure, where the protagonists follow a certain goal, or without a goal at all."
         },
         {
-            "id": 3,
             "key": "animation",
             "name_uk": "\u0410\u043d\u0456\u043c\u0430\u0446\u0456\u044f",
             "name_en": "Animation",
@@ -25,7 +22,6 @@
             "description_en": "Animation films bring stories to life using drawn, computer-generated, or stop-motion animation. They often feature imaginative worlds, talking animals, and whimsical characters, appealing to both children and adults. Animated films can range from family-friendly fairy tales to deep, philosophical narratives."
         },
         {
-            "id": 4,
             "key": "biography",
             "name_uk": "\u0411\u0456\u043e\u0433\u0440\u0430\u0444\u0456\u044f",
             "name_en": "Biography",
@@ -33,7 +29,6 @@
             "description_en": "Biographical films, or biopics, portray real-life figures, showcasing their struggles, achievements, and defining moments. These movies aim for historical accuracy while adding dramatic elements to engage the audience. Biopics can focus on historical figures, artists, athletes, or controversial personalities."
         },
         {
-            "id": 5,
             "key": "comedy",
             "name_uk": "\u041a\u043e\u043c\u0435\u0434\u0456\u044f",
             "name_en": "Comedy",
@@ -41,7 +36,6 @@
             "description_en": "The goal of this genre is to entertain the viewer with interesting stories. A movie with this genre is light, which does not pretend to be realism and will not try to deceive you. It usually describes strange events and people who can solve problems in a funny way."
         },
         {
-            "id": 6,
             "key": "crime",
             "name_uk": "\u041a\u0440\u0438\u043c\u0456\u043d\u0430\u043b",
             "name_en": "Crime",
@@ -49,7 +43,6 @@
             "description_en": "Crime films revolve around criminals, law enforcement, and the underworld. They depict heists, gang wars, police investigations, or courtroom dramas. Crime movies can be realistic and gritty or stylized and thrilling."
         },
         {
-            "id": 7,
             "key": "detective",
             "name_uk": "\u0414\u0435\u0442\u0435\u043a\u0442\u0438\u0432",
             "name_en": "Detective",
@@ -57,7 +50,6 @@
             "description_en": "The main theme of this genre is the investigation of a crime. Usually the protagonist tries in various ways to find the antagonist, who commits various serious crimes. This genre can be not only about police and detectives, but also about investigating secrets, conspiracies, etc. The main goal of the genre is to confuse the viewer, intrigue and play with his attention in every possible way. The best films in this genre can give clues and force the viewer to be a participant in the investigation, so that he also tries to analyze the events to find the truth. Another interesting feature of the genre is that the second viewing of the film can be more interesting, because the viewer will be able to better understand all the intricacies, as well as follow the antagonist."
         },
         {
-            "id": 8,
             "key": "documentary",
             "name_uk": "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430\u043b\u044c\u043d\u0438\u0439",
             "name_en": "Documentary",
@@ -65,7 +57,6 @@
             "description_en": "Documentaries present real-life stories, exploring historical events, social issues, nature, or biographies. They aim to inform and educate, often featuring interviews, archival footage, and narration. Some documentaries are investigative, while others are observational or experimental in style."
         },
         {
-            "id": 9,
             "key": "drama",
             "name_uk": "\u0414\u0440\u0430\u043c\u0430",
             "name_en": "Drama",
@@ -73,7 +64,6 @@
             "description_en": "A film about some serious events, especially if they are tied around the main character. About various kinds of tragedies and how they are overcome or lost. A key feature may be that the story is primarily told in mundane matters, where people and their relationships are an important component. An exploration of emotional conflicts, personal struggles and moral dilemmas."
         },
         {
-            "id": 10,
             "key": "family",
             "name_uk": "\u0421\u0456\u043c\u0435\u0439\u043d\u0438\u0439",
             "name_en": "Family",
@@ -81,7 +71,6 @@
             "description_en": "This genre is aimed at the widest audience, from children to older people. It is usually a light film about various kinds of relationships and funny situations. Violence, blood, or even action are almost absent in this genre."
         },
         {
-            "id": 11,
             "key": "fantasy",
             "name_uk": "\u0424\u0435\u043d\u0442\u0435\u0437\u0456",
             "name_en": "Fantasy",
@@ -89,7 +78,6 @@
             "description_en": "The film will feature elements that do not exist in nature. For example, magic or communication with animals. This genre encompasses many other genres - from family comedies to epic global stories."
         },
         {
-            "id": 12,
             "key": "history",
             "name_uk": "\u0406\u0441\u0442\u043e\u0440\u0438\u0447\u043d\u0438\u0439",
             "name_en": "History",
@@ -97,7 +85,6 @@
             "description_en": "Although it is about history, it is not a documentary. Usually it is about large and important historical events like World War II. Directors take similar material and transform it according to their vision in order to best impress the viewer with the epicness of the events. For example, they compress events that took place over years into 2-hour formats."
         },
         {
-            "id": 13,
             "key": "horror",
             "name_uk": "\u0416\u0430\u0445\u0438",
             "name_en": "Horror",
@@ -105,7 +92,6 @@
             "description_en": "The main goal is to scare the viewer, playing on any fear that exists. Mostly it is about ghosts, violence, demons and everything that the average viewer does not encounter in reality. Usually they scare with scenes of horrific murders or supernatural creatures. Most movies try to scare simply with screamers, but there are some that after watching it become scary to sleep or be in the dark."
         },
         {
-            "id": 14,
             "key": "musical",
             "name_uk": "\u041c\u044e\u0437\u0438\u043a\u043b",
             "name_en": "Musical",
@@ -113,7 +99,6 @@
             "description_en": "In these movies, the plot is presented through singing and dancing, especially when it comes to the relationships between the characters."
         },
         {
-            "id": 15,
             "key": "mystery",
             "name_uk": "\u041c\u0456\u0441\u0442\u0438\u043a\u0430",
             "name_en": "Mystery",
@@ -121,7 +106,6 @@
             "description_en": "The goal of the movie is to create a lot of mystery. The characters can behave very atypically, with various quirks. The world itself can be real and look adequate, but only at first glance. Usually the main character tries to understand what is happening."
         },
         {
-            "id": 16,
             "key": "romance",
             "name_uk": "\u0420\u043e\u043c\u0430\u043d\u0442\u0438\u043a\u0430",
             "name_en": "Romance",
@@ -129,7 +113,6 @@
             "description_en": "The main plot in most movies of this genre will be the romantic line of the main characters, their relationships and feelings. The characters fall in love with each other but there is always some conflict or challenge that they have to overcome in order to be together."
         },
         {
-            "id": 17,
             "key": "sci-fi",
             "name_uk": "\u0424\u0430\u043d\u0442\u0430\u0441\u0442\u0438\u043a\u0430",
             "name_en": "Sci-Fi",
@@ -137,7 +120,6 @@
             "description_en": "This genre can encompass a lot of things, adding elements that are not yet in reality or are poorly developed. Why not yet? Because they usually describe technologies or other things that are actually possible but due to lack of knowledge they do not exist yet. That is, it will be more difficult to believe that this thing is unreal, than vice versa. Sci-Fi often reflects social fears and philosophical questions about the future of humanity. Sci-Fi is usually divided into subgenres that can better describe different themes of cinema."
         },
         {
-            "id": 18,
             "key": "sport",
             "name_uk": "\u0421\u043f\u043e\u0440\u0442",
             "name_en": "Sport",
@@ -145,7 +127,6 @@
             "description_en": "This genre can go with any other, from documentaries to space. Sports films celebrate competition, perseverance, and teamwork. It's about pushing yourself to your limits and staying motivated."
         },
         {
-            "id": 19,
             "key": "thriller",
             "name_uk": "\u0422\u0440\u0438\u043b\u0435\u0440",
             "name_en": "Thriller",
@@ -153,7 +134,6 @@
             "description_en": "Movies in this genre are usually very serious. It shows another side of human nature, which can be worse than any animal in the world. The genre can open the door to the viewer into the abyss, where it will not push him, but allow him to jump himself. Many topics can be raised, especially such as helplessness, where you will live the last days or minutes with the victim of a maniac and can even feel this terrible call of death. A thriller shows people from the inside."
         },
         {
-            "id": 20,
             "key": "war",
             "name_uk": "\u0412\u0456\u0439\u043d\u0430",
             "name_en": "War",
@@ -161,7 +141,6 @@
             "description_en": "War films depict military conflicts, historical battles, or the personal experiences of soldiers and civilians. They can be action-packed or deeply emotional, showing the horrors of war, heroism, and moral dilemmas. It's not just about context or scenery, there's a separate filter for that in Action Time. War can be fictional or altered - the main thing is that the film shows the events of war, for example, Edge of Tomorrow (2014)."
         },
         {
-            "id": 21,
             "key": "western",
             "name_uk": "\u0412\u0435\u0441\u0442\u0435\u0440\u043d",
             "name_en": "Western",
@@ -169,7 +148,6 @@
             "description_en": "Anything related to the Wild West of American history. Films can be historical, documentary, or even just comedy. The main theme is cowboys, Indians, and their lives. Films explore themes of survival, justice, and the clash between civilization and wilderness. Classic Westerns focus on duels and horse chases, while revisionist Westerns offer harsher, morally complex narratives."
         },
         {
-            "id": 22,
             "key": "arthouse",
             "name_uk": "\u0410\u0440\u0442\u0445\u0430\u0443\u0441",
             "name_en": "Arthouse",
@@ -177,7 +155,6 @@
             "description_en": "Arthouse films prioritize artistic expression over mainstream appeal. They often feature experimental storytelling, unconventional narratives, and deep philosophical themes. These movies attract niche audiences and are frequently showcased at film festivals."
         },
         {
-            "id": 23,
             "key": "b-movie",
             "name_uk": "\u0424\u0456\u043b\u044c\u043c \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0457 B",
             "name_en": "B-movie",

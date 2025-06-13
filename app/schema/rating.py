@@ -1,6 +1,6 @@
 from datetime import datetime
 import enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -35,14 +35,6 @@ class RatingExportCreate(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class RatingsJSONFile(BaseModel):
     ratings: list[RatingExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

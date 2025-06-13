@@ -230,7 +230,7 @@ def get_info_report(
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
 def get_all_users(
-    admin: m.User = Depends(get_admin),
+    current_user: m.User = Depends(get_admin),
     # lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
@@ -255,7 +255,7 @@ def get_all_users(
             ),
         )
         for user in users
-        if s.UserRole(user.role).has_permissions()
+        if user != current_user or not s.UserRole(user.role).is_owner()
     ]
 
     return s.UsersListOut(users=users_out)

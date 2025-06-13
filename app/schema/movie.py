@@ -3,7 +3,7 @@ from enum import Enum
 import json
 
 from fastapi import File, UploadFile
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.schema.actor import ActorOut
 from app.schema.characters import CharacterOut
@@ -81,17 +81,9 @@ class MovieExportCreate(BaseModel):
     shared_universe_id: int | None = None
     shared_universe_order: int | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MoviesJSONFile(BaseModel):
     movies: list[MovieExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieActor(BaseModel):
@@ -104,10 +96,6 @@ class MovieActor(BaseModel):
     born: datetime
     died: datetime | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieDirector(BaseModel):
     key: str
@@ -118,20 +106,12 @@ class MovieDirector(BaseModel):
     born: datetime
     died: datetime | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieGenre(BaseModel):
     key: str
     name: str
     description: str
     percentage_match: float
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieSubgenre(BaseModel):
@@ -141,27 +121,15 @@ class MovieSubgenre(BaseModel):
     description: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieGenres(BaseModel):
     genres: list[MovieGenre]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieRating(BaseModel):
     uuid: str
     rating: float
     comment: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class UserRatingCriteria(BaseModel):
@@ -177,20 +145,12 @@ class UserRatingCriteria(BaseModel):
     humor: float | None = None
     animation_cartoon: float | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieSpecification(BaseModel):
     key: str
     name: str
     description: str
     percentage_match: float
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieKeyword(BaseModel):
@@ -199,20 +159,12 @@ class MovieKeyword(BaseModel):
     description: str
     percentage_match: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieActionTime(BaseModel):
     key: str
     name: str
     description: str
     percentage_match: float
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class RelatedMovieOut(BaseModel):
@@ -227,10 +179,6 @@ class SharedUniverseMovies(BaseModel):
     title: str
     poster: str
     order: int | None = None
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class SharedUniverseOut(BaseModel):
@@ -256,20 +204,12 @@ class Criterion(BaseModel):
     description: str
     rating: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class TitleVisualProfileOut(BaseModel):
     key: str
     name: str
     description: str
     criteria: list[Criterion]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieOut(BaseModel):
@@ -325,17 +265,9 @@ class MovieOut(BaseModel):
 
     created_at: datetime
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieOutList(BaseModel):
     movies: list[MovieOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MoviePreviewOut(BaseModel):
@@ -355,27 +287,15 @@ class PaginationDataOut(BaseModel):
     size: int
     pages: int
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class QuickMovie(BaseModel):
     key: str
     title_en: str
     rating: float
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class QuickMovieList(BaseModel):
     quick_movies: list[QuickMovie]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieSearchOut(BaseModel):
@@ -387,43 +307,23 @@ class MovieSearchOut(BaseModel):
     duration: str
     main_genre: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class ActorShort(BaseModel):
     key: str
     name: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieSuperSearchResult(BaseModel):
     movies: list[MoviePreviewOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieSearchResult(BaseModel):
     movies: list[MovieSearchOut]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieByActorsList(BaseModel):
     movies: list[MovieSearchOut]
     actor: list[ActorShort] | None = None
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieFiltersListOut(BaseModel):
@@ -437,20 +337,12 @@ class MovieFiltersListOut(BaseModel):
     visual_profile_categories: list[VisualProfileCategoryOut]
     shared_universes: list[SharedUniversePreCreateOut]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieFilterField(BaseModel):
     key: str
     percentage_match: float
     subgenre_parent_key: str = Field(None, alias="subgenre_parent_key")
     name: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class ActorCharacterKey(BaseModel):
@@ -485,10 +377,6 @@ class MovieIn(BaseModel):
     rating: float
     file: UploadFile = File(None)
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class QuickMovieFormData(BaseModel):
     key: str
@@ -519,10 +407,6 @@ class MoviePreCreateData(BaseModel):
     shared_universes: list[SharedUniversePreCreateOut]
     base_movies: list[MovieOutShort]
     characters: list[CharacterOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieFormData(BaseModel):
@@ -579,19 +463,11 @@ class ActorSimple(BaseModel):
     full_name: str
     avatar_url: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class DirectorSimple(BaseModel):
     key: str
     full_name: str
     avatar_url: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class MovieCarousel(BaseModel):
@@ -607,14 +483,6 @@ class MovieCarousel(BaseModel):
     actors: list[ActorSimple]
     directors: list[DirectorSimple]
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieCarouselList(BaseModel):
     movies: list[MovieCarousel]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

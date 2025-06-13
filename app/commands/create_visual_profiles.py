@@ -60,7 +60,6 @@ def create_visual_profiles():
                 )
                 session.add(new_rating)
                 session.flush()
-            print(f"Visual profile for movie {movie.key} created!")
 
         log(log.INFO, "Visual profiles created successfully")
         session.commit()

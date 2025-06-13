@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -21,34 +21,18 @@ class DirectorExportCreate(BaseModel):
     born_in_en: str
     avatar: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class DirectorsJSONFile(BaseModel):
     directors: list[DirectorExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class DirectorOut(BaseModel):
     key: str
     name: str
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class DirectorListOut(BaseModel):
     directors: list[DirectorOut]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 # not use on front
@@ -63,7 +47,3 @@ class DirectorIn(BaseModel):
     born_in_uk: str
     born_in_en: str
     avatar: UploadFile
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

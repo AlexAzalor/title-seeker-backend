@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 from config import config
 
 CFG = config()
@@ -61,18 +61,10 @@ class MovieFilterFormIn(BaseModel):
     description_uk: str | None = None
     description_en: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class MovieFilterFormOut(BaseModel):
     key: str
     name: str
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class GenreFormIn(BaseModel):
@@ -85,20 +77,12 @@ class GenreFormIn(BaseModel):
     description_en: str
     parent_genre_key: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class GenreFormOut(BaseModel):
     key: str
     name: str
     description: str
     parent_genre_key: str | None = None
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
 
 
 class SearchResult(BaseModel):
@@ -108,14 +92,6 @@ class SearchResult(BaseModel):
     image: str | None = None
     extra_info: str | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class SearchResults(BaseModel):
     results: list[SearchResult]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )

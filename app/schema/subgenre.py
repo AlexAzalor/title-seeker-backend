@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from config import config
 
@@ -14,14 +14,6 @@ class SubgenreExportCreate(BaseModel):
     description_en: str | None = None
     parent_genre_id: int | None = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
 
 class SubgenresJSONFile(BaseModel):
     subgenres: list[SubgenreExportCreate]
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
