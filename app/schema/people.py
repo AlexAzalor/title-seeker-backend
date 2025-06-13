@@ -31,6 +31,12 @@ class PersonBase(BaseModel):
     name: str
 
 
+class PersonWithAvatar(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+
+
 # Only one place
 class Actor(PersonBase):
     avatar_url: str
@@ -61,3 +67,17 @@ class PersonForm(BaseModel):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
+
+
+class MoviePersonOut(BaseModel):
+    key: str
+    full_name: str
+    avatar_url: str
+    born_location: str
+    age: int
+    born: datetime
+    died: datetime | None = None
+
+
+class MovieActorOut(MoviePersonOut):
+    character_name: str

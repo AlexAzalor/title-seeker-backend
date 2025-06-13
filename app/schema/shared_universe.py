@@ -17,7 +17,7 @@ class SharedUniversesJSONFile(BaseModel):
     shared_universes: list[SharedUniverseExportCreate]
 
 
-class SharedUniversePreCreateOut(BaseModel):
+class BaseSharedUniverse(BaseModel):
     key: str
     name: str
     description: str

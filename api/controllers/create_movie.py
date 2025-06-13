@@ -333,7 +333,6 @@ def import_new_movie_to_google_sheet(db: Session):
         for movie in movies:
             movies_to_file.append(
                 s.MovieExportCreate(
-                    id=movie.id,
                     key=movie.key,
                     title_uk=next((t.title for t in movie.translations if t.language == s.Language.UK.value)),
                     title_en=next((t.title for t in movie.translations if t.language == s.Language.EN.value)),
@@ -344,11 +343,11 @@ def import_new_movie_to_google_sheet(db: Session):
                         (t.description for t in movie.translations if t.language == s.Language.EN.value)
                     ),
                     # release_date=datetime.strptime(movie.release_date, "%d.%m.%Y"),
-                    release_date=movie.release_date,
+                    release_date=movie.release_date if movie.release_date else datetime.now(),
                     duration=int(movie.duration),
                     budget=int(movie.budget),
-                    domestic_gross=int(movie.domestic_gross) if movie.domestic_gross else None,
-                    worldwide_gross=int(movie.worldwide_gross) if movie.worldwide_gross else None,
+                    domestic_gross=int(movie.domestic_gross) if movie.domestic_gross else 0,
+                    worldwide_gross=int(movie.worldwide_gross) if movie.worldwide_gross else 0,
                     poster=movie.poster,
                     actors_ids=[actor.id for actor in movie.actors],
                     directors_ids=[director.id for director in movie.directors],

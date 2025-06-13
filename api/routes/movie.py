@@ -279,12 +279,12 @@ def get_movie(
         worldwide_gross=movie.formatted_worldwide_gross,
         release_date=movie.release_date if movie.release_date else datetime.now(),
         # Visual Profile
-        visual_profile=s.TitleVisualProfileOut(
+        visual_profile=s.VisualProfileData(
             key=visual_profile.category.key,
             name=visual_profile.category.get_name(lang),
             description=visual_profile.category.get_description(lang),
             criteria=[
-                s.Criterion(
+                s.VisualProfileCriterionData(
                     key=title_rating.criterion.key,
                     name=title_rating.criterion.get_name(lang),
                     description=title_rating.criterion.get_description(lang),
@@ -312,7 +312,7 @@ def get_movie(
         # Main AVERAGE rating
         # The .get() method only returns the default value if the key does not exist in the dictionary. If the key exists but its value is None, .get() will return None instead of the default value.
         overall_average_rating=movie.average_rating,
-        overall_average_rating_criteria=s.UserRatingCriteria(
+        overall_average_rating_criteria=s.BaseRatingCriteria(
             acting=movie.average_by_criteria.get("acting") or 0.01,
             # acting=movie.average_by_criteria.get("acting", 0.01),
             plot_storyline=movie.average_by_criteria.get("plot_storyline") or 0.01,
@@ -327,7 +327,7 @@ def get_movie(
         ),
         # User rating
         user_rating=user_rating.rating if user_rating and current_user.id != owner.id else None,
-        user_rating_criteria=s.UserRatingCriteria(
+        user_rating_criteria=s.BaseRatingCriteria(
             acting=user_rating.acting,
             plot_storyline=user_rating.plot_storyline,
             script_dialogue=user_rating.script_dialogue,
@@ -348,7 +348,7 @@ def get_movie(
         if user_rating
         else None,
         actors=[
-            s.MovieActor(
+            s.MovieActorOut(
                 key=char.actor.key,
                 full_name=char.actor.full_name(lang),
                 character_name=char.character.get_name(lang),
@@ -361,10 +361,10 @@ def get_movie(
             for char in sorted(movie.characters, key=lambda x: x.order)
         ],
         directors=[
-            s.MovieDirector(
+            s.MoviePersonOut(
                 key=director.key,
                 full_name=director.full_name(lang),
-                avatar_url=director.avatar,
+                avatar_url=director.avatar if director.avatar else "no avatar",
                 born_location=director.get_born_location(lang),
                 age=director.age,
                 born=director.born,
@@ -906,7 +906,7 @@ def get_movie_filters(
     ]
 
     su_out = [
-        s.SharedUniversePreCreateOut(
+        s.BaseSharedUniverse(
             key=su.key,
             name=su.get_name(lang),
             description=su.get_description(lang),
@@ -990,7 +990,7 @@ def get_pre_create_data(
         raise HTTPException(status_code=404, detail="Characters not found")
 
     base_movies_out = [
-        s.MovieOutShort(
+        s.MovieMenuItem(
             key=base_movie.key,
             name=base_movie.get_title(lang),
         )
@@ -1043,7 +1043,7 @@ def get_pre_create_data(
                         )
 
     shared_universes_out = [
-        s.SharedUniversePreCreateOut(
+        s.BaseSharedUniverse(
             key=universe.key,
             name=universe.get_name(lang),
             description=universe.get_description(lang),
@@ -1253,7 +1253,7 @@ def get_random_list(
                     for genre in movie.genres
                 ],
                 actors=[
-                    s.ActorSimple(
+                    s.PersonWithAvatar(
                         key=actor.key,
                         full_name=actor.full_name(lang),
                         avatar_url=actor.avatar,
@@ -1261,7 +1261,7 @@ def get_random_list(
                     for actor in movie.actors
                 ],
                 directors=[
-                    s.DirectorSimple(
+                    s.PersonWithAvatar(
                         key=director.key,
                         full_name=director.full_name(lang),
                         avatar_url=director.avatar if director.avatar else "",

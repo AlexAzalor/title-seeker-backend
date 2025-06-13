@@ -199,7 +199,6 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User, 
         budget=1000000,
         domestic_gross=3000000,
         worldwide_gross=5000000,
-        poster="id_title.png",
         location_uk="Location UK",
         location_en="Location EN",
         actors_keys=[
@@ -236,7 +235,7 @@ def test_create_movie(client: TestClient, db: Session, auth_user_owner: m.User, 
         ],
         rating_criterion_type=s.RatingCriterion.BASIC,
         rating=5,
-        rating_criteria=s.UserRatingCriteria(
+        rating_criteria=s.BaseRatingCriteria(
             acting=5,
             plot_storyline=5,
             script_dialogue=5,
@@ -307,7 +306,7 @@ def test_quick_movies(client: TestClient, auth_user_owner: m.User, auth_simple_u
         title_en="Test quick EN",
         rating=5,
         rating_criterion_type=s.RatingCriterion.BASIC,
-        rating_criteria=s.UserRatingCriteria(
+        rating_criteria=s.BaseRatingCriteria(
             acting=5,
             plot_storyline=5,
             script_dialogue=5,

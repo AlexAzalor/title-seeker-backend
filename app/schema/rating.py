@@ -15,11 +15,7 @@ class RatingCriterion(str, enum.Enum):
     ANIMATION_CARTOON = "animation_cartoon"
 
 
-class RatingExportCreate(BaseModel):
-    id: int
-    movie_id: int
-    user_id: int
-    rating: float
+class BaseRatingCriteria(BaseModel):
     acting: float
     plot_storyline: float
     script_dialogue: float
@@ -31,6 +27,13 @@ class RatingExportCreate(BaseModel):
     scare_factor: float | None = None
     humor: float | None = None
     animation_cartoon: float | None = None
+
+
+class RatingExportCreate(BaseRatingCriteria):
+    id: int
+    movie_id: int
+    user_id: int
+    rating: float
     comment: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -38,3 +41,9 @@ class RatingExportCreate(BaseModel):
 
 class RatingsJSONFile(BaseModel):
     ratings: list[RatingExportCreate]
+
+
+class MovieRating(BaseModel):
+    uuid: str
+    rating: float
+    comment: str

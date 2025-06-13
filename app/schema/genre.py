@@ -22,38 +22,18 @@ class GenresJSONFile(BaseModel):
     items: list[GenreFormFields]
 
 
-class SubgenreOut(BaseModel):
+class GenreBase(BaseModel):
     key: str
     name: str
     description: str
+
+
+class SubgenreOut(GenreBase):
     parent_genre_key: str
 
 
-class GenreOut(BaseModel):
-    key: str
-    name: str
-    description: str
+class GenreOut(GenreBase):
     subgenres: list[SubgenreOut]
-
-
-class GenreListOut(BaseModel):
-    genres: list[GenreOut]
-
-
-class GenreIn(BaseModel):
-    key: str
-    name_uk: str
-    name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
-
-
-class GenreItemOut(BaseModel):
-    key: str
-    name: str
-    description: str
-    percentage_match: float
-    parent_genre_key: str | None = None
 
 
 class GenresSubgenresOut(BaseModel):
@@ -82,8 +62,13 @@ class GenreFormIn(BaseModel):
     parent_genre_key: str | None = None
 
 
-class GenreFormOut(BaseModel):
-    key: str
-    name: str
-    description: str
+class GenreFormOut(GenreBase):
     parent_genre_key: str | None = None
+
+
+class MovieGenre(GenreBase):
+    percentage_match: float
+
+
+class MovieGenres(BaseModel):
+    genres: list[MovieGenre]

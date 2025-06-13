@@ -34,6 +34,6 @@ def test_create_shared_universe(client: TestClient, db: Session, auth_user_owner
         params={"user_uuid": auth_user_owner.uuid},
     )
     assert response.status_code == status.HTTP_201_CREATED
-    data = s.SharedUniversePreCreateOut.model_validate(response.json())
+    data = s.BaseSharedUniverse.model_validate(response.json())
     assert data
     assert data.key == NEW_SU_KEY

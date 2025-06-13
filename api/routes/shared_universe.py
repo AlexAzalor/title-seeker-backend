@@ -15,7 +15,7 @@ shared_universe_router = APIRouter(prefix="/shared-universes", tags=["Shared uni
 @shared_universe_router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
-    response_model=s.SharedUniversePreCreateOut,
+    response_model=s.BaseSharedUniverse,
     responses={
         status.HTTP_400_BAD_REQUEST: {"description": "Shared universe already exists"},
         status.HTTP_201_CREATED: {"description": "Shared universe successfully created"},

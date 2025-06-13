@@ -2,15 +2,15 @@ from datetime import datetime
 from enum import Enum
 import json
 
-from fastapi import File, UploadFile
 from pydantic import BaseModel, Field, model_validator
 
 from app.schema.characters import CharacterOut
-from app.schema.filters import FilterItemOut, MovieFilterItem
-from app.schema.genre import GenreOut, SubgenreOut
-from app.schema.people import PersonBase
-from app.schema.rating import RatingCriterion
-from app.schema.shared_universe import SharedUniversePreCreateOut
+from app.schema.filters import FilterItemField, FilterItemOut, MovieFilterItem
+from app.schema.genre import GenreOut, MovieGenre, SubgenreOut
+from app.schema.pagination import BasePagination
+from app.schema.people import MovieActorOut, MoviePersonOut, PersonBase, PersonWithAvatar
+from app.schema.rating import MovieRating, RatingCriterion, BaseRatingCriteria
+from app.schema.shared_universe import BaseSharedUniverse
 
 from app.schema.visual_profile import VisualProfileCategoryOut, VisualProfileCriterionData, VisualProfileData
 from config import config
@@ -38,25 +38,32 @@ class RelatedMovie(Enum):
     SHARED_UNIVERSE = "shared_universe"
 
 
-class MovieExportCreate(BaseModel):
-    id: int
+class BaseMovieForm(BaseModel):
+    """Fields with primitive types and enum"""
+
     key: str
     title_uk: str
     title_en: str
     description_uk: str
     description_en: str
-    release_date: datetime | None = None
     duration: int
     budget: int
-    domestic_gross: int | None = None
-    worldwide_gross: int | None = None
-    poster: str | None = None
-    actors_ids: list[int]
-    directors_ids: list[int]
+    domestic_gross: int
+    worldwide_gross: int
     location_uk: str
     location_en: str
-    # users_ratings: list[dict[int, float]]
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
+    shared_universe_order: int | None = None
+
+
+class MovieExportCreate(BaseMovieForm):
+    poster: str
+    release_date: datetime
     rating_criterion: RatingCriterion
+    # People
+    actors_ids: list[int]
+    directors_ids: list[int]
     # Genres
     genres_list: list[dict[int, float]]
     genres_ids: list[int]
@@ -73,123 +80,41 @@ class MovieExportCreate(BaseModel):
     action_times_list: list[dict[int, float]]
     action_times_ids: list[int]
 
-    relation_type: RelatedMovie | None = None
     base_movie_id: int | None = None
-    collection_order: int | None = None
-
     shared_universe_id: int | None = None
-    shared_universe_order: int | None = None
 
 
 class MoviesJSONFile(BaseModel):
     movies: list[MovieExportCreate]
 
 
-class MovieActor(BaseModel):
-    key: str
-    full_name: str
-    character_name: str
-    avatar_url: str | None = None
-    born_location: str
-    age: int
-    born: datetime
-    died: datetime | None = None
-
-
-class MovieDirector(BaseModel):
-    key: str
-    full_name: str
-    avatar_url: str | None = None
-    born_location: str
-    age: int
-    born: datetime
-    died: datetime | None = None
-
-
-class MovieGenre(BaseModel):
-    key: str
-    name: str
-    description: str
-    percentage_match: float
-
-
-class MovieSubgenre(BaseModel):
-    key: str
-    parent_genre: MovieGenre
-    name: str
-    description: str
-    percentage_match: float
-
-
-class MovieGenres(BaseModel):
-    genres: list[MovieGenre]
-
-
-class MovieRating(BaseModel):
-    uuid: str
-    rating: float
-    comment: str
-
-
-class UserRatingCriteria(BaseModel):
-    acting: float
-    plot_storyline: float
-    script_dialogue: float
-    music: float
-    enjoyment: float
-    production_design: float
-    # Additional
-    visual_effects: float | None = None
-    scare_factor: float | None = None
-    humor: float | None = None
-    animation_cartoon: float | None = None
-
-
-class MovieSpecification(BaseModel):
-    key: str
-    name: str
-    description: str
-    percentage_match: float
-
-
-class MovieKeyword(BaseModel):
-    key: str
-    name: str
-    description: str
-    percentage_match: float
-
-
-class MovieActionTime(BaseModel):
-    key: str
-    name: str
-    description: str
-    percentage_match: float
-
-
-class RelatedMovieOut(BaseModel):
+class BaseMovie(BaseModel):
     key: str
     title: str
+
+
+class MovieMenuItem(BaseModel):
+    """For ItemsSelector menu on the frontend"""
+
+    key: str
+    name: str
+
+
+class RelatedMovieOut(BaseMovie):
     relation_type: RelatedMovie
     poster: str
 
 
-class SharedUniverseMovies(BaseModel):
-    key: str
-    title: str
+class SharedUniverseMovies(BaseMovie):
     poster: str
     order: int | None = None
 
 
-class SharedUniverseOut(BaseModel):
-    key: str
-    name: str
-    description: str
+class SharedUniverseOut(BaseSharedUniverse):
     movies: list[SharedUniverseMovies]
 
 
-class SimilarMovieOut(BaseModel):
-    key: str
-    title: str
+class SimilarMovieOut(BaseMovie):
     poster: str
 
 
@@ -197,23 +122,7 @@ class SimilarMovieOutList(BaseModel):
     similar_movies: list[SimilarMovieOut]
 
 
-class Criterion(BaseModel):
-    key: str
-    name: str
-    description: str
-    rating: int
-
-
-class TitleVisualProfileOut(BaseModel):
-    key: str
-    name: str
-    description: str
-    criteria: list[Criterion]
-
-
-class MovieOut(BaseModel):
-    key: str
-    title: str
+class MovieOut(BaseMovie):
     title_en: str | None = None
 
     # Info
@@ -226,9 +135,9 @@ class MovieOut(BaseModel):
     worldwide_gross: str
 
     # Filters
-    actors: list[MovieActor]
+    actors: list[MovieActorOut]
     poster: str
-    directors: list[MovieDirector]
+    directors: list[MoviePersonOut]
     genres: list[MovieFilterItem]
     subgenres: list[MovieFilterItem] = []
     specifications: list[MovieFilterItem]
@@ -236,7 +145,7 @@ class MovieOut(BaseModel):
     action_times: list[MovieFilterItem]
 
     # Visual profile
-    visual_profile: TitleVisualProfileOut
+    visual_profile: VisualProfileData
 
     # Ratings
     # All movies ratings
@@ -251,11 +160,11 @@ class MovieOut(BaseModel):
 
     # User rating
     user_rating: float | None = None
-    user_rating_criteria: UserRatingCriteria | None = None
+    user_rating_criteria: BaseRatingCriteria | None = None
 
     # Main AVERAGE rating
     overall_average_rating: float
-    overall_average_rating_criteria: UserRatingCriteria
+    overall_average_rating_criteria: BaseRatingCriteria
 
     # Relations
     related_movies: list[RelatedMovieOut] | None = None
@@ -265,13 +174,7 @@ class MovieOut(BaseModel):
     created_at: datetime
 
 
-class MovieOutList(BaseModel):
-    movies: list[MovieOut]
-
-
-class MoviePreviewOut(BaseModel):
-    key: str
-    title: str
+class MoviePreviewOut(BaseMovie):
     poster: str | None = None
     release_date: datetime
     duration: str
@@ -279,12 +182,9 @@ class MoviePreviewOut(BaseModel):
     rating: float
 
 
-class PaginationDataOut(BaseModel):
-    items: list[MoviePreviewOut]
-    total: int
-    page: int
+class PaginationDataOut(BasePagination):
     size: int
-    pages: int
+    items: list[MoviePreviewOut]
 
 
 class QuickMovie(BaseModel):
@@ -297,34 +197,6 @@ class QuickMovieList(BaseModel):
     quick_movies: list[QuickMovie]
 
 
-class MovieSearchOut(BaseModel):
-    key: str
-    title_en: str
-    title_uk: str
-    poster: str | None = None
-    release_date: datetime
-    duration: str
-    main_genre: str
-
-
-class ActorShort(BaseModel):
-    key: str
-    name: str
-
-
-class MovieSuperSearchResult(BaseModel):
-    movies: list[MoviePreviewOut]
-
-
-class MovieSearchResult(BaseModel):
-    movies: list[MovieSearchOut]
-
-
-class MovieByActorsList(BaseModel):
-    movies: list[MovieSearchOut]
-    actor: list[ActorShort] | None = None
-
-
 class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
     subgenres: list[SubgenreOut]
@@ -334,14 +206,11 @@ class MovieFiltersListOut(BaseModel):
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
     visual_profile_categories: list[VisualProfileCategoryOut]
-    shared_universes: list[SharedUniversePreCreateOut]
+    shared_universes: list[BaseSharedUniverse]
 
 
-class MovieFilterField(BaseModel):
-    key: str
-    percentage_match: float
+class MovieFilterField(FilterItemField):
     subgenre_parent_key: str = Field(None, alias="subgenre_parent_key")
-    name: str
 
 
 class ActorCharacterKey(BaseModel):
@@ -349,49 +218,16 @@ class ActorCharacterKey(BaseModel):
     character_key: str
 
 
-class MovieIn(BaseModel):
-    id: int
-    key: str
-    title_uk: str
-    title_en: str
-    description_uk: str
-    description_en: str
-    release_date: str
-    duration: int
-    budget: int
-    domestic_gross: int
-    worldwide_gross: int
-    poster: str
-    location_uk: str
-    location_en: str
-    actors_keys: list[ActorCharacterKey]
-    directors_keys: list[str]
-    genres: list[MovieFilterField]
-    subgenres: list[MovieFilterField]
-    specifications: list[MovieFilterField]
-    keywords: list[MovieFilterField]
-    action_times: list[MovieFilterField]
-    rating_criterion_type: RatingCriterion
-    rating_criteria: UserRatingCriteria
-    rating: float
-    file: UploadFile = File(None)
-
-
 class QuickMovieFormData(BaseModel):
     key: str
     title_en: str
     rating_criterion_type: RatingCriterion
-    rating_criteria: UserRatingCriteria
+    rating_criteria: BaseRatingCriteria
     rating: float
 
 
 class QuickMovieJSON(BaseModel):
     movies: list[QuickMovieFormData]
-
-
-class MovieOutShort(BaseModel):
-    key: str
-    name: str
 
 
 class MoviePreCreateData(BaseModel):
@@ -403,30 +239,17 @@ class MoviePreCreateData(BaseModel):
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
     quick_movie: QuickMovieFormData | None = None
-    shared_universes: list[SharedUniversePreCreateOut]
-    base_movies: list[MovieOutShort]
+    shared_universes: list[BaseSharedUniverse]
+    base_movies: list[MovieMenuItem]
     characters: list[CharacterOut]
 
 
-class MovieFormData(BaseModel):
-    key: str
-    poster: str | None = None
-    title_uk: str
-    title_en: str
-    # Rating
-    rating_criterion_type: RatingCriterion
-    rating_criteria: UserRatingCriteria
-    rating: float
-    # Info
-    description_uk: str
-    description_en: str
+class MovieFormData(BaseMovieForm):
     release_date: str
-    location_en: str | None = None
-    location_uk: str | None = None
-    duration: int
-    budget: int
-    domestic_gross: int | None = None
-    worldwide_gross: int | None = None
+    # Rating
+    rating: float
+    rating_criterion_type: RatingCriterion
+    rating_criteria: BaseRatingCriteria
     # People
     actors_keys: list[ActorCharacterKey]
     directors_keys: list[str]
@@ -437,14 +260,9 @@ class MovieFormData(BaseModel):
     specifications: list[MovieFilterField]
     keywords: list[MovieFilterField]
     action_times: list[MovieFilterField]
-
-    collection_order: int | None = None
-    relation_type: RelatedMovie | None = None
+    # Related
     base_movie_key: str | None = None
-
     shared_universe_key: str | None = None
-    shared_universe_order: int | None = None
-
     # Visual profile
     category_key: str
     category_criteria: list[VisualProfileCriterionData]
@@ -457,21 +275,7 @@ class MovieFormData(BaseModel):
         return value
 
 
-class ActorSimple(BaseModel):
-    key: str
-    full_name: str
-    avatar_url: str
-
-
-class DirectorSimple(BaseModel):
-    key: str
-    full_name: str
-    avatar_url: str
-
-
-class MovieCarousel(BaseModel):
-    key: str
-    title: str
+class MovieCarousel(BaseMovie):
     poster: str
     release_date: datetime
     duration: str
@@ -479,8 +283,8 @@ class MovieCarousel(BaseModel):
     description: str
 
     genres: list[MovieGenre]
-    actors: list[ActorSimple]
-    directors: list[DirectorSimple]
+    actors: list[PersonWithAvatar]
+    directors: list[PersonWithAvatar]
 
 
 class MovieCarouselList(BaseModel):

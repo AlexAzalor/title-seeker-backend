@@ -480,7 +480,6 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         movies.append(
             s.MovieExportCreate(
-                id=id,
                 key=key,
                 title_uk=title_uk,
                 title_en=title_en,

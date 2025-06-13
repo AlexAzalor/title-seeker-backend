@@ -30,7 +30,7 @@ def append_data_to_google_spreadsheets(movies_data: s.MoviesJSONFile | None = No
 
     values = [
         [
-            movie.id,
+            1,
             movie.key,
             movie.title_uk,
             movie.title_en,
@@ -53,7 +53,7 @@ def append_data_to_google_spreadsheets(movies_data: s.MoviesJSONFile | None = No
             str(movie.action_times_list),
             # str(movie.users_ratings),
             movie.rating_criterion.value,
-            movie.id,
+            1,
         ]
     ]
 
