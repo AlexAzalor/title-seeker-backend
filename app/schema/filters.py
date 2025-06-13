@@ -34,34 +34,8 @@ class FilterFieldList(BaseModel):
     items: list[FilterFieldsWithUUID]
 
 
-class SpecificationsJSONFile(BaseModel):
-    specifications: list[FilterFields]
-
-
-class KeywordExportCreate(BaseModel):
-    id: int
-    key: str
-    name_uk: str
-    name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
-
-
-class KeywordsJSONFile(BaseModel):
-    keywords: list[KeywordExportCreate]
-
-
-class ActionTimeExportCreate(BaseModel):
-    id: int
-    key: str
-    name_uk: str
-    name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
-
-
-class ActionTimesJSONFile(BaseModel):
-    action_times: list[ActionTimeExportCreate]
+class FilterJSONFile(BaseModel):
+    items: list[FilterFields]
 
 
 class FilterItemOut(BaseModel):

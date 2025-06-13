@@ -25,7 +25,7 @@ LAST_SHEET_COLUMN = "G"
 ACT_TIME_RANGE_NAME = f"Action time!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_action_times_in_db(action_times: list[s.ActionTimeExportCreate]):
+def write_action_times_in_db(action_times: list[s.FilterFields]):
     with db.begin() as session:
         if not session.scalar(sa.select(m.Genre)):
             log(log.ERROR, "Genre table is empty")
@@ -78,7 +78,7 @@ def export_action_times_from_google_spreadsheets(with_print: bool = True, in_jso
     assert values, "No data found"
     print("values: ", values[:1])
 
-    action_times: list[s.ActionTimeExportCreate] = []
+    action_times: list[s.FilterFields] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -109,8 +109,7 @@ def export_action_times_from_google_spreadsheets(with_print: bool = True, in_jso
         description_en = row[DESCRIPTION_EN_INDEX]
 
         action_times.append(
-            s.ActionTimeExportCreate(
-                id=id,
+            s.FilterFields(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,
@@ -122,7 +121,7 @@ def export_action_times_from_google_spreadsheets(with_print: bool = True, in_jso
     print("Action Times COUNT: ", len(action_times))
 
     with open("data/action_times.json", "w") as file:
-        json.dump(s.ActionTimesJSONFile(action_times=action_times).model_dump(mode="json"), file, indent=4)
+        json.dump(s.FilterJSONFile(items=action_times).model_dump(mode="json"), file, indent=4)
         print("Action Times data saved to [data/action_times.json] file")
 
     write_action_times_in_db(action_times)
@@ -132,9 +131,9 @@ def export_action_times_from_json_file(max_action_times_limit: int | None = None
     """Fill action_times with data from json file"""
 
     with open("data/action_times.json", "r") as file:
-        file_data = s.ActionTimesJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    action_times = file_data.action_times
+    action_times = file_data.items
     if max_action_times_limit:
         action_times = action_times[:max_action_times_limit]
     write_action_times_in_db(action_times)

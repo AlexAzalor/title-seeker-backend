@@ -16,9 +16,9 @@ def import_action_times_to_google_spreadsheets():
     """Import action_times to google spreadsheets"""
 
     with open("data/action_times.json", "r") as file:
-        file_data = s.ActionTimesJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    action_times = file_data.action_times
+    action_times = file_data.items
     assert action_times, "action_times are empty!"
     print("Action Times COUNT: ", len(action_times))
 
@@ -27,13 +27,13 @@ def import_action_times_to_google_spreadsheets():
 
     values = [
         [
-            action_time.id,
+            1,
             action_time.key,
             action_time.name_uk,
             action_time.name_en,
             action_time.description_uk,
             action_time.description_en,
-            action_time.id,
+            1,
         ]
     ]
 

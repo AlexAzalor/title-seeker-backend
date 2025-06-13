@@ -25,7 +25,7 @@ LAST_SHEET_COLUMN = "G"
 KEYWORDS_RANGE_NAME = f"Keywords!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_keywords_in_db(keywords: list[s.KeywordExportCreate]):
+def write_keywords_in_db(keywords: list[s.FilterFields]):
     with db.begin() as session:
         if not session.scalar(sa.select(m.Genre)):
             log(log.ERROR, "Genre table is empty")
@@ -78,7 +78,7 @@ def export_keywords_from_google_spreadsheets(with_print: bool = True, in_json: b
     assert values, "No data found"
     print("values: ", values[:1])
 
-    keywords: list[s.KeywordExportCreate] = []
+    keywords: list[s.FilterFields] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -109,8 +109,7 @@ def export_keywords_from_google_spreadsheets(with_print: bool = True, in_json: b
         description_en = row[DESCRIPTION_EN_INDEX]
 
         keywords.append(
-            s.KeywordExportCreate(
-                id=id,
+            s.FilterFields(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,
@@ -122,7 +121,7 @@ def export_keywords_from_google_spreadsheets(with_print: bool = True, in_json: b
     print("Keywords COUNT: ", len(keywords))
 
     with open("data/keywords.json", "w") as file:
-        json.dump(s.KeywordsJSONFile(keywords=keywords).model_dump(mode="json"), file, indent=4)
+        json.dump(s.FilterJSONFile(items=keywords).model_dump(mode="json"), file, indent=4)
         print("Keywords data saved to [data/keywords.json] file")
 
     write_keywords_in_db(keywords)
@@ -132,9 +131,9 @@ def export_keywords_from_json_file(max_keywords_limit: int | None = None):
     """Fill keywords with data from json file"""
 
     with open("data/keywords.json", "r") as file:
-        file_data = s.KeywordsJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    keywords = file_data.keywords
+    keywords = file_data.items
     if max_keywords_limit:
         keywords = keywords[:max_keywords_limit]
     write_keywords_in_db(keywords)

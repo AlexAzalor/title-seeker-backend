@@ -16,9 +16,9 @@ def import_keywords_to_google_spreadsheets():
     """Import keywords to google spreadsheets"""
 
     with open("data/keywords.json", "r") as file:
-        file_data = s.KeywordsJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    keywords = file_data.keywords
+    keywords = file_data.items
     assert keywords, "keywords are empty!"
     print("Keywords COUNT: ", len(keywords))
 
@@ -27,13 +27,13 @@ def import_keywords_to_google_spreadsheets():
 
     values = [
         [
-            keyword.id,
+            1,
             keyword.key,
             keyword.name_uk,
             keyword.name_en,
             keyword.description_uk,
             keyword.description_en,
-            keyword.id,
+            1,
         ]
     ]
 

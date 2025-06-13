@@ -16,9 +16,9 @@ def import_specifications_to_google_spreadsheets():
     """Import specifications to google spreadsheets"""
 
     with open("data/specifications.json", "r") as file:
-        file_data = s.SpecificationsJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    specifications = file_data.specifications
+    specifications = file_data.items
     assert specifications, "specifications are empty!"
     print("Specifications COUNT: ", len(specifications))
 

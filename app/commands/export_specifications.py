@@ -121,7 +121,7 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
     print("Specifications COUNT: ", len(specifications))
 
     with open("data/specifications.json", "w") as file:
-        json.dump(s.SpecificationsJSONFile(specifications=specifications).model_dump(mode="json"), file, indent=4)
+        json.dump(s.FilterJSONFile(items=specifications).model_dump(mode="json"), file, indent=4)
         print("specifications data saved to [data/specifications.json] file")
 
     write_specifications_in_db(specifications)
@@ -131,9 +131,9 @@ def export_specifications_from_json_file(max_specifications_limit: int | None = 
     """Fill specifications with data from json file"""
 
     with open("data/specifications.json", "r") as file:
-        file_data = s.SpecificationsJSONFile.model_validate(json.load(file))
+        file_data = s.FilterJSONFile.model_validate(json.load(file))
 
-    specifications = file_data.specifications
+    specifications = file_data.items
     if max_specifications_limit:
         specifications = specifications[:max_specifications_limit]
     write_specifications_in_db(specifications)

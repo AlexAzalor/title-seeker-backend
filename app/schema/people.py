@@ -36,6 +36,7 @@ class Actor(PersonBase):
     avatar_url: str
     movie_count: int
 
+
 # Only one place
 class ActorsList(BaseModel):
     actors: list[Actor]
