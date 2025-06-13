@@ -115,7 +115,7 @@ def export_genres_from_google_spreadsheets(with_print: bool = True, in_json: boo
     print("Genres COUNT: ", len(genres))
 
     with open("data/genres.json", "w") as file:
-        json.dump(s.GenresJSONFile(genres=genres).model_dump(mode="json"), file, indent=4)
+        json.dump(s.GenresJSONFile(items=genres).model_dump(mode="json"), file, indent=4)
         print("Genres data saved to [data/genres.json] file")
 
     write_genres_in_db(genres)
@@ -127,7 +127,7 @@ def export_genres_from_json_file(max_genres_limit: int | None = None):
     with open("data/genres.json", "r") as file:
         file_data = s.GenresJSONFile.model_validate(json.load(file))
 
-    genres = file_data.genres
+    genres = file_data.items
     if max_genres_limit:
         genres = genres[:max_genres_limit]
     write_genres_in_db(genres)

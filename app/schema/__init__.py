@@ -5,11 +5,6 @@ from .general import (
     SearchType,
     SortOrder,
     SortBy,
-    PersonForm,
-    MovieFilterFormIn,
-    MovieFilterFormOut,
-    GenreFormIn,
-    GenreFormOut,
     SearchResult,
     SearchResults,
 )
@@ -82,7 +77,7 @@ from .movie import (
     Criterion,
     TitleVisualProfileOut,
 )
-from .people import PersonExportCreate, PersonJSONFile, PersonBase, Actor, ActorsList
+from .people import PersonExportCreate, PersonJSONFile, PersonBase, Actor, ActorsList, PersonForm
 from .genre import (
     GenreFormFields,
     GenreFormFieldsWithUUID,
@@ -95,8 +90,10 @@ from .genre import (
     GenresSubgenresOut,
     GenreItemFieldEditIn,
     GenreItemFieldEditFormIn,
+    GenreFormIn,
+    GenreFormOut,
 )
-from .subgenre import SubgenreExportCreate, SubgenresJSONFile
+
 from .user import (
     UserExportCreate,
     UsersJSONFile,
@@ -126,6 +123,7 @@ from .filters import (
     FilterItemField,
     FilterItem,
     MovieFilterItem,
+    MovieFilterFormIn,
 )
 from .visual_profile import (
     VisualProfileExportCreate,
@@ -133,16 +131,11 @@ from .visual_profile import (
     VisualProfileField,
     VisualProfileFieldWithUUID,
     VPCriterionJSONFile,
-    VPRatingExportCreate,
-    VPRatingJSONFile,
-    VPCriterionRatingExportCreate,
-    VPCriterionRatingJSONFile,
     VisualProfileIn,
     VisualProfileCriterionData,
     VisualProfileData,
     VisualProfileListOut,
     VisualProfileFormIn,
-    VisualProfileItemUpdateIn,
     VisualProfileForm,
     VisualProfileFormOut,
     VisualProfileCategoryOut,

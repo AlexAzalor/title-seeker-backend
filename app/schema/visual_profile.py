@@ -34,27 +34,6 @@ class VPCriterionJSONFile(BaseModel):
     criteria: list[VisualProfileField]
 
 
-class VPRatingExportCreate(BaseModel):
-    movie_id: int
-    user_id: int
-    category_id: int
-
-
-class VPRatingJSONFile(BaseModel):
-    ratings: list[VPRatingExportCreate]
-
-
-class VPCriterionRatingExportCreate(BaseModel):
-    title_visual_profile_id: int
-    criterion_id: int
-    rating: int
-    order: int
-
-
-class VPCriterionRatingJSONFile(BaseModel):
-    ratings: list[VPCriterionRatingExportCreate]
-
-
 class VisualProfileCriterionData(BaseModel):
     key: str
     name: str
@@ -74,10 +53,7 @@ class VisualProfileCategoryOut(BaseModel):
     description: str
 
 
-class VisualProfileData(BaseModel):
-    key: str
-    name: str
-    description: str
+class VisualProfileData(VisualProfileCategoryOut):
     criteria: list[VisualProfileCriterionData]
 
 
@@ -91,10 +67,6 @@ class VisualProfileFormIn(VisualProfileField):
 
 class VisualProfileForm(VisualProfileFieldWithUUID):
     criteria: list[VisualProfileFieldWithUUID]
-
-
-class VisualProfileItemUpdateIn(VisualProfileFieldWithUUID):
-    old_key: str
 
 
 class VisualProfileFormOut(BaseModel):

@@ -26,7 +26,7 @@ LAST_SHEET_COLUMN = "H"
 SUBGENRES_RANGE_NAME = f"Subgenres!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_subgenres_in_db(subgenres: list[s.SubgenreExportCreate]):
+def write_subgenres_in_db(subgenres: list[s.GenreFormFields]):
     with db.begin() as session:
         if not session.scalar(sa.select(m.Genre)):
             log(log.ERROR, "Genre table is empty")
@@ -79,7 +79,7 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
 
     assert values, "No data found"
 
-    subgenres: list[s.SubgenreExportCreate] = []
+    subgenres: list[s.GenreFormFields] = []
 
     # indexes of row values
     INDEX_ID = values[0].index(ID)
@@ -115,8 +115,7 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
         # parent_genre_id = convert_string_to_list_of_integers(parent_genre_id)
 
         subgenres.append(
-            s.SubgenreExportCreate(
-                id=id,
+            s.GenreFormFields(
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,
@@ -129,7 +128,7 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
     print("Subgenres COUNT: ", len(subgenres))
 
     with open("data/subgenres.json", "w") as file:
-        json.dump(s.SubgenresJSONFile(subgenres=subgenres).model_dump(mode="json"), file, indent=4)
+        json.dump(s.GenresJSONFile(items=subgenres).model_dump(mode="json"), file, indent=4)
         print("Subgenres data saved to [data/subgenres.json] file")
 
     write_subgenres_in_db(subgenres)
@@ -139,9 +138,9 @@ def export_subgenres_from_json_file(max_subgenres_limit: int | None = None):
     """Fill subgenres with data from json file"""
 
     with open("data/subgenres.json", "r") as file:
-        file_data = s.SubgenresJSONFile.model_validate(json.load(file))
+        file_data = s.GenresJSONFile.model_validate(json.load(file))
 
-    subgenres = file_data.subgenres
+    subgenres = file_data.items
     if max_subgenres_limit:
         subgenres = subgenres[:max_subgenres_limit]
     write_subgenres_in_db(subgenres)

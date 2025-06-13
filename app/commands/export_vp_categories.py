@@ -27,7 +27,7 @@ LAST_SHEET_COLUMN = "H"
 TITLE_CATEGORIES_RANGE_NAME = f"Title Categories!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_title_categories_in_db(visual_profile_categories: list[s.VisualProfileExportCreate]):
+def write_vp_categories_in_db(visual_profile_categories: list[s.VisualProfileExportCreate]):
     with db.begin() as session:
         if not session.scalar(sa.select(m.VisualProfileCategoryCriterion)):
             log(log.ERROR, "Genre table is empty")
@@ -141,7 +141,7 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
         )
         print("Title categories data saved to [data/visual_profile_categories.json] file")
 
-    write_title_categories_in_db(visual_profile_categories)
+    write_vp_categories_in_db(visual_profile_categories)
 
 
 def export_title_categories_from_json_file(max_tc_limit: int | None = None):
@@ -153,4 +153,4 @@ def export_title_categories_from_json_file(max_tc_limit: int | None = None):
     visual_profile_categories = file_data.visual_profiles
     if max_tc_limit:
         visual_profile_categories = visual_profile_categories[:max_tc_limit]
-    write_title_categories_in_db(visual_profile_categories)
+    write_vp_categories_in_db(visual_profile_categories)

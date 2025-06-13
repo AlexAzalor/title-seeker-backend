@@ -67,9 +67,8 @@ def test_visual_profile_categories(client: TestClient, db: Session, auth_user_ow
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # Update the category
-    new_form_data = s.VisualProfileItemUpdateIn(
+    new_form_data = s.VisualProfileFieldWithUUID(
         uuid=new_category.uuid,
-        old_key=NEW_CATEGORY_KEY,
         key=NEW_CATEGORY_KEY + "2",
         name_uk="Тестовий категорія 2",
         name_en="Test category 2",

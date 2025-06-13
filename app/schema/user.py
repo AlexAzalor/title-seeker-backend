@@ -35,7 +35,6 @@ class UsersJSONFile(BaseModel):
     users: list[UserExportCreate]
 
 
-# TODO: Enum?
 class RatingCriteria(BaseModel):
     acting: float
     plot_storyline: float

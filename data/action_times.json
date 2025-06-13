@@ -1,7 +1,6 @@
 {
     "items": [
         {
-            "id": 1,
             "key": "prehistoric-times",
             "name_uk": "\u0414\u043e\u0456\u0441\u0442\u043e\u0440\u0438\u0447\u043d\u0456 \u0447\u0430\u0441\u0438",
             "name_en": "Prehistoric times",
@@ -9,7 +8,6 @@
             "description_en": "The prehistoric era refers to the vast period before written records, spanning millions of years. It includes the time of early humans, who lived as hunter-gatherers, relying on stone tools and fire for survival. This era also features the dominance of dinosaurs, the Ice Age, and the first human civilizations emerging toward the end. The environment is wild and untamed, with vast forests, open plains, and dangerous predators."
         },
         {
-            "id": 2,
             "key": "ancient -world",
             "name_uk": "\u0421\u0442\u0430\u0440\u043e\u0434\u0430\u0432\u043d\u0456\u0439 \u0441\u0432\u0456\u0442",
             "name_en": "Ancient world",
@@ -17,7 +15,6 @@
             "description_en": "The ancient world covers the rise and fall of early civilizations, such as Mesopotamia, Egypt, Greece, Rome, China, and India. This period (roughly 3000 BCE \u2013 500 CE) is defined by monumental architecture, mythology, great empires, and the birth of philosophy, democracy, and organized warfare. Gladiators, pyramids, gods and goddesses, and legendary warriors characterize this time."
         },
         {
-            "id": 3,
             "key": "middle-ages",
             "name_uk": "\u0421\u0435\u0440\u0435\u0434\u043d\u044c\u043e\u0432\u0456\u0447\u0447\u044f",
             "name_en": "Middle Ages",
@@ -25,7 +22,6 @@
             "description_en": "The Middle Ages (roughly 500\u20131500 CE) were a time of knights, castles, feudal kingdoms, and religious dominance. Europe saw the rise of monarchies, the spread of Christianity and Islam, the Crusades, and the Black Death. Science and art were largely influenced by religion, and the period is often romanticized with tales of chivalry, dragons, and epic battles."
         },
         {
-            "id": 4,
             "key": "early-modern-era",
             "name_uk": "\u0420\u0430\u043d\u043d\u0456\u0439 \u043d\u043e\u0432\u0438\u0439 \u0447\u0430\u0441",
             "name_en": "Early Modern Era",
@@ -33,7 +29,6 @@
             "description_en": "Spanning the 15th to 18th centuries, the Early Modern Era witnessed the Renaissance, the Age of Exploration, and the Enlightenment. It was a time of groundbreaking discoveries, artistic masterpieces, and the birth of modern science. Europe saw absolute monarchies, revolutions, and the expansion of colonial empires. Musketeers, pirates, and grand naval battles define this period."
         },
         {
-            "id": 5,
             "key": "20th-century",
             "name_uk": "20 \u0441\u0442\u043e\u043b\u0456\u0442\u0442\u044f",
             "name_en": "20th century",
@@ -41,7 +36,6 @@
             "description_en": "The 20th century was an era of rapid technological and social change. It saw two world wars, the Cold War, the space race, and the development of computers. Industrialization, jazz, television, and globalization shaped modern culture. This century brought both destruction and incredible progress, from the invention of nuclear energy to the creation of the Internet and mobile communications. Note: this is not about strict years and the official measure of the time period (1900-1999), but how this era is perceived in modern/present time. For example, the events of the film can be in 2005, which is generally no different from the conventional year 1998, so it can be considered the 20th century, and the revolution of smartphones and social networks will already be the 21st century. In other words, there are no strict frameworks, if you feel that this is the 20th century - then so be it. This is all about feature films, not about a reliable documentary/encyclopedia."
         },
         {
-            "id": 6,
             "key": "21st-century",
             "name_uk": "21 \u0441\u0442\u043e\u043b\u0456\u0442\u0442\u044f",
             "name_en": "21st century",
@@ -49,7 +43,6 @@
             "description_en": "The 21st century is characterized by digital technology, globalization, and environmental challenges. Smartphones, social media, artificial intelligence, and space exploration continue to redefine human life. It\u2019s an era of rapid innovation, shifting politics, and the blending of cultures, with humanity facing both existential threats and new opportunities for advancement."
         },
         {
-            "id": 7,
             "key": "near-future",
             "name_uk": "\u0411\u043b\u0438\u0437\u044c\u043a\u0435 \u043c\u0430\u0439\u0431\u0443\u0442\u043d\u0454",
             "name_en": "Near future",
@@ -57,7 +50,6 @@
             "description_en": "The near future refers to a time just ahead\u2014perhaps a few years or decades from now. It often involves advanced but recognizable technology, such as improved AI, space travel, cybernetics, or climate adaptation. Science fiction set in this era often explores themes of corporate control, cyberpunk cities, or emerging threats like AI sentience and biotechnology."
         },
         {
-            "id": 8,
             "key": "far-future",
             "name_uk": "\u0414\u0430\u043b\u0435\u043a\u0435 \u043c\u0430\u0439\u0431\u0443\u0442\u043d\u0454",
             "name_en": "Far future",
@@ -65,7 +57,6 @@
             "description_en": "The far future is a time centuries, millennia, or even millions of years ahead. It\u2019s often depicted as a world of deep-space exploration, intergalactic civilizations, or extreme post-human evolution. In fiction, this period can feature advanced artificial life, time travel, or a completely transformed Earth. The limits of science and imagination are pushed in this setting."
         },
         {
-            "id": 9,
             "key": "indefinite-time",
             "name_uk": "\u041d\u0435\u0432\u0438\u0437\u043d\u0430\u0447\u0435\u043d\u0438\u0439 \u0447\u0430\u0441",
             "name_en": "Indefinite time",
@@ -73,7 +64,6 @@
             "description_en": "An indefinite time setting is ambiguous, with no clear historical reference. It could be a timeless, dreamlike world or a surreal mix of past, present, and future elements. This setting is often used in fantasy, dystopian stories, or mythological tales where time is fluid or irrelevant."
         },
         {
-            "id": 10,
             "key": "world-war-one",
             "name_uk": "\u041f\u0435\u0440\u0448\u0430 \u0441\u0432\u0456\u0442\u043e\u0432\u0430 \u0432\u0456\u0439\u043d\u0430",
             "name_en": "World War I",
@@ -81,7 +71,6 @@
             "description_en": "1914\u20131918, featuring trench warfare, espionage, and the impact of the first global war."
         },
         {
-            "id": 11,
             "key": "world-war-two",
             "name_uk": "\u0414\u0440\u0443\u0433\u0430 \u0441\u0432\u0456\u0442\u043e\u0432\u0430 \u0432\u0456\u0439\u043d\u0430",
             "name_en": "World War II",
@@ -89,7 +78,6 @@
             "description_en": "Films about the events of World War II, covering battles, espionage operations or the fate of people. Example: \"Saving Private Ryan\" (1998), \"The Pianist\" (2002).\r\nThe percentage of coincidence is as follows:\r\n>50% - more historical, more real cruelty, more about strategy and tactics and important activity of the high command.\r\n<50% - less battles, more local skirmishes, less historical (i.e. invented or invented things), more entertaining/comedic."
         },
         {
-            "id": 12,
             "key": "fantasy-middle-ages",
             "name_uk": "\u0424\u0435\u043d\u0442\u0435\u0437\u0456 \u0421\u0435\u0440\u0435\u0434\u043d\u044c\u043e\u0432\u0456\u0447\u0447\u044f",
             "name_en": "Fantasy Middle Ages",
@@ -97,7 +85,6 @@
             "description_en": "A setting inspired by medieval times, featuring knights, castles, feudal societies, and pre-industrial technology, but with magical elements, mythical creatures, or alternate history. (Examples: The Lord of the Rings, Game of Thrones, The Witcher.)"
         },
         {
-            "id": 13,
             "key": "mythic-past",
             "name_uk": "\u041c\u0456\u0444\u0456\u0447\u043d\u0435 \u043c\u0438\u043d\u0443\u043b\u0435",
             "name_en": "Mythic Past",
@@ -105,7 +92,6 @@
             "description_en": "A time period that is not necessarily historical but rooted in legends, folklore, or mythologies, often featuring gods, supernatural beings, and heroic quests. (Examples: Troy (2004), Clash of the Titans, King Arthur legends.)"
         },
         {
-            "id": 14,
             "key": "roman-empire",
             "name_uk": "\u0420\u0438\u043c\u0441\u044c\u043a\u0430 \u0456\u043c\u043f\u0435\u0440\u0456\u044f",
             "name_en": "Roman Empire",

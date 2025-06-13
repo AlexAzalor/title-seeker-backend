@@ -6,12 +6,11 @@ CFG = config()
 
 
 class SharedUniverseExportCreate(BaseModel):
-    id: int
     key: str
     name_uk: str
     name_en: str
-    description_uk: str | None = None
-    description_en: str | None = None
+    description_uk: str
+    description_en: str
 
 
 class SharedUniversesJSONFile(BaseModel):

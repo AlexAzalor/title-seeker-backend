@@ -25,7 +25,7 @@ LAST_SHEET_COLUMN = "G"
 TITLE_CRITERIA_RANGE_NAME = f"Title Criteria!A1:{LAST_SHEET_COLUMN}"
 
 
-def write_title_criteria_in_db(vp_category_criteria: list[s.VisualProfileField]):
+def write_vp_category_criteria_in_db(vp_category_criteria: list[s.VisualProfileField]):
     with db.begin() as session:
         categories = session.scalars(sa.select(m.Movie)).all()
 
@@ -126,7 +126,7 @@ def export_title_criteria_from_google_spreadsheets(with_print: bool = True, in_j
         json.dump(s.VPCriterionJSONFile(criteria=vp_category_criteria).model_dump(mode="json"), file, indent=4)
         print("Title criteria data saved to [data/vp_category_criteria.json] file")
 
-    write_title_criteria_in_db(vp_category_criteria)
+    write_vp_category_criteria_in_db(vp_category_criteria)
 
 
 def export_title_criteria_from_json_file(max_limit: int | None = None):
@@ -138,4 +138,4 @@ def export_title_criteria_from_json_file(max_limit: int | None = None):
     vp_category_criteria = file_data.criteria
     if max_limit:
         vp_category_criteria = vp_category_criteria[:max_limit]
-    write_title_criteria_in_db(vp_category_criteria)
+    write_vp_category_criteria_in_db(vp_category_criteria)

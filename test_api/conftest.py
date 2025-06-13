@@ -50,10 +50,9 @@ def db() -> Generator[orm.Session, None, None]:
         from app.commands.export_movies import export_movies_from_json_file
         from app.commands.export_rating import export_ratings_from_json_file
         from app.commands.export_characters import export_characters_from_json_file
-        from app.commands.export_title_criterion import export_title_criteria_from_json_file
-        from app.commands.export_title_categories import export_title_categories_from_json_file
-        from app.commands.export_visual_profiles import export_title_vp_from_json_file
-        from app.commands.export_title_ratings import export_title_criterion_ratings_from_json_file
+        from app.commands.export_vp_category_criterion import export_title_criteria_from_json_file
+        from app.commands.export_vp_categories import export_title_categories_from_json_file
+        from app.commands.create_visual_profiles import create_visual_profiles
 
         export_users_from_json_file()
         export_actors_from_json_file()
@@ -69,8 +68,7 @@ def db() -> Generator[orm.Session, None, None]:
         export_characters_from_json_file()
         export_title_criteria_from_json_file()
         export_title_categories_from_json_file()
-        export_title_vp_from_json_file()
-        export_title_criterion_ratings_from_json_file()
+        create_visual_profiles()
 
         def override_get_db() -> Generator:
             yield session

@@ -16,9 +16,9 @@ def import_subgenres_to_google_spreadsheets():
     """Import subgenres to google spreadsheets"""
 
     with open("data/subgenres.json", "r") as file:
-        file_data = s.SubgenresJSONFile.model_validate(json.load(file))
+        file_data = s.GenresJSONFile.model_validate(json.load(file))
 
-    subgenres = file_data.subgenres
+    subgenres = file_data.items
     assert subgenres, "subgenres are empty!"
     print("Subgenres COUNT: ", len(subgenres))
 
@@ -27,14 +27,14 @@ def import_subgenres_to_google_spreadsheets():
 
     values = [
         [
-            subgenre.id,
+            1,
             subgenre.key,
             subgenre.name_uk,
             subgenre.name_en,
             subgenre.description_uk,
             subgenre.description_en,
             subgenre.parent_genre_id,
-            subgenre.id,
+            1,
         ]
     ]
 

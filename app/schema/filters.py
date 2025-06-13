@@ -70,3 +70,13 @@ class FilterItem(BaseModel):
 class MovieFilterItem(FilterItem):
     # Equivalent to TypeScript subgenre_parent_key?: string;
     subgenre_parent_key: str = ""
+
+
+class MovieFilterFormIn(BaseModel):
+    """Form for creating a new movie attribute for specification, keyword, action time"""
+
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str | None = None
+    description_en: str | None = None

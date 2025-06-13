@@ -110,7 +110,6 @@ def export_su_from_google_spreadsheets(with_print: bool = True, in_json: bool = 
 
         shared_universes.append(
             s.SharedUniverseExportCreate(
-                id=id,
                 key=key,
                 name_uk=name_uk,
                 name_en=name_en,

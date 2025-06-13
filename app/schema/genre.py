@@ -11,6 +11,7 @@ class GenreFormFields(BaseModel):
     name_en: str
     description_uk: str
     description_en: str
+    parent_genre_id: int | None = None
 
 
 class GenreFormFieldsWithUUID(GenreFormFields):
@@ -18,7 +19,7 @@ class GenreFormFieldsWithUUID(GenreFormFields):
 
 
 class GenresJSONFile(BaseModel):
-    genres: list[GenreFormFields]
+    items: list[GenreFormFields]
 
 
 class SubgenreOut(BaseModel):
@@ -68,3 +69,21 @@ class GenreItemFieldEditIn(BaseModel):
 class GenreItemFieldEditFormIn(BaseModel):
     genres: list[GenreItemFieldEditIn]
     subgenres: list[GenreItemFieldEditIn]
+
+
+class GenreFormIn(BaseModel):
+    """Form for creating a new genre and subgenre"""
+
+    key: str
+    name_uk: str
+    name_en: str
+    description_uk: str
+    description_en: str
+    parent_genre_key: str | None = None
+
+
+class GenreFormOut(BaseModel):
+    key: str
+    name: str
+    description: str
+    parent_genre_key: str | None = None

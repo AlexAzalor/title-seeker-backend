@@ -18,7 +18,7 @@ def import_genres_to_google_spreadsheets():
     with open("data/genres.json", "r") as file:
         file_data = s.GenresJSONFile.model_validate(json.load(file))
 
-    genres = file_data.genres
+    genres = file_data.items
     assert genres, "genres are empty!"
     print("Genres COUNT: ", len(genres))
 
