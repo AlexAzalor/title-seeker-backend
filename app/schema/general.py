@@ -40,3 +40,12 @@ class SearchResult(BaseModel):
 
 class SearchResults(BaseModel):
     results: list[SearchResult]
+
+
+class MainItemMenu(BaseModel):
+    """For ItemsSelector menu on the frontend"""
+
+    key: str
+    name: str
+    # To search for items regardless of the user's chosen language
+    another_lang_name: str

@@ -4,11 +4,11 @@ import json
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schema.characters import CharacterOut
 from app.schema.filters import FilterItemField, FilterItemOut, MovieFilterItem
+from app.schema.general import MainItemMenu
 from app.schema.genre import GenreOut, MovieGenre, SubgenreOut
 from app.schema.pagination import BasePagination
-from app.schema.people import MovieActorOut, MoviePersonOut, PersonBase, PersonWithAvatar
+from app.schema.people import MovieActorOut, MoviePersonOut, PersonWithAvatar
 from app.schema.rating import MovieRating, RatingCriterion, BaseRatingCriteria
 from app.schema.shared_universe import BaseSharedUniverse
 
@@ -175,7 +175,7 @@ class MovieOut(BaseMovie):
 
 
 class MoviePreviewOut(BaseMovie):
-    poster: str | None = None
+    poster: str
     release_date: datetime
     duration: str
     main_genre: str
@@ -200,8 +200,8 @@ class QuickMovieList(BaseModel):
 class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
     subgenres: list[SubgenreOut]
-    actors: list[PersonBase]
-    directors: list[PersonBase]
+    actors: list[MainItemMenu]
+    directors: list[MainItemMenu]
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
@@ -232,8 +232,8 @@ class QuickMovieJSON(BaseModel):
 
 class MoviePreCreateData(BaseModel):
     visual_profile_categories: list[VisualProfileData]
-    actors: list[PersonBase]
-    directors: list[PersonBase]
+    actors: list[MainItemMenu]
+    directors: list[MainItemMenu]
     genres: list[GenreOut]
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]
@@ -241,7 +241,7 @@ class MoviePreCreateData(BaseModel):
     quick_movie: QuickMovieFormData | None = None
     shared_universes: list[BaseSharedUniverse]
     base_movies: list[MovieMenuItem]
-    characters: list[CharacterOut]
+    characters: list[MainItemMenu]
 
 
 class MovieFormData(BaseMovieForm):

@@ -1051,10 +1051,12 @@ def get_pre_create_data(
         for universe in shared_universes
     ]
 
+    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
     characters_out = [
-        s.CharacterOut(
+        s.MainItemMenu(
             key=character.key,
             name=character.get_name(lang),
+            another_lang_name=character.get_name(another_lang),
         )
         for character in characters
     ]

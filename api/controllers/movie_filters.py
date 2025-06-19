@@ -70,18 +70,21 @@ def get_filters(db: Session, lang: s.Language):
         log(log.ERROR, "Action times [%s] not found")
         raise HTTPException(status_code=404, detail="Action times not found")
 
+    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
     actors_out = [
-        s.PersonBase(
+        s.MainItemMenu(
             key=actor.key,
             name=actor.full_name(lang),
+            another_lang_name=actor.full_name(another_lang),
         )
         for actor in actors
     ]
 
     directors_out = [
-        s.PersonBase(
+        s.MainItemMenu(
             key=director.key,
             name=director.full_name(lang),
+            another_lang_name=director.full_name(another_lang),
         )
         for director in directors
     ]

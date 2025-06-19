@@ -136,7 +136,7 @@ Export from Google sheets (Excel)
 
 ---
 
-free -h # Check RAM usage
+free -h # Check RAM usage (free -h --si)
 lscpu # Check CPU details
 df -h # Check disk space
 
