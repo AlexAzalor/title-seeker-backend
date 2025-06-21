@@ -200,11 +200,12 @@ class QuickMovieList(BaseModel):
 class MovieFiltersListOut(BaseModel):
     genres: list[GenreOut]
     subgenres: list[SubgenreOut]
-    actors: list[MainItemMenu]
-    directors: list[MainItemMenu]
     specifications: list[FilterItemOut]
     keywords: list[FilterItemOut]
     action_times: list[FilterItemOut]
+    actors: list[MainItemMenu]
+    directors: list[MainItemMenu]
+    characters: list[MainItemMenu]
     visual_profile_categories: list[VisualProfileCategoryOut]
     shared_universes: list[BaseSharedUniverse]
 

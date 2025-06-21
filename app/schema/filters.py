@@ -14,6 +14,7 @@ class FilterEnum(Enum):
     ACTION_TIME = "action_time"
     ACTOR = "actor"
     DIRECTOR = "director"
+    CHARACTER = "character"
     VISUAL_PROFILE = "visual_profile"
     SHARED_UNIVERSE = "shared_universe"
 

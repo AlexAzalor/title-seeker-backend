@@ -133,6 +133,7 @@ def test_get_movie_filters(client: TestClient, db: Session):
     assert data.action_times
     assert data.actors
     assert data.directors
+    assert data.characters
     assert data.shared_universes
     assert data.visual_profile_categories
 

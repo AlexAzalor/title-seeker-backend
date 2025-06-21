@@ -511,27 +511,6 @@ def super_search_movies(
 ):
     """Get movies by query params"""
 
-    def get_main_genre(movie: m.Movie) -> str:
-        biggest_genre = db.scalar(
-            sa.select(m.Genre)
-            .join(m.movie_genres)
-            .where(m.movie_genres.c.movie_id == movie.id)
-            .order_by(m.movie_genres.c.percentage_match.desc())
-            .limit(1)
-        )
-
-        if biggest_genre:
-            genre_name = biggest_genre.get_name(lang)
-            percentage_match = next(
-                (
-                    mg.percentage_match
-                    for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
-                ),
-                0.0,
-            )
-            return f"{genre_name} ({percentage_match}%)"
-        return "No main genre"
-
     def movie_to_custom_schema(movies: Sequence[m.Movie]) -> Sequence[s.MoviePreviewOut]:
         return [
             s.MoviePreviewOut(
@@ -541,7 +520,7 @@ def super_search_movies(
                 # TODO: fix none release date
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
-                main_genre=get_main_genre(movie),
+                main_genre="",
                 rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0)
                 if current_user
                 else 0.0,
@@ -606,157 +585,177 @@ def super_search_movies(
             raise HTTPException(status_code=404, detail="Shared Universe(s) not found")
 
     # What Happens to the Query at Each Filter Step?
-    # It is augmented, not replaced.
-    # Each call to query.where() appends additional conditions, effectively adding AND logic to the query.
-    # Both genre and subgenre conditions are combined, meaning that the final query will only return movies that satisfy both filters (if both are provided).
 
     logical_op = sa.and_ if exact_match else sa.or_
 
-    # Try printing generated SQL with print(str(query.compile(compile_kwargs={"literal_binds": True})))
+    # Generated SQL with print(str(query.compile(compile_kwargs={"literal_binds": True})))
 
-    if genres_keys:
-        query = query.where(logical_op(*[m.Movie.genres.any(m.Genre.key == genre_key) for genre_key in genres_keys]))
+    # Build conditions for each filter type
+    filter_conditions = []
 
-        if genres_values:
-            conditions = [
-                m.Movie.genres.any(
-                    sa.and_(
-                        m.Genre.key == genre_key,
-                        m.movie_genres.c.percentage_match >= value_range[0],
-                        m.movie_genres.c.percentage_match <= value_range[1],
+    # GENRES
+    if genres_keys and genres_values:
+        genre_conditions = []
+        for genre_key, value_range in zip(genres_keys, genres_values):
+            if value_range:
+                genre_conditions.append(
+                    m.Movie.genres.any(
+                        sa.and_(
+                            m.Genre.key == genre_key,
+                            m.movie_genres.c.percentage_match >= value_range[0],
+                            m.movie_genres.c.percentage_match <= value_range[1],
+                        )
                     )
                 )
-                for genre_key, value_range in zip(genres_keys, genres_values)
-                if value_range
-            ]
+        if genre_conditions:
+            # At least one genre must match (OR within genre), but this whole group is ANDed with other filter types
+            filter_conditions.append(sa.or_(*genre_conditions))
 
-            query = query.where(logical_op(*conditions))
-
-    # Filter only by subgenre
-    if subgenres_keys:
-        query = query.where(
-            logical_op(*[m.Movie.subgenres.any(m.Subgenre.key == subgenre_key) for subgenre_key in subgenres_keys])
-        )
-
-        if subgenres_values:
-            conditions = [
-                m.Movie.subgenres.any(
-                    sa.and_(
-                        m.Subgenre.key == subgenre_key,
-                        m.movie_subgenres.c.percentage_match >= value_range[0],
-                        m.movie_subgenres.c.percentage_match <= value_range[1],
+    # SUBGENRES
+    if subgenres_keys and subgenres_values:
+        subgenre_conditions = []
+        for subgenre_key, value_range in zip(subgenres_keys, subgenres_values):
+            if value_range:
+                subgenre_conditions.append(
+                    m.Movie.subgenres.any(
+                        sa.and_(
+                            m.Subgenre.key == subgenre_key,
+                            m.movie_subgenres.c.percentage_match >= value_range[0],
+                            m.movie_subgenres.c.percentage_match <= value_range[1],
+                        )
                     )
                 )
-                for subgenre_key, value_range in zip(subgenres_keys, subgenres_values)
-                if value_range
-            ]
+        if subgenre_conditions:
+            filter_conditions.append(sa.or_(*subgenre_conditions))
 
-            query = query.where(logical_op(*conditions))
-
-    if specifications_keys:
-        query = query.where(
-            logical_op(
-                *[
-                    m.Movie.specifications.any(m.Specification.key == specification_key)
-                    for specification_key in specifications_keys
-                ]
-            )
-        )
-
-        if specifications_values:
-            conditions = [
-                m.Movie.specifications.any(
-                    sa.and_(
-                        m.Specification.key == specification_key,
-                        m.movie_specifications.c.percentage_match >= value_range[0],
-                        m.movie_specifications.c.percentage_match <= value_range[1],
+    # SPECIFICATIONS
+    if specifications_keys and specifications_values:
+        spec_conditions = []
+        for specification_key, value_range in zip(specifications_keys, specifications_values):
+            if value_range:
+                spec_conditions.append(
+                    m.Movie.specifications.any(
+                        sa.and_(
+                            m.Specification.key == specification_key,
+                            m.movie_specifications.c.percentage_match >= value_range[0],
+                            m.movie_specifications.c.percentage_match <= value_range[1],
+                        )
                     )
                 )
-                for specification_key, value_range in zip(specifications_keys, specifications_values)
-                if value_range
-            ]
+        if spec_conditions:
+            filter_conditions.append(sa.or_(*spec_conditions))
 
-            query = query.where(logical_op(*conditions))
-
-    if keywords_keys:
-        query = query.where(
-            logical_op(*[m.Movie.keywords.any(m.Keyword.key == keyword_key) for keyword_key in keywords_keys])
-        )
-
-        if keywords_values:
-            conditions = [
-                m.Movie.keywords.any(
-                    sa.and_(
-                        m.Keyword.key == keyword_key,
-                        m.movie_keywords.c.percentage_match >= value_range[0],
-                        m.movie_keywords.c.percentage_match <= value_range[1],
+    # KEYWORDS
+    if keywords_keys and keywords_values:
+        keyword_conditions = []
+        for keyword_key, value_range in zip(keywords_keys, keywords_values):
+            if value_range:
+                keyword_conditions.append(
+                    m.Movie.keywords.any(
+                        sa.and_(
+                            m.Keyword.key == keyword_key,
+                            m.movie_keywords.c.percentage_match >= value_range[0],
+                            m.movie_keywords.c.percentage_match <= value_range[1],
+                        )
                     )
                 )
-                for keyword_key, value_range in zip(keywords_keys, keywords_values)
-                if value_range
-            ]
+        if keyword_conditions:
+            filter_conditions.append(sa.or_(*keyword_conditions))
 
-            query = query.where(logical_op(*conditions))
-
-    if action_times_keys:
-        query = query.where(
-            logical_op(
-                *[
-                    m.Movie.action_times.any(m.ActionTime.key == action_time_key)
-                    for action_time_key in action_times_keys
-                ]
-            )
-        )
-
-        if action_times_values:
-            conditions = [
-                m.Movie.action_times.any(
-                    sa.and_(
-                        m.ActionTime.key == action_time_key,
-                        m.movie_action_times.c.percentage_match >= value_range[0],
-                        m.movie_action_times.c.percentage_match <= value_range[1],
+    # ACTION TIMES
+    if action_times_keys and action_times_values:
+        at_conditions = []
+        for at_key, value_range in zip(action_times_keys, action_times_values):
+            if value_range:
+                at_conditions.append(
+                    m.Movie.action_times.any(
+                        sa.and_(
+                            m.ActionTime.key == at_key,
+                            m.movie_action_times.c.percentage_match >= value_range[0],
+                            m.movie_action_times.c.percentage_match <= value_range[1],
+                        )
                     )
                 )
-                for action_time_key, value_range in zip(action_times_keys, action_times_values)
-                if value_range
-            ]
+        if at_conditions:
+            filter_conditions.append(sa.or_(*at_conditions))
 
-            query = query.where(logical_op(*conditions))
-
+    # ACTORS
     if actor:
-        query = query.where(logical_op(*[m.Movie.actors.any(m.Actor.key == actor_key) for actor_key in actor]))
-
-    if director:
-        query = query.where(
-            logical_op(*[m.Movie.directors.any(m.Director.key == director_key) for director_key in director])
-        )
-
-    if character:
-        query = query.where(
-            logical_op(
-                *[
-                    m.Movie.characters.any(m.MovieActorCharacter.character.has(m.Character.key == character_key))
-                    for character_key in character
-                ]
+        actor_conditions = []
+        for actor_key in actor:
+            actor_conditions.append(
+                m.Movie.actors.any(
+                    sa.and_(
+                        m.Actor.key == actor_key,
+                    )
+                )
             )
-        )
+        if actor_conditions:
+            filter_conditions.append(sa.or_(*actor_conditions))
 
+    # DIRECTORS
+    if director:
+        director_conditions = []
+        for director_key in director:
+            director_conditions.append(
+                m.Movie.directors.any(
+                    sa.and_(
+                        m.Director.key == director_key,
+                    )
+                )
+            )
+        if director_conditions:
+            filter_conditions.append(sa.or_(*director_conditions))
+
+    # CHARACTERS
+    if character:
+        char_conditions = []
+        for char_key in character:
+            char_conditions.append(
+                m.Movie.characters.any(
+                    sa.and_(
+                        m.MovieActorCharacter.character.has(m.Character.key == char_key),
+                    )
+                )
+            )
+        if char_conditions:
+            filter_conditions.append(sa.or_(*char_conditions))
+
+    # SHARED UNIVERSE
     if shared_universe:
-        query = query.where(
-            logical_op(*[m.Movie.shared_universe.has(m.SharedUniverse.key == su_key) for su_key in shared_universe])
-        )
+        su_conditions = []
+        for su_key in shared_universe:
+            su_conditions.append(
+                m.Movie.shared_universe.has(
+                    sa.and_(
+                        m.SharedUniverse.key == su_key,
+                    )
+                )
+            )
+        if su_conditions:
+            filter_conditions.append(sa.or_(*su_conditions))
 
+    # VISUAL PROFILE
     if visual_profile:
         vp_ids = db.scalars(
             sa.select(m.VisualProfileCategory.id).where(m.VisualProfileCategory.key.in_(visual_profile))
         ).all()
 
-        owner_id = 1
+        vp_conditions = []
+        for vp_id in vp_ids:
+            vp_conditions.append(
+                m.Movie.visual_profiles.any(
+                    sa.and_(
+                        m.Movie.visual_profiles.any(m.VisualProfile.category_id == vp_id),
+                    )
+                )
+            )
+        if vp_conditions:
+            filter_conditions.append(sa.or_(*vp_conditions))
 
-        query = query.where(
-            m.Movie.visual_profiles.any(m.VisualProfile.user_id == owner_id),
-            logical_op(*[m.Movie.visual_profiles.any(m.VisualProfile.category_id == vp_id) for vp_id in vp_ids]),
-        )
+    # Combine conditions
+    if filter_conditions:
+        query = query.where(logical_op(*filter_conditions))
 
     is_reverse = sort_order == s.SortOrder.DESC
     if sort_by == s.SortBy.RELEASE_DATE:
@@ -895,6 +894,16 @@ def get_movie_filters(
         log(log.ERROR, "Visual profile categories [%s] not found")
         raise HTTPException(status_code=404, detail="Visual profile categories not found")
 
+    characters = db.scalars(
+        sa.select(m.Character)
+        .join(m.Character.translations)
+        .where(m.CharacterTranslation.language == lang.value)
+        .order_by(m.CharacterTranslation.name)
+    ).all()
+    if not characters:
+        log(log.ERROR, "Characters [%s] not found")
+        raise HTTPException(status_code=404, detail="Characters not found")
+
     subgenres_out = [
         s.SubgenreOut(
             key=subgenre.key,
@@ -923,14 +932,25 @@ def get_movie_filters(
         for category in visual_profile_categories
     ]
 
+    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
+    characters_out = [
+        s.MainItemMenu(
+            key=character.key,
+            name=character.get_name(lang),
+            another_lang_name=character.get_name(another_lang),
+        )
+        for character in characters
+    ]
+
     return s.MovieFiltersListOut(
         genres=genres_out,
         subgenres=subgenres_out,
-        actors=actors_out,
-        directors=directors_out,
         specifications=specifications_out,
         keywords=keywords_out,
         action_times=action_times_out,
+        actors=actors_out,
+        directors=directors_out,
+        characters=characters_out,
         visual_profile_categories=vp_categories_out,
         shared_universes=su_out,
     )
