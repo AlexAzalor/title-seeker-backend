@@ -40,7 +40,7 @@ services:
       - 127.0.0.1:${LOCAL_API_PORT:-8002}:8000
 
   # backup:
-  #   image: simple2b/pg-backup:1.0
+  #   image:
   #   restart: always
   #   volumes:
   #     - ./backup:/backup

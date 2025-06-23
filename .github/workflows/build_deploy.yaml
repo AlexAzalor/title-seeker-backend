@@ -120,7 +120,7 @@ jobs:
   #         key: ${{ env.DEPLOY_SSH_KEY }}
   #         port: ${{ env.DEPLOY_SSH_PORT }}
   #         source: docker-compose.staging.yaml
-  #         target: ~/kraftjar
+  #         target: ~/...
   #     - name: deploy
   #       uses: appleboy/ssh-action@v0.1.10
   #       with:
@@ -131,7 +131,7 @@ jobs:
   #         envs: GOOGLE_CLIENT_ID
   #         script: |
   #           export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
-  #           cd ~/kraftjar
+  #           cd ~/...
   #           echo ${{env.FCM_ADMIN_KEY_BASE64}} | base64 --decode > admin_key.json
   #           mv docker-compose.staging.yaml docker-compose.yaml
   #           docker login -u ${{ env.DOCKER_LOGIN }} -p ${{ env.DOCKER_ACCESS_TOKEN }} &&

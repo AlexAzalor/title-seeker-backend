@@ -13,7 +13,6 @@ services:
       PGUSER: ${POSTGRES_USER:-postgres}
 
   app:
-    # image: simple2b/kraftjar:0.1
     restart: always
     command: sh ./start_web.sh
     environment:
@@ -26,14 +25,8 @@ services:
       - ./admin_key.json:/home/app/admin_key.json
     depends_on:
       - db
-    # labels:
-    #   - 'traefik.enable=true'
-    #   - 'traefik.http.routers.kraftjar_portal.rule=Host(`admin.kraftjar.net`)'
-    #   - 'traefik.http.routers.kraftjar_portal.tls=true'
-    #   - 'traefik.http.routers.kraftjar_portal.tls.certresolver=myresolver'
 
   api:
-    # image: simple2b/kraftjar:0.1
     restart: always
     command: sh ./start_api.sh
     environment:
@@ -48,14 +41,8 @@ services:
     volumes:
       - ./credentials.json:/home/app/credentials.json
       - ./admin_key.json:/home/app/admin_key.json
-    # labels:
-    #   - 'traefik.enable=true'
-    #   - 'traefik.http.routers.kraftjar_api.rule=Host(`api.kraftjar.net`)'
-    #   - 'traefik.http.routers.kraftjar_api.tls=true'
-    #   - 'traefik.http.routers.kraftjar_api.tls.certresolver=myresolver'
 
   backup:
-    # image: simple2b/pg-backup:1.0
     restart: always
     volumes:
       - ./backup:/backup

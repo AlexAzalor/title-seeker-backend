@@ -18,7 +18,7 @@ class BaseConfig(BaseSettings):
     IS_API: bool = False
 
     ENV: str = "base"
-    APP_NAME: str = "Title Hunt"
+    APP_NAME: str = "Title Seeker"
     SECRET_KEY: str
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
     WTF_CSRF_ENABLED: bool = False

@@ -1,7 +1,7 @@
 {
   "name": "title-hunt",
-  "version": "2.0.4",
-  "description": "Title Hunt - searching for titles using a special algorithm.",
+  "version": "1.0.0",
+  "description": "Title Seeker - searching for titles using a special algorithm.",
   "main": "index.js",
   "scripts": {
     "js-watch": "webpack --config webpack.dev.js --watch",

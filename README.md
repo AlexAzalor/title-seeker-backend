@@ -1,6 +1,6 @@
-# Title Hunt
+# Title Seeker
 
-Flask Portal, Fast API backend, DB for Title Hunt
+Flask Portal, Fast API backend, DB for Title Seeker
 
 1. Run
 

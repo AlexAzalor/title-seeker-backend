@@ -8,7 +8,7 @@ def test_policy(populate: FlaskClient):
     assert response.status_code == 200
     html = response.data.decode()
     assert "Privacy Policy" in html
-    assert "TitleHunt" in html
+    assert "TitleSeeker" in html
 
 
 # def test_create_new_user(populate: FlaskClient):

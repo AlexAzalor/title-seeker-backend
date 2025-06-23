@@ -13,7 +13,7 @@ PAGE_SIZE = 30
 PAGE = 1
 
 
-def test_get_movies(client: TestClient, db: Session):
+def test_get_movies(client: TestClient, db: Session, auth_user_owner: m.User):
     movies = db.scalars(sa.select(m.Movie)).all()
     assert movies
 
@@ -27,6 +27,13 @@ def test_get_movies(client: TestClient, db: Session):
     assert data.page == PAGE
     assert data.size == PAGE_SIZE
     assert data.pages
+
+    # Test with auth user
+    response = client.get("/api/movies", params={"page": PAGE, "size": PAGE_SIZE, "user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert data.items
 
 
 def test_get_movie(client: TestClient, db: Session, auth_simple_user: m.User, auth_user_owner: m.User):
@@ -352,7 +359,7 @@ def test_quick_movies(client: TestClient, auth_user_owner: m.User, auth_simple_u
 def test_get_random_movies(client: TestClient):
     """Test 10 random movies"""
     response = client.get("/api/movies/random/")
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     data = s.MovieCarouselList.model_validate(response.json())
     assert data
     assert len(data.movies) == 10
