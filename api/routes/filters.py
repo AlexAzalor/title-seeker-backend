@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 
 filter_router = APIRouter(
@@ -33,6 +33,7 @@ def get_specifications(
 
     specification_select = (
         sa.select(m.Specification)
+        .options(selectinload(m.Specification.translations))
         .join(m.Specification.translations)
         .where(m.SpecificationTranslation.language == lang.value)
         .order_by(m.SpecificationTranslation.name)
@@ -59,6 +60,7 @@ def get_keywords(
 
     keyword_select = (
         sa.select(m.Keyword)
+        .options(selectinload(m.Keyword.translations))
         .join(m.Keyword.translations)
         .where(m.KeywordTranslation.language == lang.value)
         .order_by(m.KeywordTranslation.name)
@@ -85,6 +87,7 @@ def get_action_times(
 
     action_time_select = (
         sa.select(m.ActionTime)
+        .options(selectinload(m.ActionTime.translations))
         .join(m.ActionTime.translations)
         .where(m.ActionTimeTranslation.language == lang.value)
         .order_by(m.ActionTimeTranslation.name)
@@ -345,11 +348,19 @@ def get_filter_form_fields(
     item = None
 
     if type == s.FilterEnum.SPECIFICATION:
-        item = db.scalar(sa.select(m.Specification).where(m.Specification.key == item_key))
+        item = db.scalar(
+            sa.select(m.Specification)
+            .options(selectinload(m.Specification.translations))
+            .where(m.Specification.key == item_key)
+        )
     if type == s.FilterEnum.KEYWORD:
-        item = db.scalar(sa.select(m.Keyword).where(m.Keyword.key == item_key))
+        item = db.scalar(
+            sa.select(m.Keyword).options(selectinload(m.Keyword.translations)).where(m.Keyword.key == item_key)
+        )
     if type == s.FilterEnum.ACTION_TIME:
-        item = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.key == item_key))
+        item = db.scalar(
+            sa.select(m.ActionTime).options(selectinload(m.ActionTime.translations)).where(m.ActionTime.key == item_key)
+        )
 
     if not item:
         log(log.WARNING, "No item found")

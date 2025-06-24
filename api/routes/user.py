@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 from config import config
 
@@ -124,17 +124,12 @@ def update_rate_movie(
     response_model=s.MovieChartData,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
 )
-def time_rate_movie(
+def get_time_rate_movie(
     current_user: m.User = Depends(get_current_user),
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
     """Get data for time rate movies chart"""
-
-    movies = db.scalars(sa.select(m.Movie)).all()
-    if not movies:
-        log(log.ERROR, "Movies not found")
-        raise HTTPException(status_code=404, detail="Movies not found")
 
     data = []
 
@@ -174,11 +169,14 @@ def get_info_report(
         for rating in ratings
     ]
 
+    # Most popular genres
+    # TODO: hardcode genres keys, or get them from somewhere
     genres_keys = ["action", "adventure", "comedy", "drama", "fantasy", "sci-fi", "horror", "romance"]
 
     # separate route?
     stmt = (
         sa.select(m.Genre)
+        .options(selectinload(m.Genre.translations), selectinload(m.Genre.movies))
         .join(m.Genre.movies)
         .join(m.Movie.ratings)
         .where(m.Rating.user_id == current_user.id)
@@ -188,11 +186,11 @@ def get_info_report(
 
     result = db.scalars(stmt).all()
 
-    genre_counts = []
+    genre_movie_counts = []
 
     for genre in result:
         count = sum(1 for movie in genre.movies if any(r.user_id == current_user.id for r in movie.ratings))
-        genre_counts.append(
+        genre_movie_counts.append(
             s.GenreChartDataOut(
                 name=genre.get_name(lang),
                 count=count,
@@ -213,7 +211,7 @@ def get_info_report(
         actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
 
     return s.UserInfoReport(
-        genre_data=genre_counts,
+        genre_data=genre_movie_counts,
         top_rated_movies=top_rated_movies,
         joined_date=current_user.created_at,
         movies_rated=len(current_user.ratings),
@@ -235,7 +233,9 @@ def get_all_users(
 ):
     """Get all users"""
 
-    users = db.scalars(sa.select(m.User).where(m.User.is_deleted.is_(False))).all()
+    users = db.scalars(
+        sa.select(m.User).options(selectinload(m.User.ratings)).where(m.User.is_deleted.is_(False))
+    ).all()
 
     if not users:
         log(log.ERROR, "Users not found")

@@ -6,7 +6,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 from config import config
 
@@ -34,7 +34,12 @@ def get_visual_profiles(
 ):
     """Get visual profile list"""
 
-    visual_profiles = db.scalars(sa.select(m.VisualProfileCategory)).all()
+    visual_profiles = db.scalars(
+        sa.select(m.VisualProfileCategory).options(
+            selectinload(m.VisualProfileCategory.translations),
+            selectinload(m.VisualProfileCategory.criteria).selectinload(m.VisualProfileCategoryCriterion.translations),
+        )
+    ).all()
     if not visual_profiles:
         log(log.WARNING, "No visual profiles found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No visual profiles found")
@@ -56,6 +61,7 @@ def get_visual_profiles(
         )
         for vp_category in sorted(visual_profiles, key=lambda x: x.id)
     ]
+
     return s.VisualProfileListOut(items=categories_out)
 
 
@@ -238,15 +244,22 @@ def get_visual_profile_forms(
 ):
     """Get all categories with criteria for admin page (with all fields)"""
 
-    categories = db.scalars(sa.select(m.VisualProfileCategory)).all()
+    categories = db.scalars(
+        sa.select(m.VisualProfileCategory).options(
+            selectinload(m.VisualProfileCategory.translations),
+            selectinload(m.VisualProfileCategory.criteria).selectinload(m.VisualProfileCategoryCriterion.translations),
+        )
+    ).all()
     if not categories:
         log(log.WARNING, "No categories found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No categories found")
 
+    # Universal criterion for all categories
+    # TODO: centralize somewhere?
     impact = db.scalar(
-        sa.select(m.VisualProfileCategoryCriterion).where(
-            m.VisualProfileCategoryCriterion.key == CFG.UNIQUE_CRITERION_KEY
-        )
+        sa.select(m.VisualProfileCategoryCriterion)
+        .options(selectinload(m.VisualProfileCategoryCriterion.translations))
+        .where(m.VisualProfileCategoryCriterion.key == CFG.UNIQUE_CRITERION_KEY)
     )
     if not impact:
         log(log.ERROR, "Impact criterion not found")
@@ -275,7 +288,8 @@ def get_visual_profile_forms(
         )
         for category in sorted(categories, key=lambda x: x.id)
     ]
-    return s.VisualProfileFormOut(
+
+    items = s.VisualProfileFormOut(
         impact=s.VisualProfileFieldWithUUID(
             uuid=impact.uuid,
             key=impact.key,
@@ -286,3 +300,5 @@ def get_visual_profile_forms(
         ),
         categories=categories_out,
     )
+
+    return items

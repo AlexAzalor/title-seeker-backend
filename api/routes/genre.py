@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 
 genre_router = APIRouter(prefix="/genres", tags=["Genres"])
@@ -30,6 +30,7 @@ def get_genres(
 
     genre_selection_query = (
         sa.select(m.Genre)
+        .options(selectinload(m.Genre.translations))
         .join(m.Genre.translations)
         .where(m.GenreTranslation.language == lang.value)
         .order_by(m.GenreTranslation.name)
@@ -56,6 +57,7 @@ def get_subgenres(
 
     subgenre_selection_query = (
         sa.select(m.Subgenre)
+        .options(selectinload(m.Subgenre.translations))
         .join(m.Subgenre.translations)
         .where(m.SubgenreTranslation.language == lang.value)
         .order_by(m.SubgenreTranslation.name)
@@ -258,9 +260,11 @@ def get_genre_form_fields(
     item = None
 
     if type == s.FilterEnum.GENRE:
-        item = db.scalar(sa.select(m.Genre).where(m.Genre.key == item_key))
+        item = db.scalar(sa.select(m.Genre).options(selectinload(m.Genre.translations)).where(m.Genre.key == item_key))
     if type == s.FilterEnum.SUBGENRE:
-        item = db.scalar(sa.select(m.Subgenre).where(m.Subgenre.key == item_key))
+        item = db.scalar(
+            sa.select(m.Subgenre).options(selectinload(m.Subgenre.translations)).where(m.Subgenre.key == item_key)
+        )
 
     if not item:
         log(log.WARNING, "No item found")

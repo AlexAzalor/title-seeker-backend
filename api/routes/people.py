@@ -65,10 +65,10 @@ def create_actor(
         )
 
         db.add(new_actor)
-        # TODO: need rolback if error
         db.commit()
         log(log.INFO, "Actor [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
+        db.rollback()
         log(log.ERROR, "Error creating actor [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating actor")
 
@@ -165,6 +165,7 @@ def create_character(
         db.commit()
         log(log.INFO, "Character [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
+        db.rollback()
         log(log.ERROR, "Error creating Character [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating character")
 
@@ -225,6 +226,7 @@ def create_director(
         db.commit()
         log(log.INFO, "Director [%s] successfully created by user [%s]", form_data.key, current_user.email)
     except Exception as e:
+        db.rollback()
         log(log.ERROR, "Error creating director [%s]: %s", form_data.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating director")
 
@@ -247,7 +249,7 @@ def create_director(
     "/search-actors/",
     status_code=status.HTTP_200_OK,
     response_model=s.SearchResults,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Actors not found"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Query is empty"}},
 )
 def search_actors(
     query: str = Query(default="", max_length=128),
@@ -260,7 +262,6 @@ def search_actors(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query is empty")
 
     normalized_query = normalize_query(query)
-    print(1)
 
     name_search_pattern = (
         sa.func.lower(m.ActorTranslation.first_name) + " " + sa.func.lower(m.ActorTranslation.last_name)
@@ -300,7 +301,7 @@ def search_actors(
     "/search-directors/",
     status_code=status.HTTP_200_OK,
     response_model=s.SearchResults,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Directors not found"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Query is empty"}},
 )
 def search_directors(
     query: str = Query(default="", max_length=128),
@@ -352,7 +353,7 @@ def search_directors(
     "/search-characters/",
     status_code=status.HTTP_200_OK,
     response_model=s.SearchResults,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Characters not found"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Query is empty"}},
 )
 def search_characters(
     query: str = Query(default="", max_length=128),
