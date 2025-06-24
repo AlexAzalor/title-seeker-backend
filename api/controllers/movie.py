@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.orm import Session
 import app.models as m
 import app.schema as s
 import sqlalchemy as sa
@@ -306,11 +306,7 @@ def build_movie_query(sort_by: s.SortBy, is_reverse: bool, current_user: m.User 
             .where(m.Rating.user_id == current_user.id)
             .order_by(user_order)
         )
+    # fdfd
     else:
         order = get_order(sort_by, is_reverse)
-        return (
-            sa.select(m.Movie)
-            .where(m.Movie.is_deleted.is_(False))
-            .order_by(order)
-            .options(joinedload(m.Movie.translations))
-        )
+        return sa.select(m.Movie).where(m.Movie.is_deleted.is_(False)).order_by(order)

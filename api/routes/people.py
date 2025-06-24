@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from app.database import get_db
 from config import config
 
@@ -275,7 +275,6 @@ def search_actors(
                 )
             )
             .limit(5)
-            .options(joinedload(m.Actor.translations))
         )
         .unique()
         .all()
@@ -328,7 +327,6 @@ def search_directors(
                 )
             )
             .limit(5)
-            .options(joinedload(m.Director.translations))
         )
         .unique()
         .all()
@@ -379,7 +377,6 @@ def search_characters(
                 )
             )
             .limit(5)
-            .options(joinedload(m.Character.translations))
         )
         .unique()
         .all()

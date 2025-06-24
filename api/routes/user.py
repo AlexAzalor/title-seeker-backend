@@ -7,7 +7,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 from app.database import get_db
 from config import config
 
@@ -179,7 +179,6 @@ def get_info_report(
     # separate route?
     stmt = (
         sa.select(m.Genre)
-        .options(selectinload(m.Genre.movies), selectinload(m.Genre.translations))
         .join(m.Genre.movies)
         .join(m.Movie.ratings)
         .where(m.Rating.user_id == current_user.id)

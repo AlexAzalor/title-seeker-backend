@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 # from fastapi.security import OAuth2PasswordBearer
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 import sqlalchemy as sa
 
 # from api.controllers.oauth2 import verify_access_token, INVALID_CREDENTIALS_EXCEPTION
@@ -24,12 +24,10 @@ def get_current_user(
         return None
 
     user = db.scalar(
-        sa.select(m.User)
-        .where(
+        sa.select(m.User).where(
             m.User.is_deleted.is_(False),
             m.User.uuid == user_uuid,
         )
-        .options(joinedload(m.User.ratings))
     )
 
     if not user:

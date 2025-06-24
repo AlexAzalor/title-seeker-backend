@@ -9,7 +9,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
 
-from sqlalchemy.orm import Session, aliased, joinedload
+from sqlalchemy.orm import Session, aliased
 
 from api.controllers.create_movie import (
     QUICK_MOVIES_FILE,
@@ -163,7 +163,7 @@ def super_search_movies(
 ):
     """Get movies by query params"""
 
-    query = sa.select(m.Movie).options(joinedload(m.Movie.translations))
+    query = sa.select(m.Movie)
 
     # condition = lambda x: x > 5
     # filtered = list(filter(condition, [1,2,3,4,5,6,7,8,9,10]))
@@ -289,7 +289,6 @@ def search(
                 )
             )
             .limit(5)
-            .options(joinedload(m.Movie.translations))
         )
         .unique()
         .all()
@@ -714,21 +713,7 @@ def get_random_list(
     random_offset = randint(0, max(0, total_movies - 10))
 
     # Select 10 random movies using the random offset
-    movies_db = (
-        db.scalars(
-            sa.select(m.Movie)
-            .offset(random_offset)
-            .limit(10)
-            .options(
-                joinedload(m.Movie.translations),
-                joinedload(m.Movie.genres),
-                joinedload(m.Movie.actors),
-                joinedload(m.Movie.directors),
-            )
-        )
-        .unique()
-        .all()
-    )
+    movies_db = db.scalars(sa.select(m.Movie).offset(random_offset).limit(10)).unique().all()
 
     movies_out = []
     for movie in movies_db:
@@ -796,15 +781,7 @@ def get_similar_movies(
 
     # TODO: Update and improve db query when adding more movies (100-200)
 
-    movie: m.Movie | None = db.scalar(
-        sa.select(m.Movie)
-        .where(m.Movie.key == movie_key)
-        .options(
-            joinedload(m.Movie.translations),
-            joinedload(m.Movie.genres),
-            joinedload(m.Movie.subgenres),
-        )
-    )
+    movie: m.Movie | None = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
 
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
