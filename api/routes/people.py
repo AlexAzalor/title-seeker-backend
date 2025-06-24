@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 import app.schema as s
 from app.logger import log
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 from config import config
 
@@ -104,6 +104,7 @@ def get_actors_with_most_movies(
     # Main query to select actors ordered by the movie count
     actors = db.execute(
         sa.select(m.Actor, subquery.c.movie_count)
+        .options(selectinload(m.Actor.translations))
         .join(subquery, m.Actor.id == subquery.c.id)
         .order_by(subquery.c.movie_count.desc())
         .limit(TOP_ACTORS_LIMIT)
@@ -118,6 +119,7 @@ def get_actors_with_most_movies(
         actors_out.append(
             s.Actor(key=actor.key, name=actor.full_name(lang), avatar_url=actor.avatar, movie_count=movie_count)
         )
+
     return s.ActorsList(actors=actors_out)
 
 

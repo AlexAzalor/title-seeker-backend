@@ -22,9 +22,12 @@ class GenresJSONFile(BaseModel):
     items: list[GenreFormFields]
 
 
-class GenreBase(BaseModel):
+class GenreShort(BaseModel):
     key: str
     name: str
+
+
+class GenreBase(GenreShort):
     description: str
 
 
@@ -40,9 +43,7 @@ class GenresSubgenresOut(BaseModel):
     genres: list[GenreOut]
 
 
-class GenreItemFieldEditIn(BaseModel):
-    key: str
-    name: str
+class GenreItemFieldEditIn(GenreShort):
     percentage_match: float
 
 

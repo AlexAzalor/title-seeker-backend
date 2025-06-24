@@ -29,7 +29,6 @@ from .movie import (
     MovieExportCreate,
     MoviesJSONFile,
     MovieOut,
-    MovieGenre,
     MovieFiltersListOut,
     BaseRatingCriteria,
     MoviePreviewOut,
@@ -75,6 +74,7 @@ from .genre import (
     GenreItemFieldEditFormIn,
     GenreFormIn,
     GenreFormOut,
+    GenreShort,
 )
 
 from .user import (

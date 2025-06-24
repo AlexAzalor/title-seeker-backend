@@ -302,9 +302,6 @@ def get_movie_filters(
     db: Session = Depends(get_db),
 ):
     """Get all movie filters"""
-    import time
-
-    start = time.perf_counter()
 
     specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
     actors_out, directors_out, characters_out = get_people_filters(db, lang)
@@ -349,9 +346,6 @@ def get_movie_filters(
         for category in visual_profile_categories
     ]
 
-    end = time.perf_counter()
-    print(f"Execution time: {end - start:.4f} seconds")
-
     return s.MovieFiltersListOut(
         genres=genres_out,
         subgenres=subgenres_out,
@@ -379,9 +373,6 @@ def get_pre_create_data(
     db: Session = Depends(get_db),
 ):
     """Get pre-create data for a new movie"""
-    import time
-
-    start = time.perf_counter()
 
     specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
     actors_out, directors_out, characters_out = get_people_filters(db, lang)
@@ -459,8 +450,6 @@ def get_pre_create_data(
                             rating_criteria=movie.rating_criteria,
                         )
 
-    end = time.perf_counter()
-    print(f"Execution time: {end - start:.4f} seconds")
     return s.MoviePreCreateData(
         visual_profile_categories=categories_out,
         base_movies=base_movies_out,
@@ -590,53 +579,58 @@ def quick_add_movie(
     status_code=status.HTTP_200_OK,
     response_model=s.MovieCarouselList,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Movie already exists"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Error with type VALIDATION"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movies not found"},
     },
 )
 def get_random_list(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
-    """Get 10 random movies"""
+    """Get 10 random movies (for carousel)"""
 
     # Get the total number of movies
     total_movies = db.scalar(sa.select(sa.func.count()).select_from(m.Movie))
 
     if not total_movies:
         log(log.ERROR, "Movies not found")
-        raise HTTPException(status_code=404, detail="Movies not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movies not found")
+
+    count = 10
 
     # Generate a random offset
-    random_offset = randint(0, max(0, total_movies - 10))
+    random_offset = randint(0, max(0, total_movies - count))
 
     # Select 10 random movies using the random offset
-    movies_db = db.scalars(sa.select(m.Movie).offset(random_offset).limit(10)).unique().all()
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .options(
+                selectinload(m.Movie.translations),
+                selectinload(m.Movie.genres).selectinload(m.Genre.translations),
+                selectinload(m.Movie.actors).selectinload(m.Actor.translations),
+                selectinload(m.Movie.directors).selectinload(m.Director.translations),
+            )
+            .offset(random_offset)
+            .limit(count)
+        )
+        .unique()
+        .all()
+    )
 
-    movies_out = []
-    for movie in movies_db:
-        movies_out.append(
+    return s.MovieCarouselList(
+        movies=[
             s.MovieCarousel(
                 key=movie.key,
-                title=next((t.title for t in movie.translations if t.language == lang.value)),
+                title=movie.get_title(lang),
+                description=movie.get_description(lang),
                 poster=movie.poster,
                 release_date=movie.release_date if movie.release_date else datetime.now(),
                 duration=movie.formatted_duration(lang.value),
-                # main_genre=main_genre,
-                location=next((t.location for t in movie.translations if t.language == lang.value)),
-                description=next((t.description for t in movie.translations if t.language == lang.value)),
+                location=movie.get_location(lang),
                 genres=[
-                    s.MovieGenre(
+                    s.GenreShort(
                         key=genre.key,
-                        name=next((t.name for t in genre.translations if t.language == lang.value)),
-                        description=next((t.description for t in genre.translations if t.language == lang.value)),
-                        percentage_match=next(
-                            (
-                                mg.percentage_match
-                                for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=genre.id)
-                            ),
-                            0.0,
-                        ),
+                        name=genre.get_name(lang),
                     )
                     for genre in movie.genres
                 ],
@@ -656,11 +650,9 @@ def get_random_list(
                     )
                     for director in movie.directors
                 ],
-            ),
-        )
-
-    return s.MovieCarouselList(
-        movies=movies_out,
+            )
+            for movie in movies_db
+        ]
     )
 
 
@@ -675,11 +667,21 @@ def get_similar_movies(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
 ):
-    """Get similar movies by movie key"""
+    """Get similar movies for current one"""
 
-    # TODO: Update and improve db query when adding more movies (100-200)
+    # TODO: IMPLEMENT/IMPROVE ALGORITHM When there will be enough movies on prod (200+)
 
-    movie: m.Movie | None = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+    movie = db.scalar(
+        sa.select(m.Movie)
+        .options(
+            selectinload(m.Movie.translations),
+            selectinload(m.Movie.genres).selectinload(m.Genre.translations),
+            selectinload(m.Movie.subgenres).selectinload(m.Subgenre.translations),
+            selectinload(m.Movie.specifications).selectinload(m.Specification.translations),
+            selectinload(m.Movie.keywords).selectinload(m.Keyword.translations),
+        )
+        .where(m.Movie.key == movie_key)
+    )
 
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
@@ -688,8 +690,8 @@ def get_similar_movies(
     genres_list = [
         s.MovieFilterItem(
             key=genre.key,
-            name=next((t.name for t in genre.translations if t.language == lang.value)),
-            description=next((t.description for t in genre.translations if t.language == lang.value)),
+            name=genre.get_name(lang),
+            description=genre.get_description(lang),
             percentage_match=next(
                 (
                     mg.percentage_match
@@ -705,8 +707,8 @@ def get_similar_movies(
         s.MovieFilterItem(
             key=subgenre.key,
             subgenre_parent_key=subgenre.genre.key,
-            name=next((t.name for t in subgenre.translations if t.language == lang.value)),
-            description=next((t.description for t in subgenre.translations if t.language == lang.value)),
+            name=subgenre.get_name(lang),
+            description=subgenre.get_description(lang),
             percentage_match=next(
                 (
                     mg.percentage_match
@@ -721,8 +723,8 @@ def get_similar_movies(
     specifications_list = [
         s.MovieFilterItem(
             key=specification.key,
-            name=next((t.name for t in specification.translations if t.language == lang.value)),
-            description=next((t.description for t in specification.translations if t.language == lang.value)),
+            name=specification.get_name(lang),
+            description=specification.get_description(lang),
             percentage_match=next(
                 (
                     mg.percentage_match
@@ -739,8 +741,8 @@ def get_similar_movies(
     keywords_list = [
         s.MovieFilterItem(
             key=keyword.key,
-            name=next((t.name for t in keyword.translations if t.language == lang.value)),
-            description=next((t.description for t in keyword.translations if t.language == lang.value)),
+            name=keyword.get_name(lang),
+            description=keyword.get_description(lang),
             percentage_match=next(
                 (
                     mg.percentage_match
@@ -1004,57 +1006,49 @@ def movies_to_add(
     status_code=status.HTTP_200_OK,
     response_model=s.GenresSubgenresOut,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Error getting genres and subgenres"},
+        status.HTTP_404_NOT_FOUND: {"description": "Genres not found"},
         status.HTTP_200_OK: {"description": "Genres and subgenres successfully retrieved"},
     },
 )
 def get_genres_subgenres(
-    movie_key: str,
     lang: s.Language = s.Language.UK,
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Get all genres and related subgenres for a movie"""
+    """Get all genres and related subgenres for the movie page (for edit)"""
 
-    genres = db.scalars(sa.select(m.Genre)).all()
+    genres = db.scalars(
+        sa.select(m.Genre).options(
+            selectinload(m.Genre.translations), selectinload(m.Genre.subgenres).selectinload(m.Subgenre.translations)
+        )
+    ).all()
 
     if not genres:
         log(log.ERROR, "Genres [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Genres not found")
 
-    try:
-        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
-
-        if not movie:
-            log(log.ERROR, "Movie [%s] not found", movie_key)
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
-
-        return s.GenresSubgenresOut(
-            genres=[
-                s.GenreOut(
-                    key=genre.key,
-                    name=genre.get_name(lang),
-                    description=genre.get_description(lang),
-                    subgenres=sorted(
-                        [
-                            s.SubgenreOut(
-                                key=subgenre.key,
-                                name=subgenre.get_name(lang),
-                                description=subgenre.get_description(lang),
-                                parent_genre_key=subgenre.genre.key,
-                            )
-                            for subgenre in genre.subgenres
-                        ],
-                        key=lambda x: x.name,
-                    ),
-                )
-                for genre in genres
-            ],
-        )
-
-    except Exception as e:
-        log(log.ERROR, "Error getting genres and subgenres: %s", e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error getting genres and subgenres")
+    return s.GenresSubgenresOut(
+        genres=[
+            s.GenreOut(
+                key=genre.key,
+                name=genre.get_name(lang),
+                description=genre.get_description(lang),
+                subgenres=sorted(
+                    [
+                        s.SubgenreOut(
+                            key=subgenre.key,
+                            name=subgenre.get_name(lang),
+                            description=subgenre.get_description(lang),
+                            parent_genre_key=subgenre.genre.key,
+                        )
+                        for subgenre in genre.subgenres
+                    ],
+                    key=lambda x: x.name,
+                ),
+            )
+            for genre in genres
+        ],
+    )
 
 
 @movie_router.put(
@@ -1073,6 +1067,12 @@ def edit_genres_subgenres(
 ):
     """Edit genres of a movie"""
 
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
     items_keys = [item.key for item in form_data.genres]
     genres = db.scalars(sa.select(m.Genre).where(m.Genre.key.in_(items_keys))).all()
 
@@ -1085,12 +1085,6 @@ def edit_genres_subgenres(
     subgenres = db.scalars(sa.select(m.Subgenre).where(m.Subgenre.key.in_(items_keys))).all()
 
     try:
-        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
-
-        if not movie:
-            log(log.ERROR, "Movie [%s] not found", movie_key)
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
-
         # Clear existing old genres and subgenres
         movie.genres.clear()
         movie.subgenres.clear()
@@ -1152,6 +1146,12 @@ def edit_specifications(
 ):
     """Edit movie specifications"""
 
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
     items_keys = [item.key for item in form_data.items]
     specifications = db.scalars(sa.select(m.Specification).where(m.Specification.key.in_(items_keys))).all()
 
@@ -1160,12 +1160,6 @@ def edit_specifications(
         raise HTTPException(status_code=404, detail="Specification not found")
 
     try:
-        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
-
-        if not movie:
-            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
-            raise HTTPException(status_code=404, detail="Movie not found")
-
         movie.specifications.clear()
         movie.specifications.extend(specifications)
         db.commit()
@@ -1207,6 +1201,12 @@ def edit_Keywords(
 ):
     """Edit movie keywords"""
 
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
     items_keys = [item.key for item in form_data.items]
     keywords = db.scalars(sa.select(m.Keyword).where(m.Keyword.key.in_(items_keys))).all()
 
@@ -1215,12 +1215,6 @@ def edit_Keywords(
         raise HTTPException(status_code=404, detail="Keywords not found")
 
     try:
-        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
-
-        if not movie:
-            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
-            raise HTTPException(status_code=404, detail="Movie not found")
-
         movie.keywords.clear()
         movie.keywords.extend(keywords)
         db.commit()
@@ -1262,6 +1256,12 @@ def edit_action_times(
 ):
     """Edit movie action times"""
 
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
     items_keys = [item.key for item in form_data.items]
     action_times = db.scalars(sa.select(m.ActionTime).where(m.ActionTime.key.in_(items_keys))).all()
 
@@ -1270,12 +1270,6 @@ def edit_action_times(
         raise HTTPException(status_code=404, detail="Action Times not found")
 
     try:
-        movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
-
-        if not movie:
-            log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
-            raise HTTPException(status_code=404, detail="Movie not found")
-
         movie.action_times.clear()
         movie.action_times.extend(action_times)
         db.commit()

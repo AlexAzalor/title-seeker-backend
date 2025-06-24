@@ -77,7 +77,7 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     assert data
     assert data.key == NEW_SPEC_KEY
 
-    # Test add specification to movie
+    # # Test update specifications (on movie page)
     movie = db.scalar(sa.select(m.Movie))
     assert movie
     assert not [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]

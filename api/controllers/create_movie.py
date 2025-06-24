@@ -19,21 +19,6 @@ QUICK_MOVIES_FILE = "data/quick_add_movies.json"
 
 
 def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
-    translations = [
-        m.MovieTranslation(
-            language=s.Language.UK.value,
-            title=form_data.title_uk,
-            description=form_data.description_uk,
-            location=form_data.location_uk,
-        ),
-        m.MovieTranslation(
-            language=s.Language.EN.value,
-            title=form_data.title_en,
-            description=form_data.description_en,
-            location=form_data.location_en,
-        ),
-    ]
-
     shared_universe = None
     if form_data.shared_universe_key:
         try:
@@ -71,6 +56,21 @@ def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
             log(log.ERROR, "Base movie [%s] not found: %s", base_movie_key, e)
             e.args = (*e.args, "Base movie not found")
             raise e
+
+    translations = [
+        m.MovieTranslation(
+            language=s.Language.UK.value,
+            title=form_data.title_uk,
+            description=form_data.description_uk,
+            location=form_data.location_uk,
+        ),
+        m.MovieTranslation(
+            language=s.Language.EN.value,
+            title=form_data.title_en,
+            description=form_data.description_en,
+            location=form_data.location_en,
+        ),
+    ]
 
     return m.Movie(
         key=form_data.key,

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.schema.filters import FilterItemField, FilterItemOut, MovieFilterItem
 from app.schema.general import MainItemMenu
-from app.schema.genre import GenreOut, MovieGenre, SubgenreOut
+from app.schema.genre import GenreOut, GenreShort, SubgenreOut
 from app.schema.pagination import BasePagination
 from app.schema.people import MovieActorOut, MoviePersonOut, PersonWithAvatar
 from app.schema.rating import RatingCriterion, BaseRatingCriteria
@@ -280,7 +280,7 @@ class MovieCarousel(BaseMovie):
     location: str
     description: str
 
-    genres: list[MovieGenre]
+    genres: list[GenreShort]
     actors: list[PersonWithAvatar]
     directors: list[PersonWithAvatar]
 
