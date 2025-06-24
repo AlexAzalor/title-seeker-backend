@@ -245,3 +245,20 @@ Train LOCALY! Applay backup localy and test!
 
 remove container AND volume -v
 dcdn -v db
+
+    # Many small relationships (tags, genres) ===> selectinload()
+    # Very few related items, predictable size ===> joinedload()
+    # No relationship needed ===> nothing
+    # Looping through many parent objects ===> Never use lazy
+
+        # condition = lambda x: x > 5
+    # filtered = list(filter(condition, [1,2,3,4,5,6,7,8,9,10]))
+
+# Generated SQL with print(str(query.compile(compile_kwargs={"literal_binds": True})))
+
+import time
+start = time.perf_counter()
+end = time.perf_counter()
+print(f"Execution time: {end - start:.4f} seconds")
+
+print("DATA:", repr(genres_out[0]))

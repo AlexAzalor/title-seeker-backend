@@ -1,76 +1,55 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 import app.models as m
 import app.schema as s
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from app.logger import log
 
 
-def get_filters(db: Session, lang: s.Language):
-    """Get all filters for movies."""
-
+def get_people_filters(db: Session, lang: s.Language):
     actors = db.scalars(
         sa.select(m.Actor)
+        .options(selectinload(m.Actor.translations))
         .join(m.Actor.translations)
         .where(m.ActorTranslation.language == lang.value)
-        .order_by(sa.func.concat(m.ActorTranslation.first_name, " ", m.ActorTranslation.last_name))
+        .order_by(
+            sa.func.concat(
+                m.ActorTranslation.first_name,
+            )
+        )
     ).all()
-
     if not actors:
         log(log.ERROR, "Actors [%s] not found")
-        raise HTTPException(status_code=404, detail="Actors not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Actors not found")
 
     directors = db.scalars(
         sa.select(m.Director)
+        .options(selectinload(m.Director.translations))
         .join(m.Director.translations)
         .where(m.DirectorTranslation.language == lang.value)
-        .order_by(sa.func.concat(m.DirectorTranslation.first_name, " ", m.DirectorTranslation.last_name))
+        .order_by(
+            sa.func.concat(
+                m.DirectorTranslation.first_name,
+            )
+        )
     ).all()
     if not directors:
         log(log.ERROR, "Director [%s] not found")
-        raise HTTPException(status_code=404, detail="Director not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Director not found")
 
-    genres = db.scalars(
-        sa.select(m.Genre)
-        .join(m.Genre.translations)
-        .where(m.GenreTranslation.language == lang.value)
-        .order_by(m.GenreTranslation.name)
+    characters = db.scalars(
+        sa.select(m.Character)
+        .options(selectinload(m.Character.translations))
+        .join(m.Character.translations)
+        .where(m.CharacterTranslation.language == lang.value)
+        .order_by(m.CharacterTranslation.name)
     ).all()
-    if not genres:
-        log(log.ERROR, "Genres [%s] not found")
-        raise HTTPException(status_code=404, detail="Genres not found")
-
-    specifications = db.scalars(
-        sa.select(m.Specification)
-        .join(m.Specification.translations)
-        .where(m.SpecificationTranslation.language == lang.value)
-        .order_by(m.SpecificationTranslation.name)
-    ).all()
-    if not specifications:
-        log(log.ERROR, "Specifications [%s] not found")
-        raise HTTPException(status_code=404, detail="Specifications not found")
-
-    keywords = db.scalars(
-        sa.select(m.Keyword)
-        .join(m.Keyword.translations)
-        .where(m.KeywordTranslation.language == lang.value)
-        .order_by(m.KeywordTranslation.name)
-    ).all()
-    if not keywords:
-        log(log.ERROR, "Keywords [%s] not found")
-        raise HTTPException(status_code=404, detail="Keywords not found")
-
-    action_times = db.scalars(
-        sa.select(m.ActionTime)
-        .join(m.ActionTime.translations)
-        .where(m.ActionTimeTranslation.language == lang.value)
-        .order_by(m.ActionTimeTranslation.name)
-    ).all()
-    if not action_times:
-        log(log.ERROR, "Action times [%s] not found")
-        raise HTTPException(status_code=404, detail="Action times not found")
+    if not characters:
+        log(log.ERROR, "Characters [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Characters not found")
 
     another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
+
     actors_out = [
         s.MainItemMenu(
             key=actor.key,
@@ -88,6 +67,32 @@ def get_filters(db: Session, lang: s.Language):
         )
         for director in directors
     ]
+
+    characters_out = [
+        s.MainItemMenu(
+            key=character.key,
+            name=character.get_name(lang),
+            another_lang_name=character.get_name(another_lang),
+        )
+        for character in characters
+    ]
+
+    return actors_out, directors_out, characters_out
+
+
+def get_genre_filters(db: Session, lang: s.Language):
+    genres = db.scalars(
+        sa.select(m.Genre)
+        .options(
+            selectinload(m.Genre.translations), selectinload(m.Genre.subgenres).selectinload(m.Subgenre.translations)
+        )
+        .join(m.Genre.translations)
+        .where(m.GenreTranslation.language == lang.value)
+        .order_by(m.GenreTranslation.name)
+    ).all()
+    if not genres:
+        log(log.ERROR, "Genres [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Genres not found")
 
     genres_out = [
         s.GenreOut(
@@ -109,6 +114,54 @@ def get_filters(db: Session, lang: s.Language):
         )
         for genre in genres
     ]
+
+    return genres_out
+
+
+def get_filters(db: Session, lang: s.Language):
+    specifications = db.scalars(
+        sa.select(m.Specification)
+        .options(selectinload(m.Specification.translations))
+        .join(m.Specification.translations)
+        .where(m.SpecificationTranslation.language == lang.value)
+        .order_by(m.SpecificationTranslation.name)
+    ).all()
+    if not specifications:
+        log(log.ERROR, "Specifications [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specifications not found")
+
+    keywords = db.scalars(
+        sa.select(m.Keyword)
+        .options(selectinload(m.Keyword.translations))
+        .join(m.Keyword.translations)
+        .where(m.KeywordTranslation.language == lang.value)
+        .order_by(m.KeywordTranslation.name)
+    ).all()
+    if not keywords:
+        log(log.ERROR, "Keywords [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keywords not found")
+
+    action_times = db.scalars(
+        sa.select(m.ActionTime)
+        .options(selectinload(m.ActionTime.translations))
+        .join(m.ActionTime.translations)
+        .where(m.ActionTimeTranslation.language == lang.value)
+        .order_by(m.ActionTimeTranslation.name)
+    ).all()
+    if not action_times:
+        log(log.ERROR, "Action times [%s] not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action times not found")
+
+    shared_universes = db.scalars(
+        sa.select(m.SharedUniverse)
+        .options(selectinload(m.SharedUniverse.translations))
+        .join(m.SharedUniverse.translations)
+        .where(m.SharedUniverseTranslation.language == lang.value)
+        .order_by(m.SharedUniverseTranslation.name)
+    ).all()
+    if not shared_universes:
+        log(log.ERROR, "Shared universes [%s] not found")
+        raise HTTPException(status_code=404, detail="Shared universes not found")
 
     specifications_out = [
         s.FilterItemOut(
@@ -140,11 +193,18 @@ def get_filters(db: Session, lang: s.Language):
         for action_time in action_times
     ]
 
+    su_out = [
+        s.BaseSharedUniverse(
+            key=su.key,
+            name=su.get_name(lang),
+            description=su.get_description(lang),
+        )
+        for su in shared_universes
+    ]
+
     return (
-        genres_out,
         specifications_out,
         keywords_out,
         action_times_out,
-        actors_out,
-        directors_out,
+        su_out,
     )

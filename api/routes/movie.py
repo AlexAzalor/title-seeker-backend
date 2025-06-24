@@ -3,13 +3,13 @@ import os
 from datetime import datetime
 from random import randint
 from typing import Annotated, Sequence
-import time
+
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
 
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, selectinload
 
 from api.controllers.create_movie import (
     QUICK_MOVIES_FILE,
@@ -25,7 +25,7 @@ from api.controllers.create_movie import (
 )
 
 from api.controllers.movie import build_movie_query, get_main_genres_for_movies, get_movie_data
-from api.controllers.movie_filters import get_filters
+from api.controllers.movie_filters import get_filters, get_genre_filters, get_people_filters
 from api.controllers.super_search import (
     get_filter_query_conditions,
     get_genre_query_conditions,
@@ -46,10 +46,6 @@ CFG = config()
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 
 UPLOAD_DIRECTORY = "./uploads/posters/"
-
-# fix
-# if not os.path.exists(UPLOAD_DIRECTORY):
-#     os.makedirs(UPLOAD_DIRECTORY)
 
 
 @movie_router.get(
@@ -109,14 +105,7 @@ def get_movie(
     current_user: m.User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get movie by key"""
-
-    start = time.perf_counter()
-
-    # Many small relationships (tags, genres) ===> selectinload()
-    # Very few related items, predictable size ===> joinedload()
-    # No relationship needed ===> nothing
-    # Looping through many parent objects ===> Never use lazy
+    """Get all movie details by key"""
 
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
 
@@ -124,16 +113,12 @@ def get_movie(
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    items = get_movie_data(
+    return get_movie_data(
         movie,
         db,
         lang,
         current_user,
     )
-
-    end = time.perf_counter()
-    print(f"Execution time: {end - start:.4f} seconds")
-    return items
 
 
 @movie_router.get(
@@ -165,22 +150,15 @@ def super_search_movies(
 
     query = sa.select(m.Movie)
 
-    # condition = lambda x: x > 5
-    # filtered = list(filter(condition, [1,2,3,4,5,6,7,8,9,10]))
-
-    # What Happens to the Query at Each Filter Step?
-
     logical_op = sa.and_ if exact_match else sa.or_
 
-    # Generated SQL with print(str(query.compile(compile_kwargs={"literal_binds": True})))
-
+    # What Happens to the Query at Each Filter Step?
     # Build conditions for each filter type
     filter_conditions = []
 
     # GENRES, SUBGENRES
     genre_conditions, subgenre_conditions = get_genre_query_conditions(genre, subgenre, db)
     if genre_conditions:
-        # At least one genre must match (OR within genre), but this whole group is ANDed with other filter types
         filter_conditions.append(sa.or_(*genre_conditions))
     if subgenre_conditions:
         filter_conditions.append(sa.or_(*subgenre_conditions))
@@ -261,7 +239,7 @@ def super_search_movies(
     "/search/",
     status_code=status.HTTP_200_OK,
     response_model=s.SearchResults,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Movies not found"}},
+    responses={status.HTTP_403_FORBIDDEN: {"description": "Title type not supported"}},
 )
 def search(
     query: str = Query(default="", max_length=128),
@@ -273,14 +251,13 @@ def search(
 
     if title_type != s.SearchType.MOVIES:
         log(log.ERROR, "Title type [%s] not supported", title_type)
-        raise HTTPException(status_code=404, detail="Title type not supported")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Title type not supported")
 
     normalized_query = normalize_query(query)
 
     movies_db = (
         db.scalars(
             sa.select(m.Movie)
-            .where(m.Movie.is_deleted.is_(False))
             .where(
                 m.Movie.translations.any(
                     sa.func.regexp_replace(
@@ -293,31 +270,16 @@ def search(
         .unique()
         .all()
     )
+
+    main_genre_map = get_main_genres_for_movies(db, [movie.id for movie in movies_db], lang)
+
     movies_out = []
+
     if movies_db:
         for movie in movies_db:
-            biggest_genre = db.scalar(
-                sa.select(m.Genre)
-                .join(m.movie_genres)
-                .where(m.movie_genres.c.movie_id == movie.id)
-                .order_by(m.movie_genres.c.percentage_match.desc())
-                .limit(1)
-            )
-
-            main_genre = "No genre"
-            if biggest_genre:
-                genre_name = biggest_genre.get_name(lang)
-                percentage_match = next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=biggest_genre.id)
-                    ),
-                    0.0,
-                )
-                main_genre = f"{genre_name} ({percentage_match}%)"
-
             release_date = movie.release_date.year if movie.release_date else "No release date"
             duration = movie.formatted_duration(lang.value)
+            main_genre = main_genre_map.get(movie.id, "No main genre")
 
             movies_out.append(
                 s.SearchResult(
@@ -340,49 +302,33 @@ def get_movie_filters(
     db: Session = Depends(get_db),
 ):
     """Get all movie filters"""
+    import time
 
-    genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out = get_filters(db, lang)
+    start = time.perf_counter()
 
-    # TODO: Fix this
+    specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
+    actors_out, directors_out, characters_out = get_people_filters(db, lang)
+    genres_out = get_genre_filters(db, lang)
+
+    # selectinload - used to reduce the number of database requests, especially for loops and working with languages (.get_name(lang)).
+
     subgenres = db.scalars(
         sa.select(m.Subgenre)
+        .options(selectinload(m.Subgenre.translations))  # avoids N+1 queries
         .join(m.Subgenre.translations)
         .where(m.SubgenreTranslation.language == lang.value)
-        .order_by(m.SubgenreTranslation.name)
+        .order_by(m.SubgenreTranslation.name)  # this only works if joined
     ).all()
     if not subgenres:
         log(log.ERROR, "Subgenre [%s] not found")
-        raise HTTPException(status_code=404, detail="Subgenre not found")
-
-    shared_universes = db.scalars(
-        sa.select(m.SharedUniverse)
-        .join(m.SharedUniverse.translations)
-        .where(m.SharedUniverseTranslation.language == lang.value)
-        .order_by(m.SharedUniverseTranslation.name)
-    ).all()
-    if not shared_universes:
-        log(log.ERROR, "Shared universes [%s] not found")
-        raise HTTPException(status_code=404, detail="Shared universes not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subgenre not found")
 
     visual_profile_categories = db.scalars(
-        sa.select(m.VisualProfileCategory)
-        .join(m.VisualProfileCategory.translations)
-        .where(m.VPCategoryTranslation.language == lang.value)
-        .order_by(m.VPCategoryTranslation.name)
+        sa.select(m.VisualProfileCategory).options(selectinload(m.VisualProfileCategory.translations))
     ).all()
     if not visual_profile_categories:
         log(log.ERROR, "Visual profile categories [%s] not found")
-        raise HTTPException(status_code=404, detail="Visual profile categories not found")
-
-    characters = db.scalars(
-        sa.select(m.Character)
-        .join(m.Character.translations)
-        .where(m.CharacterTranslation.language == lang.value)
-        .order_by(m.CharacterTranslation.name)
-    ).all()
-    if not characters:
-        log(log.ERROR, "Characters [%s] not found")
-        raise HTTPException(status_code=404, detail="Characters not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visual profile categories not found")
 
     subgenres_out = [
         s.SubgenreOut(
@@ -394,15 +340,6 @@ def get_movie_filters(
         for subgenre in subgenres
     ]
 
-    su_out = [
-        s.BaseSharedUniverse(
-            key=su.key,
-            name=su.get_name(lang),
-            description=su.get_description(lang),
-        )
-        for su in shared_universes
-    ]
-
     vp_categories_out = [
         s.VisualProfileCategoryOut(
             key=category.key,
@@ -412,17 +349,8 @@ def get_movie_filters(
         for category in visual_profile_categories
     ]
 
-    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
-    characters_out = [
-        s.MainItemMenu(
-            key=character.key,
-            name=character.get_name(lang),
-            another_lang_name=character.get_name(another_lang),
-        )
-        for character in characters
-    ]
-
-    # print("DATA:", repr(genres_out[0]))
+    end = time.perf_counter()
+    print(f"Execution time: {end - start:.4f} seconds")
 
     return s.MovieFiltersListOut(
         genres=genres_out,
@@ -451,15 +379,19 @@ def get_pre_create_data(
     db: Session = Depends(get_db),
 ):
     """Get pre-create data for a new movie"""
+    import time
 
-    genres_out, specifications_out, keywords_out, action_times_out, actors_out, directors_out = get_filters(db, lang)
+    start = time.perf_counter()
 
-    # Order by natural order of RelatedMovie
+    specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
+    actors_out, directors_out, characters_out = get_people_filters(db, lang)
+    genres_out = get_genre_filters(db, lang)
+
     base_movies = db.scalars(
         sa.select(m.Movie)
+        .options(selectinload(m.Movie.translations))
         .join(m.Movie.translations)
         .where(m.MovieTranslation.language == lang.value)
-        .where(m.Movie.is_deleted.is_(False))
         .order_by(
             # Ignore "The" at the beginning of the title (not remove)
             sa.func.regexp_replace(m.MovieTranslation.title, r"^(The\s)", "", "i"),
@@ -468,28 +400,21 @@ def get_pre_create_data(
     ).all()
     if not base_movies:
         log(log.ERROR, "Base movies not found")
-        raise HTTPException(status_code=404, detail="Base movies not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Base movies not found")
 
-    # TODO: add full_name as hybrid_property?
-    shared_universes = db.scalars(
-        sa.select(m.SharedUniverse)
-        .join(m.SharedUniverse.translations)
-        .where(m.SharedUniverseTranslation.language == lang.value)
-        .order_by(m.SharedUniverseTranslation.name)
+    categories = db.scalars(
+        sa.select(m.VisualProfileCategory)
+        .options(
+            selectinload(m.VisualProfileCategory.translations),
+            selectinload(m.VisualProfileCategory.criteria).selectinload(m.VisualProfileCategoryCriterion.translations),
+        )
+        .join(m.VisualProfileCategory.translations)
+        .where(m.VPCategoryTranslation.language == lang.value)
+        .order_by(m.VPCategoryTranslation.name)
     ).all()
-    if not shared_universes:
-        log(log.ERROR, "Shared universes [%s] not found")
-        raise HTTPException(status_code=404, detail="Shared universes not found")
-
-    characters = db.scalars(
-        sa.select(m.Character)
-        .join(m.Character.translations)
-        .where(m.CharacterTranslation.language == lang.value)
-        .order_by(m.CharacterTranslation.name)
-    ).all()
-    if not characters:
-        log(log.ERROR, "Characters [%s] not found")
-        raise HTTPException(status_code=404, detail="Characters not found")
+    if not categories:
+        log(log.ERROR, "Title categories not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Title categories not found")
 
     base_movies_out = [
         s.MovieMenuItem(
@@ -498,16 +423,6 @@ def get_pre_create_data(
         )
         for base_movie in base_movies
     ]
-
-    categories = db.scalars(
-        sa.select(m.VisualProfileCategory)
-        .join(m.VisualProfileCategory.translations)
-        .where(m.VPCategoryTranslation.language == lang.value)
-        .order_by(m.VPCategoryTranslation.name)
-    ).all()
-    if not categories:
-        log(log.ERROR, "Title categories not found")
-        raise HTTPException(status_code=404, detail="Title categories not found")
 
     categories_out = [
         s.VisualProfileData(
@@ -544,25 +459,8 @@ def get_pre_create_data(
                             rating_criteria=movie.rating_criteria,
                         )
 
-    shared_universes_out = [
-        s.BaseSharedUniverse(
-            key=universe.key,
-            name=universe.get_name(lang),
-            description=universe.get_description(lang),
-        )
-        for universe in shared_universes
-    ]
-
-    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
-    characters_out = [
-        s.MainItemMenu(
-            key=character.key,
-            name=character.get_name(lang),
-            another_lang_name=character.get_name(another_lang),
-        )
-        for character in characters
-    ]
-
+    end = time.perf_counter()
+    print(f"Execution time: {end - start:.4f} seconds")
     return s.MoviePreCreateData(
         visual_profile_categories=categories_out,
         base_movies=base_movies_out,
@@ -573,7 +471,7 @@ def get_pre_create_data(
         keywords=keywords_out,
         action_times=action_times_out,
         quick_movie=quick_movie,
-        shared_universes=shared_universes_out,
+        shared_universes=su_out,
         characters=characters_out,
     )
 

@@ -131,7 +131,7 @@ def time_rate_movie(
 ):
     """Get data for time rate movies chart"""
 
-    movies = db.scalars(sa.select(m.Movie).where(m.Movie.is_deleted.is_(False))).all()
+    movies = db.scalars(sa.select(m.Movie)).all()
     if not movies:
         log(log.ERROR, "Movies not found")
         raise HTTPException(status_code=404, detail="Movies not found")

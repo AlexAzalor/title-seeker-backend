@@ -309,4 +309,4 @@ def build_movie_query(sort_by: s.SortBy, is_reverse: bool, current_user: m.User 
     # fdfd
     else:
         order = get_order(sort_by, is_reverse)
-        return sa.select(m.Movie).where(m.Movie.is_deleted.is_(False)).order_by(order)
+        return sa.select(m.Movie).order_by(order)
