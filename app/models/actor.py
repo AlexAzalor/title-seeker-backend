@@ -44,7 +44,7 @@ class Actor(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
         return f"<Actor [{self.id}]: {self.translations[0].full_name}>"
 
     def full_name(self, lang: Language = Language.UK) -> str:
-        return next((t.full_name for t in self.translations if t.language == lang.value))
+        return next((t.full_name for t in self.translations if t.language == lang.value), "")
 
     def get_born_location(self, lang: Language = Language.UK) -> str:
         return next((t.born_in for t in self.translations if t.language == lang.value), "")

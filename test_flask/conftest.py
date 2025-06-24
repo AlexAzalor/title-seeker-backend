@@ -58,12 +58,4 @@ def populate(client: FlaskClient):
         ).save(False)
     db.session.commit()
 
-    # from app.commands.addresses import export_addresses_from_json_file
-    # from app.commands.locations import export_regions_from_json_file
-    # from app.commands.service import export_services_from_json_file
-
-    # export_regions_from_json_file(False)
-    # export_services_from_json_file(False)
-    # export_addresses_from_json_file(False)
-
     yield client

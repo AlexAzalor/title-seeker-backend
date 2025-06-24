@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from random import randint
 from typing import Annotated, Sequence
-
+import time
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
@@ -24,7 +24,7 @@ from api.controllers.create_movie import (
     set_percentage_match,
 )
 
-from api.controllers.movie import build_movie_query, get_main_genres_for_movies
+from api.controllers.movie import build_movie_query, get_main_genres_for_movies, get_movie_data
 from api.controllers.movie_filters import get_filters
 from api.controllers.super_search import (
     get_filter_query_conditions,
@@ -106,280 +106,34 @@ def get_movies(
 def get_movie(
     movie_key: str,
     lang: s.Language = s.Language.UK,
-    current_user: m.User = Depends(get_current_user),
+    current_user: m.User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get movie by key"""
 
-    movie: m.Movie | None = db.scalar(
-        sa.select(m.Movie)
-        .where(m.Movie.key == movie_key)
-        .options(
-            # add rest?
-            # Do I need to use joinedload() for all relationships? I get name from db function
-            joinedload(m.Movie.translations),
-            joinedload(m.Movie.actors),
-            joinedload(m.Movie.directors),
-            joinedload(m.Movie.genres),
-            joinedload(m.Movie.subgenres),
-            joinedload(m.Movie.specifications),
-            joinedload(m.Movie.keywords),
-            joinedload(m.Movie.action_times),
-            joinedload(m.Movie.ratings),
-            joinedload(m.Movie.shared_universe),
-            joinedload(m.Movie.characters),
-        )
-    )
+    start = time.perf_counter()
+
+    # Many small relationships (tags, genres) ===> selectinload()
+    # Very few related items, predictable size ===> joinedload()
+    # No relationship needed ===> nothing
+    # Looping through many parent objects ===> Never use lazy
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
 
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    # separate route?
-    user_rating = None
-    visual_profile = None
-
-    if current_user:
-        user_rating = db.scalar(
-            sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
-        )
-        visual_profile = movie.get_users_rating(current_user.id)
-
-    owner = db.scalar(sa.select(m.User).where(m.User.role == s.UserRole.OWNER.value))
-    if not owner:
-        log(log.ERROR, "Owner not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner not found")
-
-    owner_rating = db.scalar(
-        sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == owner.id)
+    items = get_movie_data(
+        movie,
+        db,
+        lang,
+        current_user,
     )
-    if not owner_rating:
-        log(log.ERROR, "Owner rating for movie [%s] not found", movie_key)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner rating not found")
 
-    if not visual_profile:
-        visual_profile = movie.get_users_rating(owner.id)
-
-    if not visual_profile:
-        log(log.ERROR, "Visual profile for movie [%s] not found", movie_key)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visual profile not found")
-
-    return s.MovieOut(
-        created_at=movie.created_at,
-        key=movie.key,
-        title=movie.get_title(lang),
-        title_en=movie.get_title(s.Language.EN) if lang == s.Language.UK else None,
-        description=movie.get_description(lang),
-        location=movie.get_location(lang),
-        poster=movie.poster,
-        budget=movie.formatted_budget,
-        duration=movie.formatted_duration(lang.value),
-        domestic_gross=movie.formatted_domestic_gross,
-        worldwide_gross=movie.formatted_worldwide_gross,
-        release_date=movie.release_date if movie.release_date else datetime.now(),
-        # Visual Profile
-        visual_profile=s.VisualProfileData(
-            key=visual_profile.category.key,
-            name=visual_profile.category.get_name(lang),
-            description=visual_profile.category.get_description(lang),
-            criteria=[
-                s.VisualProfileCriterionData(
-                    key=title_rating.criterion.key,
-                    name=title_rating.criterion.get_name(lang),
-                    description=title_rating.criterion.get_description(lang),
-                    rating=title_rating.rating,
-                )
-                for title_rating in sorted(visual_profile.ratings, key=lambda x: x.order)
-            ],
-        ),
-        # Rating
-        # All movies ratings
-        ratings=[
-            s.MovieRating(
-                uuid=rating.uuid,
-                rating=rating.rating,
-                comment=rating.comment,
-            )
-            for rating in movie.ratings
-        ],
-        ratings_count=movie.ratings_count,
-        # Rating Type
-        rating_criterion=s.RatingCriterion(movie.rating_criterion),
-        # Owner rating
-        # owner_rating=owner_rating.rating,
-        owner_rating=owner_rating.rating,
-        # Main AVERAGE rating
-        # The .get() method only returns the default value if the key does not exist in the dictionary. If the key exists but its value is None, .get() will return None instead of the default value.
-        overall_average_rating=movie.average_rating,
-        overall_average_rating_criteria=s.BaseRatingCriteria(
-            acting=movie.average_by_criteria.get("acting") or 0.01,
-            # acting=movie.average_by_criteria.get("acting", 0.01),
-            plot_storyline=movie.average_by_criteria.get("plot_storyline") or 0.01,
-            script_dialogue=movie.average_by_criteria.get("script_dialogue") or 0.01,
-            music=movie.average_by_criteria.get("music") or 0.01,
-            enjoyment=movie.average_by_criteria.get("enjoyment") or 0.01,
-            production_design=movie.average_by_criteria.get("production_design") or 0.01,
-            visual_effects=movie.average_by_criteria.get("visual_effects"),
-            scare_factor=movie.average_by_criteria.get("scare_factor"),
-            humor=movie.average_by_criteria.get("humor"),
-            animation_cartoon=movie.average_by_criteria.get("animation_cartoon"),
-        ),
-        # User rating
-        user_rating=user_rating.rating if user_rating and current_user.id != owner.id else None,
-        user_rating_criteria=s.BaseRatingCriteria(
-            acting=user_rating.acting,
-            plot_storyline=user_rating.plot_storyline,
-            script_dialogue=user_rating.script_dialogue,
-            music=user_rating.music,
-            enjoyment=user_rating.enjoyment,
-            production_design=user_rating.production_design,
-            visual_effects=user_rating.visual_effects
-            if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS.value
-            else None,
-            scare_factor=user_rating.scare_factor
-            if movie.rating_criterion == s.RatingCriterion.SCARE_FACTOR.value
-            else None,
-            humor=user_rating.humor if movie.rating_criterion == s.RatingCriterion.HUMOR.value else None,
-            animation_cartoon=user_rating.animation_cartoon
-            if movie.rating_criterion == s.RatingCriterion.ANIMATION_CARTOON.value
-            else None,
-        )
-        if user_rating
-        else None,
-        actors=[
-            s.MovieActorOut(
-                key=char.actor.key,
-                full_name=char.actor.full_name(lang),
-                character_name=char.character.get_name(lang),
-                avatar_url=char.actor.avatar,
-                born_location=char.actor.get_born_location(lang),
-                age=char.actor.age,
-                born=char.actor.born,
-                died=char.actor.died,
-            )
-            for char in sorted(movie.characters, key=lambda x: x.order)
-        ],
-        directors=[
-            s.MoviePersonOut(
-                key=director.key,
-                full_name=director.full_name(lang),
-                avatar_url=director.avatar if director.avatar else "no avatar",
-                born_location=director.get_born_location(lang),
-                age=director.age,
-                born=director.born,
-                died=director.died,
-            )
-            for director in movie.directors
-        ],
-        genres=[
-            s.MovieFilterItem(
-                key=genre.key,
-                name=genre.get_name(lang),
-                description=genre.get_description(lang),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_genres).filter_by(movie_id=movie.id, genre_id=genre.id)
-                    ),
-                    0.0,
-                ),
-            )
-            for genre in movie.genres
-        ],
-        subgenres=[
-            s.MovieFilterItem(
-                key=subgenre.key,
-                subgenre_parent_key=subgenre.genre.key,
-                name=subgenre.get_name(lang),
-                description=subgenre.get_description(lang),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_subgenres).filter_by(movie_id=movie.id, subgenre_id=subgenre.id)
-                    ),
-                    0.0,
-                ),
-            )
-            for subgenre in movie.subgenres
-        ],
-        specifications=[
-            s.MovieFilterItem(
-                key=specification.key,
-                name=specification.get_name(lang),
-                description=specification.get_description(lang),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_specifications).filter_by(
-                            movie_id=movie.id, specification_id=specification.id
-                        )
-                    ),
-                    0.0,
-                ),
-            )
-            for specification in movie.specifications
-        ],
-        keywords=[
-            s.MovieFilterItem(
-                key=keyword.key,
-                name=keyword.get_name(lang),
-                description=keyword.get_description(lang),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_keywords).filter_by(movie_id=movie.id, keyword_id=keyword.id)
-                    ),
-                    0.0,
-                ),
-            )
-            for keyword in movie.keywords
-        ],
-        action_times=[
-            s.MovieFilterItem(
-                key=action_time.key,
-                name=action_time.get_name(lang),
-                description=action_time.get_description(lang),
-                percentage_match=next(
-                    (
-                        mg.percentage_match
-                        for mg in db.query(m.movie_action_times).filter_by(
-                            movie_id=movie.id, action_time_id=action_time.id
-                        )
-                    ),
-                    0.0,
-                ),
-            )
-            for action_time in movie.action_times
-        ],
-        related_movies=[
-            s.RelatedMovieOut(
-                key=related_movie.key,
-                poster=related_movie.poster,
-                title=related_movie.get_title(lang),
-                relation_type=s.RelatedMovie(related_movie.relation_type),
-            )
-            for related_movie in movie.related_movies_collection
-        ]
-        if movie.relation_type
-        else None,
-        shared_universe_order=movie.shared_universe_order,
-        shared_universe=s.SharedUniverseOut(
-            key=movie.shared_universe.key,
-            name=movie.shared_universe.get_name(lang),
-            description=movie.shared_universe.get_description(lang),
-            movies=[
-                s.SharedUniverseMovies(
-                    key=shared_movie.key,
-                    title=shared_movie.get_title(lang),
-                    poster=shared_movie.poster,
-                    order=shared_movie.shared_universe_order,
-                )
-                for shared_movie in movie.shared_universe.get_sorted_movies()
-            ],
-        )
-        if movie.shared_universe
-        else None,
-    )
+    end = time.perf_counter()
+    print(f"Execution time: {end - start:.4f} seconds")
+    return items
 
 
 @movie_router.get(

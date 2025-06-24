@@ -31,7 +31,6 @@ from .movie import (
     MovieOut,
     MovieGenre,
     MovieFiltersListOut,
-    MovieRating,
     BaseRatingCriteria,
     MoviePreviewOut,
     MoviePreCreateData,

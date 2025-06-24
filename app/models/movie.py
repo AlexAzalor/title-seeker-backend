@@ -195,6 +195,6 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
 
         return character.get_name(lang)
 
-    def get_users_rating(self, user_id: int) -> "VisualProfile | None":
-        """Get the rating for a specific user."""
+    def get_visual_profile(self, user_id: int) -> "VisualProfile | None":
+        """Retrieve the owner's (for now) visual profile"""
         return next((v_profile for v_profile in self.visual_profiles if v_profile.user_id == user_id), None)

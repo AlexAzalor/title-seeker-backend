@@ -9,7 +9,7 @@ from app.schema.general import MainItemMenu
 from app.schema.genre import GenreOut, MovieGenre, SubgenreOut
 from app.schema.pagination import BasePagination
 from app.schema.people import MovieActorOut, MoviePersonOut, PersonWithAvatar
-from app.schema.rating import MovieRating, RatingCriterion, BaseRatingCriteria
+from app.schema.rating import RatingCriterion, BaseRatingCriteria
 from app.schema.shared_universe import BaseSharedUniverse
 
 from app.schema.visual_profile import VisualProfileCategoryOut, VisualProfileCriterionData, VisualProfileData
@@ -149,7 +149,6 @@ class MovieOut(BaseMovie):
 
     # Ratings
     # All movies ratings
-    ratings: list[MovieRating]
     ratings_count: int
 
     # Type
@@ -170,8 +169,6 @@ class MovieOut(BaseMovie):
     related_movies: list[RelatedMovieOut] | None = None
     shared_universe: SharedUniverseOut | None = None
     shared_universe_order: int | None = None
-
-    created_at: datetime
 
 
 class MoviePreviewOut(BaseMovie):

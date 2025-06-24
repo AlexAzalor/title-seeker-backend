@@ -41,9 +41,3 @@ class RatingExportCreate(BaseRatingCriteria):
 
 class RatingsJSONFile(BaseModel):
     ratings: list[RatingExportCreate]
-
-
-class MovieRating(BaseModel):
-    uuid: str
-    rating: float
-    comment: str
