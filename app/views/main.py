@@ -9,8 +9,3 @@ main_blueprint = Blueprint("main", __name__)
 @login_required
 def index():
     return render_template("index.html")
-
-
-@main_blueprint.route("/policy")
-def policy():
-    return render_template("static/privacy_policy.html")

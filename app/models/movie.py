@@ -59,6 +59,7 @@ class Movie(db.Model, ModelMixin, CreatableMixin, UpdatableMixin):
     worldwide_gross: orm.Mapped[int | None] = orm.mapped_column(sa.BigInteger, nullable=True)
     poster: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=True)
 
+    # secondary= tells the ORM that a link table (also called a junction or association table) exists between two entities.
     actors: orm.Mapped[list["Actor"]] = orm.relationship(
         "Actor",
         secondary=movie_actors,

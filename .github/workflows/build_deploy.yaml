@@ -9,13 +9,6 @@ env:
   DOCKER_LOGIN: azalor
   IMAGE_NAME: azalor/title-hunter-backend
   DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-  # DEPLOY_HOST: ${{ secrets.SSH_HOST_IP_STAGING }}
-  # DEPLOY_USER_NAME: ${{ secrets.SSH_USER }}
-  # DEPLOY_SSH_KEY: ${{ secrets.SSH_KEY }}
-  # DEPLOY_SSH_PORT: ${{ secrets.SSH_PORT }}
-
-  # GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-  # FCM_ADMIN_KEY_BASE64: ${{ secrets.FCM_ADMIN_KEY }}
 
 jobs:
   on-develop-branch-check:
@@ -103,37 +96,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-  # deploy:
-  #   name: Deploy to staging
-  #   runs-on: ubuntu-latest
-  #   needs:
-  #     - on-develop-branch-check
-  #     - build
-  #   if: ${{ needs.on-develop-branch-check.outputs.on_develop == 'true' }}
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: update compose file
-  #       uses: appleboy/scp-action@v0.1.4
-  #       with:
-  #         host: ${{ env.DEPLOY_HOST }}
-  #         username: ${{ env.DEPLOY_USER_NAME }}
-  #         key: ${{ env.DEPLOY_SSH_KEY }}
-  #         port: ${{ env.DEPLOY_SSH_PORT }}
-  #         source: docker-compose.staging.yaml
-  #         target: ~/...
-  #     - name: deploy
-  #       uses: appleboy/ssh-action@v0.1.10
-  #       with:
-  #         host: ${{ env.DEPLOY_HOST }}
-  #         username: ${{ env.DEPLOY_USER_NAME }}
-  #         key: ${{ env.DEPLOY_SSH_KEY }}
-  #         port: ${{ env.DEPLOY_SSH_PORT }}
-  #         envs: GOOGLE_CLIENT_ID
-  #         script: |
-  #           export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
-  #           cd ~/...
-  #           echo ${{env.FCM_ADMIN_KEY_BASE64}} | base64 --decode > admin_key.json
-  #           mv docker-compose.staging.yaml docker-compose.yaml
-  #           docker login -u ${{ env.DOCKER_LOGIN }} -p ${{ env.DOCKER_ACCESS_TOKEN }} &&
-  #           docker compose pull &&
-  #           docker compose up -d

@@ -34,53 +34,11 @@
       "justMyCode": false
     },
     {
-      "name": "Export services",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["export-services"]
-    },
-    {
-      "name": "Export regions",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["export-regions"]
-    },
-    {
-      "name": "Export addresses",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["export-addresses"]
-    },
-    {
       "name": "Fill DB",
       "type": "debugpy",
       "request": "launch",
       "module": "flask",
-      "args": ["fill-stage-db"]
+      "args": ["fill-db-with-movies"]
     },
-    {
-      "name": "Write phone numbers",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["write-phones"]
-    },
-    {
-      "name": "Write emails",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["write-emails"]
-    },
-    {
-      "name": "Fill db with jobs",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "flask",
-      "args": ["fill-db-with-jobs"]
-    }
   ]
 }

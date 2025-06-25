@@ -101,35 +101,6 @@ def register_sqlite_functions(dbapi_connection, connection_record):
         pass  # Ignore for non-SQLite engines
 
 
-# @pytest.fixture
-# def s3_client() -> Generator[S3Client, None, None]:
-#     """Returns a mock S3 client"""
-
-#     with mock_aws():
-#         from api.dependency.s3_client import get_s3_connect
-#         from config import config
-
-#         CFG = config()
-
-#         client = get_s3_connect()
-#         client.create_bucket(
-#             Bucket=CFG.AWS_S3_BUCKET_NAME,
-#             CreateBucketConfiguration={"LocationConstraint": CFG.AWS_REGION},  # type: ignore
-#         )
-
-#         yield client
-
-
-# @pytest.fixture
-# def sns_client() -> Generator[SNSClient, None, None]:
-#     """Returns a mock SNS client"""
-
-#     with mock_aws():
-#         client = boto3.client("sns", region_name="us-east-1")
-
-#         yield client
-
-
 @pytest.fixture
 def client(db, monkeypatch) -> Generator[TestClient, None, None]:
     """Returns a non-authorized test client for the API"""
@@ -144,7 +115,7 @@ def auth_user_owner(
     db: orm.Session,
 ):
     """Returns an authorized test client for the API"""
-    # authorized_header: dict[str, str] = {}
+
     user = db.scalar(select(m.User).where(m.User.id == 1, m.User.role == s.UserRole.OWNER.value))
     assert user
     yield user
@@ -155,43 +126,7 @@ def auth_simple_user(
     db: orm.Session,
 ):
     """Returns an authorized test user"""
+
     user = db.scalar(select(m.User).where(m.User.role.not_in(s.UserRole.get_admin_roles())))
     assert user
     yield user
-
-    # response = client.post(
-    #     "/api/auth/login",
-    #     data={
-    #         "username": user.first_name,
-    #         "password": CFG.TEST_USER_PASSWORD,
-    #     },
-    # )
-    # assert response.status_code == status.HTTP_200_OK
-    # token = s.Token.model_validate(response.json())
-    # authorized_header["Authorization"] = f"Bearer {token.access_token}"
-
-    # yield authorized_header
-
-
-# @pytest.fixture
-# def worker_header(
-#     client: TestClient,
-#     db: orm.Session,
-# ) -> Generator[dict[str, str], None, None]:
-#     """Returns an authorized test client for the API"""
-#     authorized_header: dict[str, str] = {}
-#     user = db.scalar(select(m.User).where(m.User.id == 2))
-#     assert user
-
-#     response = client.post(
-#         "/api/auth/login",
-#         data={
-#             "username": user.first_name,
-#             "password": CFG.TEST_USER_PASSWORD,
-#         },
-#     )
-#     assert response.status_code == status.HTTP_200_OK
-#     token = s.Token.model_validate(response.json())
-#     authorized_header["Authorization"] = f"Bearer {token.access_token}"
-
-#     yield authorized_header

@@ -31,14 +31,14 @@ def rate_movie(
     movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
     if not movie:
         log(log.ERROR, "Movie [%s] not found")
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
     user_rating = db.scalar(
         sa.select(m.Rating).where(m.Rating.movie_id == movie.id).where(m.Rating.user_id == current_user.id)
     )
     if user_rating:
         log(log.ERROR, "Rating for movie [%s] already exists", movie.key)
-        raise HTTPException(status_code=400, detail="Rating for movie already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Rating for movie already exists")
 
     rating_data = data.rating_criteria
 
@@ -84,16 +84,16 @@ def update_rate_movie(
     movie = db.scalars(sa.select(m.Movie).where(m.Movie.key == data.movie_key)).first()
     if not movie:
         log(log.ERROR, "Movie [%s] not found", data.movie_key)
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
     if not current_user.ratings:
         log(log.ERROR, "User [%s] has no ratings to update", current_user.email)
-        raise HTTPException(status_code=404, detail="User has no ratings to update")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User has no ratings to update")
 
     rating = next((r for r in current_user.ratings if r.movie.key == data.movie_key), None)
     if not rating:
         log(log.ERROR, "Rating for movie [%s] not found", data.movie_key)
-        raise HTTPException(status_code=404, detail="Rating not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rating not found")
 
     rating_data = data.rating_criteria
 
@@ -133,6 +133,7 @@ def get_time_rate_movie(
 
     data = []
 
+    # TODO: refactor
     for rating in current_user.ratings:
         created_at = rating.created_at if rating.created_at > rating.updated_at else rating.updated_at
         data.append(
@@ -239,7 +240,7 @@ def get_all_users(
 
     if not users:
         log(log.ERROR, "Users not found")
-        raise HTTPException(status_code=404, detail="Users not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Users not found")
 
     users_out = [
         s.UserOut(
@@ -274,7 +275,7 @@ def set_language(
 
     if not current_user:
         log(log.ERROR, "User [%s] not found", current_user.email)
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     current_user.preferred_language = lang.value
     db.commit()
@@ -295,19 +296,19 @@ def update_title_visual_profile(
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == data.movie_key))
     if not movie:
         log(log.ERROR, "Movie [%s] not found", data.movie_key)
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
     user_vp = next((vp for vp in movie.visual_profiles if vp.user_id == current_user.id), None)
     if not user_vp:
         log(log.ERROR, "User [%s] has no visual profile for movie [%s]", current_user.email, data.movie_key)
-        raise HTTPException(status_code=404, detail="User has no visual profile for this movie")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User has no visual profile for this movie")
 
     # Change category and its criteria
     if user_vp.category.key != data.category_key:
         category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == data.category_key))
         if not category:
             log(log.ERROR, "Category [%s] not found", data.category_key)
-            raise HTTPException(status_code=404, detail="Category not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
         user_vp.category_id = category.id
         user_vp.ratings.clear()
@@ -319,7 +320,7 @@ def update_title_visual_profile(
 
             if not criterion_db:
                 log(log.ERROR, "Criterion [%s] not found", criterion.key)
-                raise HTTPException(status_code=404, detail="Criterion not found")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Criterion not found")
 
             new_rating = m.VisualProfileRating(
                 title_visual_profile_id=user_vp.id,
@@ -341,7 +342,7 @@ def update_title_visual_profile(
 
             if not criterion_db:
                 log(log.ERROR, "Criterion [%s] not found", criterion.key)
-                raise HTTPException(status_code=404, detail="Criterion not found")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Criterion not found")
 
             criterion_rating = db.scalar(
                 sa.select(m.VisualProfileRating).where(
@@ -352,7 +353,7 @@ def update_title_visual_profile(
 
             if not criterion_rating:
                 log(log.ERROR, "Criterion rating for movie [%s] not found", data.movie_key)
-                raise HTTPException(status_code=404, detail="Criterion rating not found")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Criterion rating not found")
 
             criterion_rating.rating = criterion.rating
             criterion_rating.order = idx + 1

@@ -235,6 +235,8 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
 
 
 def get_main_genres_for_movies(db: Session, movie_ids: list[int], lang: s.Language):
+    from collections import defaultdict
+
     # Fetch all genre matches for these movies
     genre_rows = db.execute(
         sa.select(
@@ -250,7 +252,6 @@ def get_main_genres_for_movies(db: Session, movie_ids: list[int], lang: s.Langua
 
     # Build a dict: movie_id -> (genre, percentage_match)
     main_genre_map = {}
-    from collections import defaultdict
 
     movie_genre_matches = defaultdict(list)
     for row in genre_rows:
