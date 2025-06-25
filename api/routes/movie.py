@@ -107,7 +107,26 @@ def get_movie(
 ):
     """Get all movie details by key"""
 
-    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+    movie = db.scalar(
+        sa.select(m.Movie)
+        .where(m.Movie.key == movie_key)
+        # "selectinload" for deep queries speeds up execution. All other, simple ones, on the contrary, can slow down (like movie.translations).
+        .options(
+            # Visual profile
+            selectinload(m.Movie.visual_profiles)
+            .selectinload(m.VisualProfile.ratings)
+            .selectinload(m.VisualProfileRating.criterion)
+            .selectinload(m.VisualProfileCategoryCriterion.translations),
+            # Actor
+            selectinload(m.Movie.characters)
+            .selectinload(m.MovieActorCharacter.actor)
+            .selectinload(m.Actor.translations),
+            # Character
+            selectinload(m.Movie.characters)
+            .selectinload(m.MovieActorCharacter.character)
+            .selectinload(m.Character.translations),
+        )
+    )
 
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
@@ -148,7 +167,7 @@ def super_search_movies(
 ):
     """Get movies by query params"""
 
-    query = sa.select(m.Movie)
+    query = sa.select(m.Movie).options(selectinload(m.Movie.translations), selectinload(m.Movie.ratings))
 
     logical_op = sa.and_ if exact_match else sa.or_
 
@@ -258,6 +277,7 @@ def search(
     movies_db = (
         db.scalars(
             sa.select(m.Movie)
+            .options(selectinload(m.Movie.translations))
             .where(
                 m.Movie.translations.any(
                     sa.func.regexp_replace(

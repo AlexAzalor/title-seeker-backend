@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 import app.models as m
 import app.schema as s
 import sqlalchemy as sa
@@ -245,7 +245,7 @@ def get_main_genres_for_movies(db: Session, movie_ids: list[int], lang: s.Langua
     ).all()
     # Fetch all genres needed
     genre_ids = {row.genre_id for row in genre_rows}
-    genres = db.query(m.Genre).filter(m.Genre.id.in_(genre_ids)).all()
+    genres = db.query(m.Genre).options(selectinload(m.Genre.translations)).filter(m.Genre.id.in_(genre_ids)).all()
     genre_map = {genre.id: genre for genre in genres}
 
     # Build a dict: movie_id -> (genre, percentage_match)
@@ -302,11 +302,11 @@ def build_movie_query(sort_by: s.SortBy, is_reverse: bool, current_user: m.User 
         user_order = get_user_order(sort_by, is_reverse)
         return (
             sa.select(m.Movie)
+            .options(selectinload(m.Movie.translations), selectinload(m.Movie.ratings))
             .join(m.Rating, m.Rating.movie_id == m.Movie.id)
             .where(m.Rating.user_id == current_user.id)
             .order_by(user_order)
         )
-    # fdfd
     else:
         order = get_order(sort_by, is_reverse)
-        return sa.select(m.Movie).order_by(order)
+        return sa.select(m.Movie).options(selectinload(m.Movie.translations)).order_by(order)
