@@ -2,8 +2,10 @@ name: Build and Deploy
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - develop
+    # tags:
+    #   - 'v*.*.*'
 
 env:
   DOCKER_LOGIN: azalor
