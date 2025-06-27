@@ -235,6 +235,8 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
 
 
 def get_main_genres_for_movies(db: Session, movie_ids: list[int], lang: s.Language):
+    """Get the main genre (highest percentage match) for each movie."""
+
     from collections import defaultdict
 
     # Fetch all genre matches for these movies

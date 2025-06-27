@@ -23,7 +23,7 @@ TODO.md
 
 **/backups
 **/uploads
-**/data
+**/data/*
 
 **/*.pem
 **/*.sql

@@ -133,8 +133,15 @@ def get_time_rate_movie(
 
     data = []
 
-    # TODO: refactor
-    for rating in current_user.ratings:
+    recent_rated_movies = db.scalars(
+        sa.select(m.Rating)
+        .options(selectinload(m.Rating.movie).selectinload(m.Movie.translations))
+        .where(m.Rating.user_id == current_user.id)
+        .order_by(m.Rating.updated_at.desc())
+        .limit(30)
+    ).all()
+
+    for rating in recent_rated_movies:
         created_at = rating.created_at if rating.created_at > rating.updated_at else rating.updated_at
         data.append(
             s.TimeRateMovieOut(
@@ -145,7 +152,7 @@ def get_time_rate_movie(
             )
         )
 
-    return s.MovieChartData(movie_chart_data=sorted(data, key=lambda x: x.created_at)[-30:])
+    return s.MovieChartData(movie_chart_data=data[::-1])  # Reverse the order to show the most recent in the end
 
 
 @user_router.get(
