@@ -49,8 +49,6 @@ def google_auth(
     new_movies_to_add_count = 0
 
     if s.UserRole(user.role).is_owner():
-        # file_path = get_quick_movie_file_path()
-        # if os.path.exists(file_path):
         quick_movies = get_movies_data_from_file()
 
         if quick_movies:

@@ -456,8 +456,6 @@ def get_movies_data_from_file():
     """Get movies data from json file"""
 
     file_path = get_quick_movie_file_path()
-    if not os.path.exists(file_path):
-        get_quick_movie_file_path(with_create=True)
 
     with open(file_path, "r") as file:
         file_data = s.QuickMovieJSON.model_validate(json.load(file))

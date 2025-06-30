@@ -1,4 +1,3 @@
-import os
 import json
 from datetime import datetime
 import re
@@ -140,20 +139,33 @@ def normalize_query(query: str) -> str:
     return re.sub(r"[^a-zA-Zа-яА-Я0-9 ]", "", query.lower())
 
 
-def get_quick_movie_file_path(with_create: bool = False):
+def find_project_root(marker_files=("pyproject.toml", ".git")):
+    from pathlib import Path
+
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        if any((current / marker).exists() for marker in marker_files):
+            return current
+        current = current.parent
+    raise RuntimeError("Project root not found.")
+
+
+def get_quick_movie_file_path():
     """Check if a file exists for quick movies. If not, create the directory and file."""
 
     folder_name = "movie_data"
     file_name = "quick_movies.json"
+    project_root = find_project_root()
 
-    quick_movies_paths = os.path.join(folder_name, file_name)
+    folder_path = project_root / folder_name
+    file_path = folder_path / file_name
 
-    if with_create:
-        if not os.path.exists(quick_movies_paths):
-            os.makedirs(folder_name)
+    # Create folder if it doesn't exist
+    folder_path.mkdir(parents=True, exist_ok=True)
 
-        if not os.path.exists(quick_movies_paths):
-            with open(quick_movies_paths, "w") as f:
-                json.dump({"movies": []}, f, indent=4)
+    # Create file with empty JSON structure if it doesn't exist
+    if not file_path.exists():
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump({"movies": []}, f, indent=4)
 
-    return quick_movies_paths
+    return str(file_path)
