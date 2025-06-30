@@ -24,6 +24,7 @@ TODO.md
 **/backups
 **/uploads
 **/data/*
+**/movie_data/*
 
 **/*.pem
 **/*.sql

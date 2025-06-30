@@ -21,5 +21,6 @@ dump.tgz
 
 uploads/*
 backups/*
+movie_data/*
 
 *.pem
