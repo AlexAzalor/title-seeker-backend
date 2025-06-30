@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from random import randint
 from typing import Annotated, Sequence
@@ -12,7 +11,6 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File
 from sqlalchemy.orm import Session, aliased, selectinload
 
 from api.controllers.create_movie import (
-    QUICK_MOVIES_FILE,
     add_image_to_s3_bucket,
     add_poster_to_new_movie,
     add_new_characters,
@@ -34,7 +32,7 @@ from api.controllers.super_search import (
     get_visual_profile_query_conditions,
 )
 from api.dependency.user import get_admin, get_current_user, get_owner
-from api.utils import get_error_message, normalize_query
+from api.utils import get_error_message, get_quick_movie_file_path, normalize_query
 import app.models as m
 import app.schema as s
 from app.database import get_db
@@ -456,19 +454,18 @@ def get_pre_create_data(
     quick_movie = None
 
     if quick_movie_key:
-        if os.path.exists(QUICK_MOVIES_FILE):
-            movies = get_movies_data_from_file()
+        movies = get_movies_data_from_file()
 
-            if movies:
-                for movie in movies:
-                    if movie.key == quick_movie_key:
-                        quick_movie = s.QuickMovieFormData(
-                            key=movie.key,
-                            title_en=movie.title_en,
-                            rating=movie.rating,
-                            rating_criterion_type=movie.rating_criterion_type,
-                            rating_criteria=movie.rating_criteria,
-                        )
+        if movies:
+            for movie in movies:
+                if movie.key == quick_movie_key:
+                    quick_movie = s.QuickMovieFormData(
+                        key=movie.key,
+                        title_en=movie.title_en,
+                        rating=movie.rating,
+                        rating_criterion_type=movie.rating_criterion_type,
+                        rating_criteria=movie.rating_criteria,
+                    )
 
     return s.MoviePreCreateData(
         visual_profile_categories=categories_out,
@@ -583,7 +580,9 @@ def quick_add_movie(
             # Add new movie to existing movies
             movies_to_file += movies
 
-        with open(QUICK_MOVIES_FILE, "w") as file:
+        file_path = get_quick_movie_file_path()
+
+        with open(file_path, "w") as file:
             json.dump(s.QuickMovieJSON(movies=movies_to_file).model_dump(mode="json"), file, indent=4)
 
         log(log.INFO, "Movie [%s] successfully added by [%s]", form_data.key, current_user.email)
@@ -998,25 +997,24 @@ def get_similar_movies(
     status_code=status.HTTP_200_OK,
     response_model=s.QuickMovieList,
 )
-def movies_to_add(
+def get_movies_to_add_list(
     admin_user: m.User = Depends(get_admin),
 ):
     """List of new movies to add"""
 
     quick_movies_out = []
 
-    if os.path.exists(QUICK_MOVIES_FILE):
-        quick_movies = get_movies_data_from_file()
+    quick_movies = get_movies_data_from_file()
 
-        if quick_movies:
-            for quick_movie in quick_movies:
-                quick_movies_out.append(
-                    s.QuickMovie(
-                        key=quick_movie.key,
-                        title_en=quick_movie.title_en,
-                        rating=quick_movie.rating,
-                    )
+    if quick_movies:
+        for quick_movie in quick_movies:
+            quick_movies_out.append(
+                s.QuickMovie(
+                    key=quick_movie.key,
+                    title_en=quick_movie.title_en,
+                    rating=quick_movie.rating,
                 )
+            )
 
     return s.QuickMovieList(quick_movies=quick_movies_out)
 

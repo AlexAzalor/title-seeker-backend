@@ -1,3 +1,5 @@
+import os
+import json
 from datetime import datetime
 import re
 from boto3 import Session
@@ -136,3 +138,22 @@ def normalize_query(query: str) -> str:
     """Normalize the query for multilingual support."""
     # Remove special characters and normalize for Ukrainian and English
     return re.sub(r"[^a-zA-Zа-яА-Я0-9 ]", "", query.lower())
+
+
+def get_quick_movie_file_path(with_create: bool = False):
+    """Check if a file exists for quick movies. If not, create the directory and file."""
+
+    folder_name = "movie_data"
+    file_name = "quick_movies.json"
+
+    quick_movies_paths = os.path.join(folder_name, file_name)
+
+    if with_create:
+        if not os.path.exists(quick_movies_paths):
+            os.makedirs(folder_name)
+
+        if not os.path.exists(quick_movies_paths):
+            with open(quick_movies_paths, "w") as f:
+                json.dump({"movies": []}, f, indent=4)
+
+    return quick_movies_paths

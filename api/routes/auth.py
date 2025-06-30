@@ -1,7 +1,6 @@
-import os
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, status
-from api.controllers.create_movie import QUICK_MOVIES_FILE, get_movies_data_from_file
+from api.controllers.create_movie import get_movies_data_from_file
 from api.dependency.user import get_current_user
 import app.models as m
 import sqlalchemy as sa
@@ -50,11 +49,12 @@ def google_auth(
     new_movies_to_add_count = 0
 
     if s.UserRole(user.role).is_owner():
-        if os.path.exists(QUICK_MOVIES_FILE):
-            quick_movies = get_movies_data_from_file()
+        # file_path = get_quick_movie_file_path()
+        # if os.path.exists(file_path):
+        quick_movies = get_movies_data_from_file()
 
-            if quick_movies:
-                new_movies_to_add_count = len(quick_movies)
+        if quick_movies:
+            new_movies_to_add_count = len(quick_movies)
 
     return s.GoogleAuthOut(
         uuid=user.uuid,

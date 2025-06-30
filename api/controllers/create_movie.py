@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from fastapi import UploadFile
 
 from api.dependency.s3_client import get_s3_connect
-from api.utils import process_movie_rating
+from api.utils import get_quick_movie_file_path, process_movie_rating
 import app.schema as s
 import app.models as m
 from app.logger import log
@@ -14,8 +14,6 @@ from sqlalchemy.orm import Session
 from config import config
 
 CFG = config()
-
-QUICK_MOVIES_FILE = "data/quick_add_movies.json"
 
 
 def create_new_movie(db: Session, form_data: s.MovieFormData) -> m.Movie:
@@ -457,7 +455,11 @@ def import_new_movie_to_google_sheet(db: Session):
 def get_movies_data_from_file():
     """Get movies data from json file"""
 
-    with open(QUICK_MOVIES_FILE, "r") as file:
+    file_path = get_quick_movie_file_path()
+    if not os.path.exists(file_path):
+        get_quick_movie_file_path(with_create=True)
+
+    with open(file_path, "r") as file:
         file_data = s.QuickMovieJSON.model_validate(json.load(file))
 
     return file_data.movies
@@ -465,8 +467,9 @@ def get_movies_data_from_file():
 
 def remove_quick_movie(movie_key: str):
     """Remove movie from json file"""
+    file_path = get_quick_movie_file_path()
 
-    if os.path.exists(QUICK_MOVIES_FILE):
+    if os.path.exists(file_path):
         try:
             movies = get_movies_data_from_file()
 
@@ -477,7 +480,7 @@ def remove_quick_movie(movie_key: str):
                 if movie_key in keys:
                     movies_to_file = [movie for movie in movies if movie.key != movie_key]
 
-                with open(QUICK_MOVIES_FILE, "w") as file:
+                with open(file_path, "w") as file:
                     json.dump(s.QuickMovieJSON(movies=movies_to_file).model_dump(mode="json"), file, indent=4)
         except Exception as e:
             log(log.ERROR, "Error adding movie [%s] to file: %s", movie_key, e)
