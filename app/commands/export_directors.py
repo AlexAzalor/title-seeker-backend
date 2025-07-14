@@ -95,7 +95,6 @@ def export_directors_from_google_spreadsheets(with_print: bool = True, in_json: 
     BORN_IN_EN_INDEX = values[0].index(BORN_IN_EN)
     AVATAR_INDEX = values[0].index(AVATAR)
 
-    print("values: ", values[:1])
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue

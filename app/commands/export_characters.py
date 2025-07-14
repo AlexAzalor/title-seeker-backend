@@ -130,7 +130,6 @@ def export_characters_from_google_spreadsheets(with_print: bool = True, in_json:
     INDEX_ACTORS_IDS = values[0].index(ACTORS_IDS)
     INDEX_MOVIES_IDS = values[0].index(MOVIES_IDS)
 
-    print("values: ", values[:1])
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue

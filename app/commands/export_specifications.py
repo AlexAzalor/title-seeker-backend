@@ -76,7 +76,6 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
     values = result.get("values", [])
 
     assert values, "No data found"
-    print("values: ", values[:1])
 
     specifications: list[s.FilterFields] = []
 
@@ -100,7 +99,6 @@ def export_specifications_from_google_spreadsheets(with_print: bool = True, in_j
 
         name_uk = row[NAME_UK_INDEX]
         assert name_uk, f"The name_uk {name_uk} is missing"
-        # print("name_uk: ", name_uk)
 
         name_en = row[NAME_EN_INDEX]
         assert name_en, f"The name_en {name_en} is missing"

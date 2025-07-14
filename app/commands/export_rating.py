@@ -137,7 +137,6 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
     INDEX_CREATED_AT = values[0].index(CREATED_AT)
     INDEX_UPDATED_AT = values[0].index(UPDATED_AT)
 
-    print("values: ", values[:1])
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue
@@ -154,8 +153,6 @@ def export_ratings_from_google_spreadsheets(with_print: bool = True, in_json: bo
         acting = row[INDEX_ACTING]
         assert acting, f"The acting {acting} is missing"
         acting = float(acting.replace(",", "."))
-
-        # print('acting', acting, type(acting), float(acting.replace(",", ".")))
 
         plot_storyline = row[INDEX_PLOT_STORYLINE]
         assert plot_storyline, f"The plot_storyline {plot_storyline} is missing"

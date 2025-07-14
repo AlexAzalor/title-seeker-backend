@@ -72,8 +72,6 @@ def write_movies_in_db(movies: list[s.MovieExportCreate]):
                 skipped_movies += 1
                 continue
 
-            # print('movie', movie.key)
-
             subgenres = (
                 [
                     session.scalar(sa.select(m.Subgenre).where(m.Subgenre.id == subgenre_id))
@@ -322,7 +320,6 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
     assert values, "No data found"
 
-    print("movies table row", values[:1])
     movies: list[s.MovieExportCreate] = []
 
     # indexes of row values
@@ -447,9 +444,6 @@ def export_movies_from_google_spreadsheets(with_print: bool = True, in_json: boo
 
         action_times_ids = [list(action_time_id.keys())[0] for action_time_id in action_times_list]
         assert action_times_ids, f"The action_times_ids {action_times_ids} is missing"
-
-        # print('1', action_times_ids)
-        # print('2', action_times_list)
 
         location_uk = row[LOCATION_UK_INDEX]
         assert location_uk, f"The location_uk {location_uk} is missing"

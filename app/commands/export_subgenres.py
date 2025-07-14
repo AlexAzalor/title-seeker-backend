@@ -90,7 +90,6 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
     DESCRIPTION_UK_INDEX = values[0].index(DESCRIPTION_UK)
     DESCRIPTION_EN_INDEX = values[0].index(DESCRIPTION_EN)
 
-    print("values: ", values[:1])
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue
@@ -103,7 +102,6 @@ def export_subgenres_from_google_spreadsheets(with_print: bool = True, in_json: 
 
         name_uk = row[NAME_UK_INDEX]
         assert name_uk, f"The name_uk {name_uk} is missing"
-        # print("name_uk: ", name_uk)
 
         name_en = row[NAME_EN_INDEX]
         assert name_en, f"The name_en {name_en} is missing"

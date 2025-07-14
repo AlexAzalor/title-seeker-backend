@@ -85,7 +85,6 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
     values = result.get("values", [])
 
     assert values, "No data found"
-    print("values: ", values[:1])
 
     visual_profile_categories: list[s.VisualProfileExportCreate] = []
 
@@ -114,7 +113,6 @@ def export_title_categories_from_google_spreadsheets(with_print: bool = True, in
 
         name_uk = row[NAME_UK_INDEX]
         assert name_uk, f"The name_uk {name_uk} is missing"
-        # print("name_uk: ", name_uk)
 
         name_en = row[NAME_EN_INDEX]
         assert name_en, f"The name_en {name_en} is missing"

@@ -75,7 +75,6 @@ def export_users_from_google_spreadsheets(with_print: bool = True, in_json: bool
     INDEX_ROLE = values[0].index(ROLE)
     INDEX_EMAIL = values[0].index(EMAIL)
 
-    print("values: ", values[:1])
     for row in values[1:]:
         if not row[INDEX_ID]:
             continue

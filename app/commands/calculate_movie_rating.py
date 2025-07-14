@@ -27,7 +27,6 @@ def calculate_movie_rating():
                 sum([rating.production_design for rating in movie_ratings]) / len(movie_ratings), 2
             )
             if movie.rating_criterion == s.RatingCriterion.VISUAL_EFFECTS:
-                # print('movie_ratings----------------', movie_ratings)
                 average_visual_effects = round(
                     sum([rating.visual_effects for rating in movie_ratings]) / len(movie_ratings), 2
                 )

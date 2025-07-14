@@ -55,21 +55,12 @@ class BaseConfig(BaseSettings):
     SCOPES: list[str]
     SPREADSHEET_ID: str
 
-    USER_CAROUSEL_LIMIT: int = 16
-
     # S3
     AWS_ACCESS_KEY: str | None
     AWS_SECRET_KEY: str | None
     AWS_REGION: str | None
     AWS_S3_BUCKET_NAME: str = "titlehunt"
     AWS_S3_BUCKET_URL: str
-
-    # aws sns
-    AWS_SNS_ACCESS_KEY: str | None
-    AWS_SNS_SECRET_KEY: str | None
-    AWS_SNS_REGION: str | None
-
-    SERVICES_LIMIT: int = 16
 
     TEST_DATA_PATH: str = "./test_api/test_data/"
 
