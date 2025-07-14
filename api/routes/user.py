@@ -214,9 +214,11 @@ def get_info_report(
         last_rating_date = create_date if create_date > update_date else update_date
 
     actors_count = None
+    directors_count = None
 
     if s.UserRole(current_user.role).has_permissions():
         actors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Actor)).first()
+        directors_count = db.scalars(sa.select(sa.func.count()).select_from(m.Director)).first()
 
     return s.UserInfoReport(
         genre_data=genre_movie_counts,
@@ -225,6 +227,7 @@ def get_info_report(
         movies_rated=len(current_user.ratings),
         last_movie_rate_date=last_rating_date,
         total_actors_count=actors_count,
+        total_directors_count=directors_count,
     )
 
 

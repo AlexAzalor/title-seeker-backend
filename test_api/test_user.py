@@ -74,7 +74,7 @@ def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User)
     assert len(data.movie_chart_data) == 30
 
 
-def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User):
+def test_get_info_report_data(client: TestClient, auth_user_owner: m.User):
     assert auth_user_owner.ratings
 
     response = client.get("/api/users/info-report/", params={"user_uuid": auth_user_owner.uuid})
@@ -84,6 +84,8 @@ def test_get_genre_radar_chart_data(client: TestClient, auth_user_owner: m.User)
     assert data.genre_data
     assert data.top_rated_movies
     assert data.joined_date
+    assert data.total_actors_count is not None
+    assert data.total_directors_count is not None
 
 
 def test_get_all_users(client: TestClient, auth_user_owner: m.User):

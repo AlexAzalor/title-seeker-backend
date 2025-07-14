@@ -156,6 +156,7 @@ def super_search_movies(
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
     exact_match: Annotated[bool, Query()] = False,
+    inner_exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
     sort_order: s.SortOrder = s.SortOrder.DESC,
     lang: s.Language = s.Language.UK,
@@ -168,6 +169,7 @@ def super_search_movies(
     query = sa.select(m.Movie).options(selectinload(m.Movie.translations), selectinload(m.Movie.ratings))
 
     logical_op = sa.and_ if exact_match else sa.or_
+    inner_logical_op = sa.and_ if inner_exact_match else sa.or_
 
     # What Happens to the Query at Each Filter Step?
     # Build conditions for each filter type
@@ -176,41 +178,41 @@ def super_search_movies(
     # GENRES, SUBGENRES
     genre_conditions, subgenre_conditions = get_genre_query_conditions(genre, subgenre, db)
     if genre_conditions:
-        filter_conditions.append(sa.or_(*genre_conditions))
+        filter_conditions.append(inner_logical_op(*genre_conditions))
     if subgenre_conditions:
-        filter_conditions.append(sa.or_(*subgenre_conditions))
+        filter_conditions.append(inner_logical_op(*subgenre_conditions))
 
     # SPECIFICATIONS, KEYWORDS, ACTION TIMES
     spec_conditions, keyword_conditions, at_conditions = get_filter_query_conditions(
         specification, keyword, action_time, db
     )
     if spec_conditions:
-        filter_conditions.append(sa.or_(*spec_conditions))
+        filter_conditions.append(inner_logical_op(*spec_conditions))
     if keyword_conditions:
-        filter_conditions.append(sa.or_(*keyword_conditions))
+        filter_conditions.append(inner_logical_op(*keyword_conditions))
     if at_conditions:
-        filter_conditions.append(sa.or_(*at_conditions))
+        filter_conditions.append(inner_logical_op(*at_conditions))
 
     # ACTORS, DIRECTORS, CHARACTERS
     actor_conditions, director_conditions, char_conditions = get_people_query_conditions(actor, director, character, db)
     if actor_conditions:
-        filter_conditions.append(sa.or_(*actor_conditions))
+        filter_conditions.append(inner_logical_op(*actor_conditions))
     if director_conditions:
-        filter_conditions.append(sa.or_(*director_conditions))
+        filter_conditions.append(inner_logical_op(*director_conditions))
     if char_conditions:
-        filter_conditions.append(sa.or_(*char_conditions))
+        filter_conditions.append(inner_logical_op(*char_conditions))
 
     # SHARED UNIVERSE
     if shared_universe:
         su_conditions = get_shared_universe_query_conditions(shared_universe, db)
         if su_conditions:
-            filter_conditions.append(sa.or_(*su_conditions))
+            filter_conditions.append(inner_logical_op(*su_conditions))
 
     # VISUAL PROFILE
     if visual_profile:
         vp_conditions = get_visual_profile_query_conditions(visual_profile, db)
         if vp_conditions:
-            filter_conditions.append(sa.or_(*vp_conditions))
+            filter_conditions.append(inner_logical_op(*vp_conditions))
 
     # Combine conditions
     if filter_conditions:
@@ -689,6 +691,7 @@ def get_similar_movies(
     """Get similar movies for current one"""
 
     # TODO: IMPLEMENT/IMPROVE ALGORITHM When there will be enough movies on prod (200+)
+    # Also the radar chart should be more round in shape, this means there is a rich variety of movies
 
     movie = db.scalar(
         sa.select(m.Movie)
@@ -880,18 +883,24 @@ def get_similar_movies(
             )
         )
 
+    movies_limit = 10
+
     # Ensure at least one genre and one subgenre match
-    stmt = sa.select(m.Movie).where(
-        m.Movie.id != movie.id,  # Exclude the current movie
-        m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),  # Exclude specific movies
-        sa.and_(
-            sa.or_(*genre_conditions)
-            if genre_conditions
-            else sa.literal(True),  # If genres are provided, at least one must match
-            sa.or_(*subgenre_conditions)
-            if subgenre_conditions
-            else sa.literal(True),  # If subgenres are provided, at least one must match
-        ),
+    stmt = (
+        sa.select(m.Movie)
+        .where(
+            m.Movie.id != movie.id,  # Exclude the current movie
+            m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),  # Exclude specific movies
+            sa.and_(
+                sa.or_(*genre_conditions)
+                if genre_conditions
+                else sa.literal(True),  # If genres are provided, at least one must match
+                sa.or_(*subgenre_conditions)
+                if subgenre_conditions
+                else sa.literal(True),  # If subgenres are provided, at least one must match
+            ),
+        )
+        .limit(movies_limit)
     )
 
     similar_movies = db.execute(stmt).scalars().all()
@@ -936,28 +945,32 @@ def get_similar_movies(
         #         )
         #     )
 
-        stmt = sa.select(m.Movie).where(
-            m.Movie.id != movie.id,
-            m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),
-            sa.and_(
-                sa.or_(*genre_conditions) if genre_conditions else sa.literal(True),
-                # sa.or_(*subgenre_conditions)
-                # if subgenre_conditions
-                # else sa.literal(True),
-                # sa.or_(*spec_conditions)
-                # if spec_conditions
-                # else sa.literal(True),
-                # sa.or_(*keyword_conditions)
-                # if keyword_conditions
-                # else sa.literal(True),
-            ),
-            sa.or_(
-                sa.or_(*spec_conditions) if spec_conditions else sa.literal(True),
-                sa.or_(*keyword_conditions) if keyword_conditions else sa.literal(True),
-                # sa.or_(*action_time_conditions)
-                # if action_time_conditions
-                # else sa.literal(True),
-            ),
+        stmt = (
+            sa.select(m.Movie)
+            .where(
+                m.Movie.id != movie.id,
+                m.Movie.key.not_in([m.key for m in movie.related_movies_collection]),
+                sa.and_(
+                    sa.or_(*genre_conditions) if genre_conditions else sa.literal(True),
+                    # sa.or_(*subgenre_conditions)
+                    # if subgenre_conditions
+                    # else sa.literal(True),
+                    # sa.or_(*spec_conditions)
+                    # if spec_conditions
+                    # else sa.literal(True),
+                    # sa.or_(*keyword_conditions)
+                    # if keyword_conditions
+                    # else sa.literal(True),
+                ),
+                sa.or_(
+                    sa.or_(*spec_conditions) if spec_conditions else sa.literal(True),
+                    sa.or_(*keyword_conditions) if keyword_conditions else sa.literal(True),
+                    # sa.or_(*action_time_conditions)
+                    # if action_time_conditions
+                    # else sa.literal(True),
+                ),
+            )
+            .limit(movies_limit)
         )
 
         similar_movies = db.execute(stmt).scalars().all()

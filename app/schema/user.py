@@ -85,6 +85,7 @@ class UserInfoReport(BaseModel):
     movies_rated: int
     last_movie_rate_date: datetime | None
     total_actors_count: int | None = None
+    total_directors_count: int | None = None
 
 
 class UserOut(BaseModel):

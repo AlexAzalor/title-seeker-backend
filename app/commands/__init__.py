@@ -300,6 +300,7 @@ def init(app: Flask):
         from .export_vp_category_criterion import export_title_criteria_from_google_spreadsheets
         from .export_vp_categories import export_title_categories_from_google_spreadsheets
         from .create_visual_profiles import create_visual_profiles
+        from .calculate_movie_rating import calculate_movie_rating
 
         export_users_from_google_spreadsheets()
         export_actors_from_google_spreadsheets()
@@ -316,6 +317,7 @@ def init(app: Flask):
         export_title_criteria_from_google_spreadsheets()
         export_title_categories_from_google_spreadsheets()
         create_visual_profiles()
+        calculate_movie_rating()
 
         print("===============================================================")
         print("DATABASE SUCCESSFULLY FILLED WITH DATA FROM GOOGLE SPREADSHEETS")
