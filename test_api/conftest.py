@@ -1,8 +1,18 @@
+import os
+
+os.environ["APP_ENV"] = "testing"
+
+from dotenv import load_dotenv
+
+env_path = os.path.join(os.path.dirname(__file__), "test.env")
+load_dotenv(env_path, override=True)
+
+from config import config
+
 from typing import Generator
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 import pytest
-from dotenv import load_dotenv
 from fastapi import status
 from moto import mock_aws
 from mypy_boto3_s3 import S3Client
@@ -10,9 +20,7 @@ from mypy_boto3_sns import SNSClient
 
 from test_api.utils import do_nothing, regexp_replace
 
-load_dotenv("test_api/test.env")
 # ruff: noqa: F401 E402
-import os
 import boto3
 
 from fastapi.testclient import TestClient
@@ -21,7 +29,6 @@ from sqlalchemy import orm, select
 from api import app
 from app import models as m
 from app import schema as s
-from config import config
 
 
 def pytest_configure():

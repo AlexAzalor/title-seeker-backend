@@ -59,7 +59,7 @@ class BaseConfig(BaseSettings):
     AWS_ACCESS_KEY: str | None
     AWS_SECRET_KEY: str | None
     AWS_REGION: str | None
-    AWS_S3_BUCKET_NAME: str = "titlehunt"
+    AWS_S3_BUCKET_NAME: str
     AWS_S3_BUCKET_URL: str
 
     TEST_DATA_PATH: str = "./test_api/test_data/"
