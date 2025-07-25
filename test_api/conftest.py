@@ -1,13 +1,8 @@
 import os
-
-os.environ["APP_ENV"] = "testing"
-
 from dotenv import load_dotenv
-
-env_path = os.path.join(os.path.dirname(__file__), "test.env")
-load_dotenv(env_path, override=True)
-
 from config import config
+
+load_dotenv("test_api/test.env")
 
 from typing import Generator
 from sqlalchemy import event
