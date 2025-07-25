@@ -3,7 +3,7 @@ import sqlalchemy as sa
 # from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from api.routes.people import TOP_ACTORS_LIMIT
+from api.routes.people import TOP_PEOPLE_LIMIT
 from app import models as m
 from app import schema as s
 from fastapi import status
@@ -58,9 +58,9 @@ def test_actors(client: TestClient, db: Session, auth_user_owner: m.User):
     # Test get actors with most movies
     response = client.get("/api/people/actors-with-most-movies/")
     assert response.status_code == status.HTTP_200_OK
-    top_actors = s.ActorsList.model_validate(response.json())
+    top_actors = s.PeopleList.model_validate(response.json())
     assert top_actors
-    assert len(top_actors.actors) == TOP_ACTORS_LIMIT
+    assert len(top_actors.people) == TOP_PEOPLE_LIMIT
 
 
 def test_characters(client: TestClient, db: Session, auth_user_owner: m.User):
@@ -124,6 +124,13 @@ def test_directors(client: TestClient, db: Session, auth_user_owner: m.User):
             params={"user_uuid": auth_user_owner.uuid},
         )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # Test get directors with most movies
+    response = client.get("/api/people/directors-with-most-movies/")
+    assert response.status_code == status.HTTP_200_OK
+    top_directors = s.PeopleList.model_validate(response.json())
+    assert top_directors
+    assert len(top_directors.people) == TOP_PEOPLE_LIMIT
 
 
 def test_search_actors(client: TestClient, db: Session):

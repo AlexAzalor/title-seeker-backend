@@ -14,7 +14,7 @@ from app.database import get_db
 from config import config
 
 CFG = config()
-TOP_ACTORS_LIMIT = 20
+TOP_PEOPLE_LIMIT = 20
 
 people_router = APIRouter(prefix="/people", tags=["People"])
 
@@ -86,7 +86,7 @@ def create_actor(
     )
 
 
-@people_router.get("/actors-with-most-movies", status_code=status.HTTP_200_OK, response_model=s.ActorsList)
+@people_router.get("/actors-with-most-movies", status_code=status.HTTP_200_OK, response_model=s.PeopleList)
 def get_actors_with_most_movies(
     lang: s.Language = s.Language.UK,
     db: Session = Depends(get_db),
@@ -107,7 +107,7 @@ def get_actors_with_most_movies(
         .options(selectinload(m.Actor.translations))
         .join(subquery, m.Actor.id == subquery.c.id)
         .order_by(subquery.c.movie_count.desc())
-        .limit(TOP_ACTORS_LIMIT)
+        .limit(TOP_PEOPLE_LIMIT)
     ).all()
     if not actors:
         log(log.ERROR, "Actors [%s] not found")
@@ -117,10 +117,47 @@ def get_actors_with_most_movies(
 
     for actor, movie_count in actors:
         actors_out.append(
-            s.Actor(key=actor.key, name=actor.full_name(lang), avatar_url=actor.avatar, movie_count=movie_count)
+            s.TopPerson(key=actor.key, name=actor.full_name(lang), avatar_url=actor.avatar, movie_count=movie_count)
         )
 
-    return s.ActorsList(actors=actors_out)
+    return s.PeopleList(people=actors_out)
+
+
+@people_router.get("/directors-with-most-movies", status_code=status.HTTP_200_OK, response_model=s.PeopleList)
+def get_directors_with_most_movies(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get directors with the most movies"""
+
+    subquery = (
+        sa.select(m.Director.id, sa.func.count(m.Movie.id).label("movie_count"))
+        .join(m.Movie.directors)
+        .group_by(m.Director.id)
+        .subquery()
+    )
+
+    directors = db.execute(
+        sa.select(m.Director, subquery.c.movie_count)
+        .options(selectinload(m.Director.translations))
+        .join(subquery, m.Director.id == subquery.c.id)
+        .order_by(subquery.c.movie_count.desc())
+        .limit(TOP_PEOPLE_LIMIT)
+    ).all()
+    if not directors:
+        log(log.ERROR, "Directors [%s] not found")
+        raise HTTPException(status_code=404, detail="Directors not found")
+
+    directors_out = []
+
+    for director, movie_count in directors:
+        directors_out.append(
+            s.TopPerson(
+                key=director.key, name=director.full_name(lang), avatar_url=director.avatar, movie_count=movie_count
+            )
+        )
+
+    return s.PeopleList(people=directors_out)
 
 
 @people_router.post(

@@ -38,14 +38,14 @@ class PersonWithAvatar(BaseModel):
 
 
 # Only one place
-class Actor(PersonBase):
+class TopPerson(PersonBase):
     avatar_url: str
     movie_count: int
 
 
 # Only one place
-class ActorsList(BaseModel):
-    actors: list[Actor]
+class PeopleList(BaseModel):
+    people: list[TopPerson]
 
 
 class PersonForm(BaseModel):
