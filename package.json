@@ -1,6 +1,6 @@
 {
   "name": "title-seeker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Title Seeker - searching for titles using a special algorithm.",
   "main": "index.js",
   "scripts": {
