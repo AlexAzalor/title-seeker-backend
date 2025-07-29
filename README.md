@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 Title Seeker Backend
+# 🎬 <a href="https://titleseeker.com" target="_blank">Title Seeker</a>
 
 **A powerful title discovery platform built with modern technologies**
 
