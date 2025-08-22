@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, File, HTTPException, Depends, Query, UploadFile, status
 from api.controllers.people import add_avatar_to_new_actor, add_avatar_to_new_director
 from api.dependency.user import get_admin
-from api.utils import normalize_query
+from api.utils import normalize_query, invalidate_movie_cache, get_cached_data, set_cached_data
 import app.models as m
 import sqlalchemy as sa
 
@@ -93,6 +93,16 @@ def get_actors_with_most_movies(
 ):
     """Get actors with the most movies"""
 
+    # Create cache key
+    cache_key = f"actors_with_most_movies_{lang.value}"
+
+    # Try to get from Redis cache first
+    cached_data = get_cached_data(cache_key)
+    if cached_data:
+        log(log.INFO, "Returning cached data for key [%s]", cache_key)
+        # Convert back to Pydantic model
+        return s.PeopleList(**cached_data)
+
     # Subquery to count the number of movies for each actor
     subquery = (
         sa.select(m.Actor.id, sa.func.count(m.Movie.id).label("movie_count"))
@@ -120,7 +130,13 @@ def get_actors_with_most_movies(
             s.TopPerson(key=actor.key, name=actor.full_name(lang), avatar_url=actor.avatar, movie_count=movie_count)
         )
 
-    return s.PeopleList(people=actors_out)
+    actors_list = s.PeopleList(people=actors_out)
+    # Cache the result in Redis with 1 hour TTL
+    actors_dict = actors_list.model_dump(mode="json")
+    if set_cached_data(cache_key, actors_dict, ttl=3600):
+        log(log.INFO, "Cached data for key [%s]", cache_key)
+
+    return actors_list
 
 
 @people_router.get("/directors-with-most-movies", status_code=status.HTTP_200_OK, response_model=s.PeopleList)
@@ -129,6 +145,16 @@ def get_directors_with_most_movies(
     db: Session = Depends(get_db),
 ):
     """Get directors with the most movies"""
+
+    # Create cache key
+    cache_key = f"directors_with_most_movies_{lang.value}"
+
+    # Try to get from Redis cache first
+    cached_data = get_cached_data(cache_key)
+    if cached_data:
+        log(log.INFO, "Returning cached data for key [%s]", cache_key)
+        # Convert back to Pydantic model
+        return s.PeopleList(**cached_data)
 
     subquery = (
         sa.select(m.Director.id, sa.func.count(m.Movie.id).label("movie_count"))
@@ -157,7 +183,13 @@ def get_directors_with_most_movies(
             )
         )
 
-    return s.PeopleList(people=directors_out)
+    directors_list = s.PeopleList(people=directors_out)
+    # Cache the result in Redis with 1 hour TTL
+    directors_dict = directors_list.model_dump(mode="json")
+    if set_cached_data(cache_key, directors_dict, ttl=3600):
+        log(log.INFO, "Cached data for key [%s]", cache_key)
+
+    return directors_list
 
 
 @people_router.post(

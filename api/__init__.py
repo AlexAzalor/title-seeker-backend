@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi_pagination import add_pagination
-
+import redis
 from config import config
 
 from .utils import custom_generate_unique_id
@@ -20,6 +20,8 @@ app = FastAPI(
         },
     ],
 )
+
+r = redis.Redis(host="localhost", port=6379, db=0)
 
 
 app.include_router(router)

@@ -169,3 +169,48 @@ def get_quick_movie_file_path():
             json.dump({"movies": []}, f, indent=4)
 
     return str(file_path)
+
+
+def invalidate_movie_cache(movie_key: str):
+    """Invalidate all cached entries for a specific movie"""
+    from api import r
+
+    try:
+        # Find all cache keys for this movie (different languages and users)
+        pattern = f"movie:{movie_key}:*"
+        keys = r.keys(pattern)
+
+        if keys:
+            r.delete(*keys)
+            log(log.INFO, "Invalidated [%d] cache entries for movie [%s]", len(keys), movie_key)
+        else:
+            log(log.INFO, "No cache entries found for movie [%s]", movie_key)
+
+    except Exception as e:
+        log(log.WARNING, "Failed to invalidate cache for movie [%s]: %s", movie_key, e)
+
+
+def get_cached_data(cache_key: str):
+    """Safely get data from Redis cache"""
+    from api import r
+
+    try:
+        cached_data = r.get(cache_key)
+        if cached_data:
+            return json.loads(cached_data)
+        return None
+    except Exception as e:
+        log(log.WARNING, "Redis cache read error for key [%s]: %s", cache_key, e)
+        return None
+
+
+def set_cached_data(cache_key: str, data: dict, ttl: int = 3600):
+    """Safely set data in Redis cache with TTL"""
+    from api import r
+
+    try:
+        r.setex(cache_key, ttl, json.dumps(data))
+        return True
+    except Exception as e:
+        log(log.WARNING, "Redis cache write error for key [%s]: %s", cache_key, e)
+        return False

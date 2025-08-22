@@ -12,10 +12,6 @@ CFG = config()
 ROOT_PATH = Path(BASE_DIR)
 TOKEN_FILE = ROOT_PATH / "token.json"
 
-SEARCH_IDS = re.compile(r"\((?P<id>\d+)\)")
-
-ALL_UKRAINE = "вся україна"
-
 
 # an internal function for authorization in Google Sheets
 def authorized_user_in_google_spreadsheets() -> Credentials:

@@ -32,7 +32,14 @@ from api.controllers.super_search import (
     get_visual_profile_query_conditions,
 )
 from api.dependency.user import get_admin, get_current_user, get_owner
-from api.utils import get_error_message, get_quick_movie_file_path, normalize_query
+from api.utils import (
+    get_error_message,
+    get_quick_movie_file_path,
+    normalize_query,
+    invalidate_movie_cache,
+    get_cached_data,
+    set_cached_data,
+)
 import app.models as m
 import app.schema as s
 from app.database import get_db
@@ -105,6 +112,17 @@ def get_movie(
 ):
     """Get all movie details by key"""
 
+    # Create cache key based on movie_key, language, and user_id
+    user_id = current_user.id if current_user else "anonymous"
+    cache_key = f"movie:{movie_key}:{lang.value}:{user_id}"
+
+    # Try to get from Redis cache first
+    cached_data = get_cached_data(cache_key)
+    if cached_data:
+        log(log.INFO, "Movie [%s] served from cache", movie_key)
+        # Convert back to Pydantic model
+        return s.MovieOut(**cached_data)
+
     movie = db.scalar(
         sa.select(m.Movie)
         .where(m.Movie.key == movie_key)
@@ -130,12 +148,19 @@ def get_movie(
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    return get_movie_data(
+    movie_data = get_movie_data(
         movie,
         db,
         lang,
         current_user,
     )
+
+    # Cache the result in Redis with 1 hour TTL
+    movie_dict = movie_data.model_dump(mode="json")
+    if set_cached_data(cache_key, movie_dict, ttl=3600):
+        log(log.INFO, "Movie [%s] cached successfully", movie_key)
+
+    return movie_data
 
 
 @movie_router.get(
@@ -537,6 +562,11 @@ def create_movie(
             remove_quick_movie(form_data.key)
 
         db.commit()
+
+        # Invalidate any potential cache entries for this movie key
+        # (though there shouldn't be any for a new movie)
+        invalidate_movie_cache(form_data.key)
+
         log(log.INFO, "Movie [%s] successfully created", form_data.key)
     except Exception as e:
         db.rollback()
@@ -1155,6 +1185,9 @@ def edit_genres_subgenres(
                 )
                 db.execute(movie_subgenre)
         db.commit()
+
+        # Invalidate cache for this movie since genres/subgenres changed
+        invalidate_movie_cache(movie_key)
 
         log(log.INFO, "Genre [%s] successfully updated", movie_key)
     except Exception as e:
