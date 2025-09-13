@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi_pagination import add_pagination
 
@@ -6,6 +7,7 @@ from config import config
 
 from .utils import custom_generate_unique_id
 from .routes import router
+from .routes.graphql_routes import graphql_app
 
 CFG = config()
 
@@ -22,8 +24,24 @@ app = FastAPI(
 )
 
 
+# Include GraphQL router
+app.include_router(graphql_app, prefix="/graphql", tags=["GraphQL"])
 app.include_router(router)
 add_pagination(app)
+
+origins = [
+    "http://localhost:3000",  # Your React app's URL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# app.include_router(graphql_app, prefix="/graphql")
 
 
 @app.get("/", tags=["root"])

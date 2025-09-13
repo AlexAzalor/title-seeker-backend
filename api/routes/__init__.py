@@ -9,6 +9,7 @@ from .user import user_router
 from .filters import filter_router
 from .shared_universe import shared_universe_router
 from .visual_profile import visual_profile_router
+from .graphql_routes import graphql_app
 
 router = APIRouter(prefix="/api", tags=["API"])
 
@@ -21,6 +22,8 @@ router.include_router(filter_router)
 router.include_router(shared_universe_router)
 router.include_router(user_router)
 router.include_router(file_router)
+
+router.include_router(graphql_app, prefix="/graphql")
 
 
 @router.get("/list-endpoints/")
