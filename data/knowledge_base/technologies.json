@@ -1,0 +1,52 @@
+{
+    "technologies": [
+        {
+            "key": "react",
+            "category_id": 1,
+            "name": "React",
+            "description": "Some text"
+        },
+        {
+            "key": "typescript",
+            "category_id": 1,
+            "name": "TypeScript",
+            "description": "Some text"
+        },
+        {
+            "key": "nextjs",
+            "category_id": 1,
+            "name": "Next.js",
+            "description": "Some text"
+        },
+        {
+            "key": "javascript",
+            "category_id": 1,
+            "name": "JavaScript",
+            "description": "Some text"
+        },
+        {
+            "key": "python",
+            "category_id": 2,
+            "name": "Python",
+            "description": "Some text"
+        },
+        {
+            "key": "fastapi",
+            "category_id": 2,
+            "name": "FastAPI",
+            "description": "Some text"
+        },
+        {
+            "key": "flask",
+            "category_id": 2,
+            "name": "Flask",
+            "description": "Some text"
+        },
+        {
+            "key": "django",
+            "category_id": 2,
+            "name": "Django",
+            "description": "Some text"
+        }
+    ]
+}

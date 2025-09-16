@@ -40,3 +40,6 @@ from .title_visual_profile.visual_profile_category_criterion import VisualProfil
 from .title_visual_profile.vp_criterion_translation import VPCriterionTranslation
 from .title_visual_profile.visual_profile import VisualProfile
 from .title_visual_profile.visual_profile_rating import VisualProfileRating
+from .knowledge_base.category.orm import KnowledgeBaseCategory
+from .knowledge_base.technology.orm import KnowledgeBaseTechnology
+from .knowledge_base.question_answer.orm import KnowledgeBaseQuestionAnswer

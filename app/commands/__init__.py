@@ -273,6 +273,30 @@ def init(app: Flask):
         create_visual_profiles()
         print("done")
 
+    @app.cli.command()
+    def fill_db_with_kb_technologies():
+        """Fill knowledge_base_categories table with data from google spreadsheets"""
+        from .knowledge_base.import_kb_technologies import export_kb_technologies_from_google_spreadsheets
+
+        export_kb_technologies_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_kb_categories():
+        """Fill knowledge_base_categories table with data from google spreadsheets"""
+        from .knowledge_base.import_kb_categories import export_kb_categories_from_google_spreadsheets
+
+        export_kb_categories_from_google_spreadsheets()
+        print("done")
+
+    @app.cli.command()
+    def fill_db_with_kb_q_a():
+        """Fill knowledge_base_questions_answers table with data from google spreadsheets"""
+        from .knowledge_base.import_kb_questions_answers import export_kb_q_and_a_from_google_spreadsheets
+
+        export_kb_q_and_a_from_google_spreadsheets()
+        print("done")
+
     # TODO: remove this command if not needed
     # @app.cli.command()
     # def add_uuid():

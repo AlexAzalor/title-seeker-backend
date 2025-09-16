@@ -120,3 +120,17 @@ from .visual_profile import (
     VisualProfileFormOut,
     VisualProfileCategoryOut,
 )
+
+from .knowledge_base.dto import (
+    KnowledgeBaseCategoryCreate,
+    KBCategoryJSONFile,
+    KnowledgeBaseTechnologyCreate,
+    KBTechnologyJSONFile,
+    KnowledgeBaseQuestionAnswerCreate,
+    KBQuestionAnswerJSONFile,
+    KBCategoryOut,
+    KBCategoryListOut,
+    KBQuestionAnswerOut,
+    KBTechnologyOut,
+    KBTechnologyListOut,
+)

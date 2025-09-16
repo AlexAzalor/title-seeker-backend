@@ -9,9 +9,11 @@ from .user import user_router
 from .filters import filter_router
 from .shared_universe import shared_universe_router
 from .visual_profile import visual_profile_router
+from .knowledge_base import knowledge_base_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
+router.include_router(knowledge_base_router)
 router.include_router(movie_router)
 router.include_router(visual_profile_router)
 router.include_router(auth_router)
