@@ -27,14 +27,13 @@ TITLE_CATEGORIES_RANGE_NAME = f"KB QuestionAnswer!A1:{LAST_SHEET_COLUMN}"
 
 def write_kb_q_and_a_in_db(kb_qs_and_as: list[s.KnowledgeBaseQuestionAnswerCreate]):
     with db.begin() as session:
-        if not session.scalar(sa.select(m.KnowledgeBaseQuestionAnswer)):
-            log(log.ERROR, "KB Q&A table is empty")
+        if not session.scalar(sa.select(m.KnowledgeBaseTechnology)):
+            log(log.ERROR, "KB Technology table is empty")
             log(log.ERROR, "Please run `flask fill-db-with-kb-q-a` first")
-            raise Exception("KB Q&A table is empty. Please run `flask fill-db-with-kb-q-a` first")
+            raise Exception("KB Technology table is empty. Please run `flask fill-db-with-kb-q-a` first")
 
         for q_and_a in kb_qs_and_as:
             new_q_and_a = m.KnowledgeBaseQuestionAnswer(
-                id=q_and_a.id,
                 technology_id=q_and_a.technology_id,
                 question=q_and_a.question,
                 score=q_and_a.score,

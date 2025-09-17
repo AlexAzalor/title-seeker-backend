@@ -133,4 +133,9 @@ from .knowledge_base.dto import (
     KBQuestionAnswerOut,
     KBTechnologyOut,
     KBTechnologyListOut,
+    KBTechnologyIn,
+    KBQuestionAnswerIn,
+    KBCategoryPutIn,
+    KBTechnologyPutIn,
+    KBQuestionAnswerPutIn,
 )
