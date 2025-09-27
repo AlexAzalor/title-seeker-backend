@@ -15,13 +15,13 @@ class KnowledgeBaseQuestionAnswer(db.Model, CreatableMixin, UpdatableMixin):
         sa.Integer, sa.ForeignKey("knowledge_base_technologies.id"), nullable=False
     )
 
-    score: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False, default=0)
+    score: orm.Mapped[int] = orm.mapped_column(sa.Integer, default=0)
 
     question: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=False)
-    short_answer: orm.Mapped[str] = orm.mapped_column(sa.String(512), nullable=False)
+    short_answer: orm.Mapped[str | None] = orm.mapped_column(sa.String(512), nullable=True)
 
     # Content from Editor (WYSIWYG) with rich text, images, links, etc.
-    answer: orm.Mapped[str] = orm.mapped_column(sa.Text, nullable=False)
+    answer: orm.Mapped[str | None] = orm.mapped_column(sa.Text, nullable=True)
 
     def __repr__(self):
         return f"<KnowledgeBaseQuestionAnswer [{self.id}]: {self.question}>"

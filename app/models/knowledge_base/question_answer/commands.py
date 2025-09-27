@@ -5,7 +5,7 @@ import app.schema as s
 from fastapi import HTTPException, status
 
 
-def create(session: Session, form_data: s.KBQuestionAnswerIn):
+def create(session: Session, form_data: s.KBQuestionIn):
     """Create a new knowledge base Q&A"""
 
     technology = session.scalar(
@@ -17,9 +17,6 @@ def create(session: Session, form_data: s.KBQuestionAnswerIn):
     new_qa = m.KnowledgeBaseQuestionAnswer(
         technology_id=technology.id,
         question=form_data.question,
-        score=form_data.score,
-        short_answer=form_data.short_answer,
-        answer=form_data.answer,
     )
     session.add(new_qa)
     session.commit()

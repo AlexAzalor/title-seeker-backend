@@ -40,6 +40,8 @@ class KBCategoryOut(BaseModel):
     key: str
     name: str
     description: str
+    # Not now
+    # mastery_progress: int
 
 
 class KBCategoryPutIn(KBCategoryOut):
@@ -50,13 +52,24 @@ class KBCategoryListOut(BaseModel):
     categories: list[KBCategoryOut]
 
 
+class KBQuestion(BaseModel):
+    id: int
+    question: str
+    short_answer: str | None
+    score: int
+
+
+class KBQuestionsListOut(BaseModel):
+    questions: list[KBQuestion]
+
+
 class KBQuestionAnswerOut(BaseModel):
     id: int
     technology_id: int
     question: str
     score: int
-    short_answer: str
-    answer: str
+    short_answer: str | None
+    answer: str | None
 
 
 class KBTechnologyOut(BaseModel):
@@ -76,6 +89,11 @@ class KBTechnologyIn(BaseModel):
     name: str
     description: str
     category_key: str
+
+
+class KBQuestionIn(BaseModel):
+    question: str
+    technology_key: str
 
 
 class KBQuestionAnswerIn(BaseModel):

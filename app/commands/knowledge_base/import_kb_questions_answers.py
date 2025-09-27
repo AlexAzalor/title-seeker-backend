@@ -33,6 +33,12 @@ def write_kb_q_and_a_in_db(kb_qs_and_as: list[s.KnowledgeBaseQuestionAnswerCreat
             raise Exception("KB Technology table is empty. Please run `flask fill-db-with-kb-q-a` first")
 
         for q_and_a in kb_qs_and_as:
+            existing_q_and_a = session.scalar(
+                sa.select(m.KnowledgeBaseQuestionAnswer).where(m.KnowledgeBaseQuestionAnswer.id == q_and_a.id)
+            )
+            if existing_q_and_a:
+                print(f"KnowledgeBaseQuestionAnswer [{q_and_a.id}] already exists. Skipping...")
+                continue
             new_q_and_a = m.KnowledgeBaseQuestionAnswer(
                 technology_id=q_and_a.technology_id,
                 question=q_and_a.question,
@@ -122,13 +128,13 @@ def export_kb_q_and_a_from_google_spreadsheets(with_print: bool = True, in_json:
     write_kb_q_and_a_in_db(questions_answers)
 
 
-# def export_title_categories_from_json_file(max_tc_limit: int | None = None):
-#     """Fill visual_profile_categories with data from json file"""
+def export_kb_qa_from_json_file(max_limit: int | None = None):
+    """Fill KB Q&A with data from json file"""
 
-#     with open("data/visual_profile_categories.json", "r") as file:
-#         file_data = s.VisualProfileJSONFile.model_validate(json.load(file))
+    with open("data/knowledge_base/questions_answers.json", "r") as file:
+        file_data = s.KBQuestionAnswerJSONFile.model_validate(json.load(file))
 
-#     visual_profile_categories = file_data.visual_profiles
-#     if max_tc_limit:
-#         visual_profile_categories = visual_profile_categories[:max_tc_limit]
-#     write_kb_q_and_a_in_db(visual_profile_categories)
+    qa = file_data.questions_answers
+    if max_limit:
+        qa = qa[:max_limit]
+    write_kb_q_and_a_in_db(qa)

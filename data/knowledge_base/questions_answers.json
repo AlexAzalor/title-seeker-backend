@@ -87,6 +87,102 @@
             "score": 5,
             "short_answer": "FastAPI \u0441\u0430\u043c \u0432\u0438\u043a\u043b\u0438\u043a\u0430\u0454 \u0446\u044e \u0444\u0443\u043d\u043a\u0446\u0456\u044e, \u0431\u0435\u0440\u0435 \u0457\u0457 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0456 \u043f\u0435\u0440\u0435\u0434\u0430\u0454 \u0443 \u0442\u0432\u0456\u0439 \u043a\u043e\u0434.",
             "answer": "Dependency = \u0446\u0435 \u0444\u0443\u043d\u043a\u0446\u0456\u044f \u0430\u0431\u043e \u043a\u043b\u0430\u0441, \u044f\u043a\u0438\u0439 \u043c\u043e\u0436\u043d\u0430 \u201c\u043f\u0456\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0438\u201d \u0434\u043e \u0435\u043d\u0434\u043f\u043e\u0439\u043d\u0442\u0430.\nFastAPI \u0441\u0430\u043c \u0432\u0438\u043a\u043b\u0438\u043a\u0430\u0454 \u0446\u044e \u0444\u0443\u043d\u043a\u0446\u0456\u044e, \u0431\u0435\u0440\u0435 \u0457\u0457 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0456 \u043f\u0435\u0440\u0435\u0434\u0430\u0454 \u0443 \u0442\u0432\u0456\u0439 \u043a\u043e\u0434."
+        },
+        {
+            "id": 12,
+            "technology_id": 1,
+            "question": "Debounce and Throttle \u2014 implementation, complexity, and real use-cases",
+            "score": 2,
+            "short_answer": "React tip: wrap debounce/throttle in useCallback/useRef so you don't recreate timer state every render.",
+            "answer": "Debounce: Wait until the user stops doing actions for N ms, then run the function. Great for search boxes or resize handlers where you want the final result.\r\nThrottle: Allow the function to run at most once every N ms. Great for scroll handlers or continuous tracking where you want regular updates but not too many."
+        },
+        {
+            "id": 13,
+            "technology_id": 1,
+            "question": "How do you optimize performance in React applications?",
+            "score": 1,
+            "short_answer": "Performance optimization in React means making your app faster, more efficient, and more responsive, especially as it grows in complexity.",
+            "answer": "Here are the best strategies to optimize performance in React applications:\n\nReact Performance Optimization Techniques\nUse React.memo()\n\nPrevents unnecessary re-renders of functional components by memoizing the result.\nWorks best when components receive the same props most of the time.\nUse useMemo() for Expensive Calculations\n\nMemoizes expensive function results so they don\u2019t re-run on every render.\nUseful when you have heavy computation inside a component.\nUse useCallback() for Stable Functions\n"
+        },
+        {
+            "id": 14,
+            "technology_id": 1,
+            "question": "What is JSX in React?",
+            "score": 3,
+            "short_answer": "JSX (JavaScript XML) is a syntax extension for JavaScript used in React that lets you write HTML-like code directly within JavaScript.",
+            "answer": "It\u2019s not valid JavaScript on its own, but React tools like Babel compile it into React.createElement() calls that produce Virtual DOM objects."
+        },
+        {
+            "id": 15,
+            "technology_id": 1,
+            "question": "What are Props in React?",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 16,
+            "technology_id": 1,
+            "question": "What are Props in React? 2",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 17,
+            "technology_id": 1,
+            "question": "What are Props in React? 3",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 18,
+            "technology_id": 1,
+            "question": "What are Props in React? 4",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 19,
+            "technology_id": 1,
+            "question": "What are Props in React? 5",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 20,
+            "technology_id": 1,
+            "question": "What are Props in React? 6",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 21,
+            "technology_id": 1,
+            "question": "What are Props in React? 7",
+            "score": 2,
+            "short_answer": "Props (short for properties) are read-only inputs passed from one component to another in React, similar to how arguments are passed to functions.",
+            "answer": "They help make components dynamic and reusable by allowing parent components to pass data and event handlers down to child components."
+        },
+        {
+            "id": 22,
+            "technology_id": 1,
+            "question": "What is State in React?",
+            "score": 1,
+            "short_answer": "While props are external and passed in by parent components, state is internal to the component and can be changed by the component itself.",
+            "answer": "State in React refers to a built-in object that allows components to store and manage dynamic data \u2014 i.e., data that can change over time and affect what is rendered on the screen."
+        },
+        {
+            "id": 23,
+            "technology_id": 1,
+            "question": "What is State in React? 2",
+            "score": 1,
+            "short_answer": "While props are external and passed in by parent components, state is internal to the component and can be changed by the component itself.",
+            "answer": "State in React refers to a built-in object that allows components to store and manage dynamic data \u2014 i.e., data that can change over time and affect what is rendered on the screen."
         }
     ]
 }

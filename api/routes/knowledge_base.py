@@ -2,14 +2,16 @@ from fastapi import APIRouter, Depends, status
 
 from api.controllers.knowledge_base import get_technologies_dto
 
+from api.dependency.user import get_owner
 import app.schema as s
+import app.models as m
 from sqlalchemy.orm import Session
 from app.database import get_db
 from config import config
 
 from app.models.knowledge_base.category import queries, commands
 from app.models.knowledge_base.technology import queries as tech_queries, commands as tech_commands
-from app.models.knowledge_base.question_answer import commands as qa_commands
+from app.models.knowledge_base.question_answer import commands as qa_commands, queries as qa_queries
 
 CFG = config()
 
@@ -48,7 +50,7 @@ def get_kb_categories(
         status.HTTP_404_NOT_FOUND: {"description": "No technologies found"},
     },
 )
-def get_technologies(
+def get_kb_technologies(
     category_key: str,
     db: Session = Depends(get_db),
 ):
@@ -59,6 +61,63 @@ def get_technologies(
     return get_technologies_dto(technologies)
 
 
+@knowledge_base_router.get(
+    "/questions/{technology_key}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.KBQuestionsListOut,
+    responses={
+        status.HTTP_200_OK: {"description": "Technologies successfully retrieved"},
+        status.HTTP_404_NOT_FOUND: {"description": "No technologies found"},
+    },
+)
+def get_kb_technology_questions(
+    technology_key: str,
+    db: Session = Depends(get_db),
+):
+    """Get technology questions list with short answers"""
+
+    tech_questions = tech_queries.get_technology_questions(db, technology_key)
+
+    return s.KBQuestionsListOut(
+        questions=[
+            s.KBQuestion(
+                id=question.id,
+                question=question.question,
+                short_answer=question.short_answer,
+                score=question.score,
+            )
+            for question in tech_questions
+        ]
+    )
+
+
+@knowledge_base_router.get(
+    "/question-answer/{id}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.KBQuestionAnswerOut,
+    responses={
+        status.HTTP_200_OK: {"description": "Technologies successfully retrieved"},
+        status.HTTP_404_NOT_FOUND: {"description": "No technologies found"},
+    },
+)
+def get_kb_question_answer(
+    id: int,
+    db: Session = Depends(get_db),
+):
+    """Get answer by id"""
+
+    technologies = qa_queries.get_answer(db, id)
+
+    return s.KBQuestionAnswerOut(
+        id=technologies.id,
+        technology_id=technologies.technology_id,
+        question=technologies.question,
+        score=technologies.score,
+        short_answer=technologies.short_answer,
+        answer=technologies.answer,
+    )
+
+
 @knowledge_base_router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
@@ -67,8 +126,9 @@ def get_technologies(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def create_category(
+def create_kb_category(
     form_data: s.KBCategoryOut,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get all knowledge base categories"""
@@ -84,8 +144,9 @@ def create_category(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def create_technology(
+def create_kb_technology(
     form_data: s.KBTechnologyIn,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get all knowledge base categories"""
@@ -101,8 +162,9 @@ def create_technology(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def create_question_answer(
-    form_data: s.KBQuestionAnswerIn,
+def create_kb_question_answer(
+    form_data: s.KBQuestionIn,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get all knowledge base categories"""
@@ -118,8 +180,9 @@ def create_question_answer(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def update_category(
+def update_kb_category(
     form_data: s.KBCategoryPutIn,
+    # current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get all knowledge base categories"""
@@ -135,8 +198,9 @@ def update_category(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def update_technology(
+def update_kb_technology(
     form_data: s.KBTechnologyPutIn,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Get all knowledge base categories"""
@@ -152,10 +216,41 @@ def update_technology(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid input"},
     },
 )
-def update_question_answer(
+def update_kb_question_answer(
     form_data: s.KBQuestionAnswerPutIn,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
     """Update question & answer fields"""
 
     qa_commands.update(db, form_data)
+
+
+@knowledge_base_router.get(
+    "/random-questions/{technology_key}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.KBQuestionsListOut,
+    responses={
+        status.HTTP_200_OK: {"description": "Random questions successfully retrieved"},
+        status.HTTP_404_NOT_FOUND: {"description": "No questions found"},
+    },
+)
+def get_kb_random_questions(
+    technology_key: str,
+    db: Session = Depends(get_db),
+):
+    """Get 10 random questions by tech key with poor score"""
+
+    questions = tech_queries.get_random_questions_by_technology(db, technology_key)
+
+    return s.KBQuestionsListOut(
+        questions=[
+            s.KBQuestion(
+                id=question.id,
+                question=question.question,
+                short_answer=question.short_answer,  # Need?
+                score=question.score,
+            )
+            for question in questions
+        ]
+    )

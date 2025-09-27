@@ -1,14 +1,14 @@
-"""
-This module contains the query functions for the CategoryProtocolAssignment model.
-"""
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models.knowledge_base.question_answer.orm import KnowledgeBaseQuestionAnswer
+from sqlalchemy.orm import Session
+import sqlalchemy as sa
+import app.models as m
+from fastapi import HTTPException, status
 
 
-async def find_by_technology(session: AsyncSession, technology_id: str) -> list[KnowledgeBaseQuestionAnswer]:
-    statement = select(KnowledgeBaseQuestionAnswer).where(KnowledgeBaseQuestionAnswer.technology_id == technology_id)
-    result = await session.execute(statement)
-    return list(result.scalars().all())
+def get_answer(session: Session, id: int) -> m.KnowledgeBaseQuestionAnswer:
+    statement = sa.select(m.KnowledgeBaseQuestionAnswer).where(m.KnowledgeBaseQuestionAnswer.id == id)
+    result = session.scalar(statement)
+
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Q&A not found")
+
+    return result

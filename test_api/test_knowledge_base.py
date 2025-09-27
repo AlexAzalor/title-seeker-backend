@@ -34,7 +34,21 @@ def test_get_kb_technologies(client: TestClient, db: Session):
     assert data.technologies
 
 
-def test_create_update_kb_category(client: TestClient, db: Session):
+def test_get_kb_question_answer(client: TestClient, db: Session):
+    TECH_KEY = "react"
+    technology = db.scalar(sa.select(m.KnowledgeBaseTechnology).where(m.KnowledgeBaseTechnology.key == TECH_KEY))
+    assert technology
+    assert technology.questions_answers
+
+    response = client.get(
+        f"/api/knowledge-base/question-answer/{1}",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = s.KBQuestionAnswerOut.model_validate(response.json())
+    assert data
+
+
+def test_create_update_kb_category(client: TestClient, db: Session, auth_user_owner: m.User):
     form_data = s.KBCategoryOut(
         key="new-category",
         name="New Category",
@@ -42,8 +56,7 @@ def test_create_update_kb_category(client: TestClient, db: Session):
     )
 
     response = client.post(
-        "/api/knowledge-base/",
-        json=form_data.model_dump(),
+        "/api/knowledge-base/", json=form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
     )
     assert response.status_code == status.HTTP_201_CREATED
     new_category = db.scalar(sa.select(m.KnowledgeBaseCategory).where(m.KnowledgeBaseCategory.key == form_data.key))
@@ -58,15 +71,14 @@ def test_create_update_kb_category(client: TestClient, db: Session):
     )
 
     response = client.put(
-        "/api/knowledge-base/",
-        json=new_form_data.model_dump(),
+        "/api/knowledge-base/", json=new_form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     upd_category = db.scalar(sa.select(m.KnowledgeBaseCategory).where(m.KnowledgeBaseCategory.key == new_form_data.key))
     assert upd_category
 
 
-def test_create_kb_technology(client: TestClient, db: Session):
+def test_create_kb_technology(client: TestClient, db: Session, auth_user_owner: m.User):
     CATEGORY_KEY = "frontend"
     form_data = s.KBTechnologyIn(
         key="new-tech",
@@ -76,8 +88,7 @@ def test_create_kb_technology(client: TestClient, db: Session):
     )
 
     response = client.post(
-        "/api/knowledge-base/technologies",
-        json=form_data.model_dump(),
+        "/api/knowledge-base/technologies", json=form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
     )
     assert response.status_code == status.HTTP_201_CREATED
     new_tech = db.scalar(sa.select(m.KnowledgeBaseTechnology).where(m.KnowledgeBaseTechnology.key == form_data.key))
@@ -93,30 +104,25 @@ def test_create_kb_technology(client: TestClient, db: Session):
     )
 
     response = client.put(
-        "/api/knowledge-base/technology",
-        json=new_form_data.model_dump(),
+        "/api/knowledge-base/technology", json=new_form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     upd_tech = db.scalar(sa.select(m.KnowledgeBaseTechnology).where(m.KnowledgeBaseTechnology.key == new_form_data.key))
     assert upd_tech
 
 
-def test_create_kb_question_answer(client: TestClient, db: Session):
+def test_create_kb_question_answer(client: TestClient, db: Session, auth_user_owner: m.User):
     TECH_KEY = "react"
     technology = db.scalar(sa.select(m.KnowledgeBaseTechnology).where(m.KnowledgeBaseTechnology.key == TECH_KEY))
     assert technology
 
-    form_data = s.KBQuestionAnswerIn(
+    form_data = s.KBQuestionIn(
         question="What is hook?",
-        short_answer="A hook is a special function in React",
-        answer="A hook is a special function in React that lets you use state and other React features without writing a class.",
-        score=5,
         technology_key=TECH_KEY,
     )
 
     response = client.post(
-        "/api/knowledge-base/question-answer",
-        json=form_data.model_dump(),
+        "/api/knowledge-base/question-answer", json=form_data.model_dump(), params={"user_uuid": auth_user_owner.uuid}
     )
     assert response.status_code == status.HTTP_201_CREATED
     new_qa = db.scalar(
@@ -137,6 +143,7 @@ def test_create_kb_question_answer(client: TestClient, db: Session):
     response = client.put(
         "/api/knowledge-base/question-answer",
         json=new_form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     upd_qa = db.scalar(

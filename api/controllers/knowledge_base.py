@@ -9,7 +9,7 @@ def compute_technology_mastery(technology: m.KnowledgeBaseTechnology):
         return 0
 
     MAX_STARS = 5
-    MAX_QUESTIONS = 10
+    MAX_QUESTIONS = 50
     PERCENTAGE_FACTOR = 100
 
     sum_scores = sum(q.score for q in technology.questions_answers)
