@@ -20,7 +20,7 @@ dump.sql
 dump.tgz
 
 uploads/*
-backups/*
+/backups/*
 movie_data/*
 
 *.pem

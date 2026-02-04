@@ -1,8 +1,9 @@
+from re import M
 import sqlalchemy as sa
 import app.models as m
 from sqlalchemy.orm import Session
 
-from api.utils import extract_values, extract_word
+from api.utils import extract_values, extract_word, string_to_number_list
 
 
 def get_genre_query_conditions(genre: list[str], subgenre: list[str], db: Session):
@@ -165,3 +166,42 @@ def get_people_query_conditions(actor: list[str], director: list[str], character
             )
 
     return actor_conditions, director_conditions, char_conditions
+
+def get_duration_query_conditions(duration_query: str):
+    duration_values = string_to_number_list(duration_query)
+
+    # NOTE: Duration values connected to frontend slider limits
+    # NOTE: Duration is in minutes
+    MIN_LIMIT = 1
+    MAX_LIMIT = 300
+
+    min = duration_values[0]
+    max = duration_values[1]
+
+    duration_conditions = []
+
+
+    if (min >= max):
+        return []
+
+    if min != MIN_LIMIT and max != MAX_LIMIT:
+        duration_conditions.append(
+        sa.and_(
+            m.Movie.duration >= min,
+            m.Movie.duration <= max,
+        )
+    )
+
+    if min == MIN_LIMIT:
+        duration_conditions.append(
+            m.Movie.duration <= max
+        )
+        return duration_conditions
+
+    if max == MAX_LIMIT:
+        duration_conditions.append(
+            m.Movie.duration >= min
+        )
+        return duration_conditions
+
+    return duration_conditions
