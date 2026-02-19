@@ -156,7 +156,7 @@ def super_search_movies(
     character: Annotated[list[str], Query()] = [],
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
-    duration:Annotated[str, Query()] = [],
+    duration: str | None = None,
     exact_match: Annotated[bool, Query()] = False,
     inner_exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
@@ -219,11 +219,7 @@ def super_search_movies(
     if duration:
         duration_conditions = get_duration_query_conditions(duration)
         if duration_conditions:
-            filter_conditions.append(
-                inner_logical_op(
-                    *duration_conditions
-                )
-            )
+            filter_conditions.append(inner_logical_op(*duration_conditions))
 
     # Combine conditions
     if filter_conditions:

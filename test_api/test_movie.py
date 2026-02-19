@@ -115,7 +115,7 @@ def test_super_search(client: TestClient, db: Session):
     assert data
     assert [m for m in data.items if m.key == movie.key]
 
-    SEARCH_DURATION = '90,102'
+    SEARCH_DURATION = "90,102"
     # American Psycho - 1h 42m (102)
     # The Mask - 1h 41m (101)
     # Shrek - 1h 30m (90)

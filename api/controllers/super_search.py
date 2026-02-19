@@ -1,4 +1,3 @@
-from re import M
 import sqlalchemy as sa
 import app.models as m
 from sqlalchemy.orm import Session
@@ -167,6 +166,7 @@ def get_people_query_conditions(actor: list[str], director: list[str], character
 
     return actor_conditions, director_conditions, char_conditions
 
+
 def get_duration_query_conditions(duration_query: str):
     duration_values = string_to_number_list(duration_query)
 
@@ -180,28 +180,23 @@ def get_duration_query_conditions(duration_query: str):
 
     duration_conditions = []
 
-
-    if (min >= max):
+    if min >= max:
         return []
 
     if min != MIN_LIMIT and max != MAX_LIMIT:
         duration_conditions.append(
-        sa.and_(
-            m.Movie.duration >= min,
-            m.Movie.duration <= max,
+            sa.and_(
+                m.Movie.duration >= min,
+                m.Movie.duration <= max,
+            )
         )
-    )
 
     if min == MIN_LIMIT:
-        duration_conditions.append(
-            m.Movie.duration <= max
-        )
+        duration_conditions.append(m.Movie.duration <= max)
         return duration_conditions
 
     if max == MAX_LIMIT:
-        duration_conditions.append(
-            m.Movie.duration >= min
-        )
+        duration_conditions.append(m.Movie.duration >= min)
         return duration_conditions
 
     return duration_conditions
