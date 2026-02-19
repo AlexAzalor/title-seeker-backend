@@ -55,6 +55,9 @@ def db() -> Generator[orm.Session, None, None]:
         from app.commands.export_vp_category_criterion import export_title_criteria_from_json_file
         from app.commands.export_vp_categories import export_title_categories_from_json_file
         from app.commands.create_visual_profiles import create_visual_profiles
+        from app.commands.knowledge_base.import_kb_categories import export_kb_categories_from_json_file
+        from app.commands.knowledge_base.import_kb_technologies import export_kb_technologies_from_json_file
+        from app.commands.knowledge_base.import_kb_questions_answers import export_kb_qa_from_json_file
 
         export_users_from_json_file()
         export_actors_from_json_file()
@@ -71,6 +74,9 @@ def db() -> Generator[orm.Session, None, None]:
         export_title_criteria_from_json_file()
         export_title_categories_from_json_file()
         create_visual_profiles()
+        export_kb_categories_from_json_file()
+        export_kb_technologies_from_json_file()
+        export_kb_qa_from_json_file()
 
         def override_get_db() -> Generator:
             yield session

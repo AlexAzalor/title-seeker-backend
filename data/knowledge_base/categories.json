@@ -1,0 +1,14 @@
+{
+    "categories": [
+        {
+            "key": "frontend",
+            "name": "Frontend",
+            "description": "Some text"
+        },
+        {
+            "key": "backend",
+            "name": "Backend",
+            "description": "Some text"
+        }
+    ]
+}
