@@ -25,6 +25,7 @@ from api.controllers.create_movie import (
 from api.controllers.movie import build_movie_query, get_main_genres_for_movies, get_movie_data
 from api.controllers.movie_filters import get_filters, get_genre_filters, get_people_filters
 from api.controllers.super_search import (
+    get_duration_query_conditions,
     get_filter_query_conditions,
     get_genre_query_conditions,
     get_people_query_conditions,
@@ -155,6 +156,7 @@ def super_search_movies(
     character: Annotated[list[str], Query()] = [],
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
+    duration: str | None = None,
     exact_match: Annotated[bool, Query()] = False,
     inner_exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
@@ -213,6 +215,11 @@ def super_search_movies(
         vp_conditions = get_visual_profile_query_conditions(visual_profile, db)
         if vp_conditions:
             filter_conditions.append(inner_logical_op(*vp_conditions))
+
+    if duration:
+        duration_conditions = get_duration_query_conditions(duration)
+        if duration_conditions:
+            filter_conditions.append(inner_logical_op(*duration_conditions))
 
     # Combine conditions
     if filter_conditions:

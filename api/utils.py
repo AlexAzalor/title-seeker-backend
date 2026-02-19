@@ -66,6 +66,19 @@ def extract_word(input_string: List[str]) -> List[str]:
     return words_list
 
 
+def string_to_number_list(value: str) -> List[int]:
+    """
+    Convert a comma-separated string of numbers to a list of integers.
+
+    :param value: String containing comma-separated numbers (e.g., "90,120")
+    :return: List of integers (e.g., [90, 120])
+    """
+    if not value:
+        return []
+
+    return [int(num.strip()) for num in value.split(",") if num.strip()]
+
+
 def calculate_average_rating(ratings: list[m.Rating], attribute: str) -> float:
     """
     Calculate the average of a specific attribute from a list of ratings.

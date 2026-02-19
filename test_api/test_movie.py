@@ -115,6 +115,19 @@ def test_super_search(client: TestClient, db: Session):
     assert data
     assert [m for m in data.items if m.key == movie.key]
 
+    SEARCH_DURATION = "90,102"
+    # American Psycho - 1h 42m (102)
+    # The Mask - 1h 41m (101)
+    # Shrek - 1h 30m (90)
+    # Groundhog Day - 1h 41m (101)
+    MOVIES_COUNT = 4
+
+    response = client.get("/api/movies/super-search/", params={"duration": SEARCH_DURATION})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert len(data.items) == MOVIES_COUNT
+
 
 def test_search(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
