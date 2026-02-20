@@ -29,6 +29,7 @@ from api.controllers.super_search import (
     get_filter_query_conditions,
     get_genre_query_conditions,
     get_people_query_conditions,
+    get_rating_query_conditions,
     get_shared_universe_query_conditions,
     get_visual_profile_query_conditions,
 )
@@ -157,6 +158,11 @@ def super_search_movies(
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
     duration: str | None = None,
+    rating: str | None = None,
+    visual_effects: str | None = None,
+    scare_factor: str | None = None,
+    humor: str | None = None,
+    animation_cartoon: str | None = None,
     exact_match: Annotated[bool, Query()] = False,
     inner_exact_match: Annotated[bool, Query()] = False,
     sort_by: s.SortBy = s.SortBy.RATED_AT,
@@ -176,6 +182,17 @@ def super_search_movies(
     # What Happens to the Query at Each Filter Step?
     # Build conditions for each filter type
     filter_conditions = []
+
+    # RATING + CRITERIA (all combined with AND inside a single ratings.any(...))
+    rating_conditions = get_rating_query_conditions(
+        rating,
+        visual_effects,
+        scare_factor,
+        humor,
+        animation_cartoon,
+    )
+    if rating_conditions:
+        filter_conditions.extend(rating_conditions)
 
     # GENRES, SUBGENRES
     genre_conditions, subgenre_conditions = get_genre_query_conditions(genre, subgenre, db)
