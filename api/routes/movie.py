@@ -26,6 +26,11 @@ from api.controllers.movie import build_movie_query, get_main_genres_for_movies,
 from api.controllers.movie_filters import get_filters, get_genre_filters, get_people_filters
 from api.controllers.super_search import (
     get_duration_query_conditions,
+    get_exclude_action_time_conditions,
+    get_exclude_genre_conditions,
+    get_exclude_keyword_conditions,
+    get_exclude_specification_conditions,
+    get_exclude_subgenre_conditions,
     get_filter_query_conditions,
     get_genre_query_conditions,
     get_people_query_conditions,
@@ -157,6 +162,11 @@ def super_search_movies(
     character: Annotated[list[str], Query()] = [],
     shared_universe: Annotated[list[str], Query()] = [],
     visual_profile: Annotated[list[str], Query()] = [],
+    exclude_genre: Annotated[list[str], Query()] = [],
+    exclude_subgenre: Annotated[list[str], Query()] = [],
+    exclude_specification: Annotated[list[str], Query()] = [],
+    exclude_keyword: Annotated[list[str], Query()] = [],
+    exclude_action_time: Annotated[list[str], Query()] = [],
     duration: str | None = None,
     rating: str | None = None,
     visual_effects: str | None = None,
@@ -241,6 +251,28 @@ def super_search_movies(
     # Combine conditions
     if filter_conditions:
         query = query.where(logical_op(*filter_conditions))
+
+    # Exclude conditions are always AND — applied after the main filter
+    if exclude_genre:
+        for cond in get_exclude_genre_conditions(exclude_genre):
+            query = query.where(cond)
+
+    if exclude_subgenre:
+        for cond in get_exclude_subgenre_conditions(exclude_subgenre):
+            query = query.where(cond)
+
+    if exclude_specification:
+        exclude_spec_conditions = get_exclude_specification_conditions(exclude_specification)
+        for cond in exclude_spec_conditions:
+            query = query.where(cond)
+
+    if exclude_keyword:
+        for cond in get_exclude_keyword_conditions(exclude_keyword):
+            query = query.where(cond)
+
+    if exclude_action_time:
+        for cond in get_exclude_action_time_conditions(exclude_action_time):
+            query = query.where(cond)
 
     is_reverse = sort_order == s.SortOrder.DESC
     if sort_by == s.SortBy.RELEASE_DATE:

@@ -154,6 +154,36 @@ def get_filter_query_conditions(specification: list[str], keyword: list[str], ac
     return spec_conditions, keyword_conditions, at_conditions
 
 
+def get_exclude_genre_conditions(exclude_genre: list[str]) -> list:
+    """Build conditions to exclude movies that have any of the given genres."""
+    keys = extract_word(exclude_genre)
+    return [sa.not_(m.Movie.genres.any(m.Genre.key == key)) for key in keys]
+
+
+def get_exclude_subgenre_conditions(exclude_subgenre: list[str]) -> list:
+    """Build conditions to exclude movies that have any of the given subgenres."""
+    keys = extract_word(exclude_subgenre)
+    return [sa.not_(m.Movie.subgenres.any(m.Subgenre.key == key)) for key in keys]
+
+
+def get_exclude_specification_conditions(exclude_specification: list[str]) -> list:
+    """Build conditions to exclude movies that have any of the given specifications."""
+    keys = extract_word(exclude_specification)
+    return [sa.not_(m.Movie.specifications.any(m.Specification.key == key)) for key in keys]
+
+
+def get_exclude_keyword_conditions(exclude_keyword: list[str]) -> list:
+    """Build conditions to exclude movies that have any of the given keywords."""
+    keys = extract_word(exclude_keyword)
+    return [sa.not_(m.Movie.keywords.any(m.Keyword.key == key)) for key in keys]
+
+
+def get_exclude_action_time_conditions(exclude_action_time: list[str]) -> list:
+    """Build conditions to exclude movies that have any of the given action times."""
+    keys = extract_word(exclude_action_time)
+    return [sa.not_(m.Movie.action_times.any(m.ActionTime.key == key)) for key in keys]
+
+
 def get_shared_universe_query_conditions(shared_universe: list[str], db: Session):
     su_conditions = []
     for su_key in shared_universe:
