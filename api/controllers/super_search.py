@@ -5,6 +5,61 @@ from sqlalchemy.orm import Session
 from api.utils import extract_values, extract_word, string_to_number_list
 
 
+def get_rating_query_conditions(
+    rating: str | None,
+    visual_effects: str | None,
+    scare_factor: str | None,
+    humor: str | None,
+    animation_cartoon: str | None,
+) -> list:
+    """
+    Build rating search conditions. All conditions are "AND" inside a single
+    Movie.ratings.any(...) call.
+
+    - rating: "min,max" range string (e.g. "7.24,10")
+    - additional criteria (mutually exclusive): visual_effects, scare_factor,
+      humor, animation_cartoon — minimum score; also restricts to movies that
+      HAVE that criterion (IS NOT NULL)
+    """
+    row_conditions: list = []
+
+    # Rating range
+    if rating:
+        parts = [p.strip() for p in rating.split(",") if p.strip()]
+        if len(parts) == 2:
+            try:
+                min_r = float(parts[0])
+                max_r = float(parts[1])
+                if min_r < max_r:
+                    row_conditions.append(m.Rating.rating >= min_r)
+                    row_conditions.append(m.Rating.rating <= max_r)
+            except ValueError:
+                pass
+
+    # Additional criteria (mutually exclusive)
+    # Selecting one restricts to movies that HAVE this criterion (NOT NULL) + minimum score
+    additional = [
+        (visual_effects, m.Rating.visual_effects),
+        (scare_factor, m.Rating.scare_factor),
+        (humor, m.Rating.humor),
+        (animation_cartoon, m.Rating.animation_cartoon),
+    ]
+    for raw_val, field in additional:
+        if raw_val:
+            row_conditions.append(field.isnot(None))
+            try:
+                v = float(raw_val)
+                if v > 0:
+                    row_conditions.append(field >= v)
+            except ValueError:
+                pass
+
+    if not row_conditions:
+        return []
+
+    return [m.Movie.ratings.any(sa.and_(*row_conditions))]
+
+
 def get_genre_query_conditions(genre: list[str], subgenre: list[str], db: Session):
     genres_keys = extract_word(genre)
     genres_values: list[list[int]] = extract_values(genre)

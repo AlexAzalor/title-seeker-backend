@@ -115,6 +115,8 @@ def test_super_search(client: TestClient, db: Session):
     assert data
     assert [m for m in data.items if m.key == movie.key]
 
+    ### Duration search
+
     SEARCH_DURATION = "90,102"
     # American Psycho - 1h 42m (102)
     # The Mask - 1h 41m (101)
@@ -123,6 +125,25 @@ def test_super_search(client: TestClient, db: Session):
     MOVIES_COUNT = 4
 
     response = client.get("/api/movies/super-search/", params={"duration": SEARCH_DURATION})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.PaginationDataOut.model_validate(response.json())
+    assert data
+    assert len(data.items) == MOVIES_COUNT
+
+    ### Rating search
+
+    SEARCH_RATING = "7.5,10"
+    VISUAL_EFFECTS = "1.5"
+    # The Avengers
+    # The Lord of the Rings: The Two Towers
+    # The Lord of the Rings: The Return of the King
+    # Terminator 2: Judgment Day
+    # The Matrix
+    MOVIES_COUNT = 5
+
+    response = client.get(
+        "/api/movies/super-search/", params={"rating": SEARCH_RATING, "visual_effects": VISUAL_EFFECTS}
+    )
     assert response.status_code == status.HTTP_200_OK
     data = s.PaginationDataOut.model_validate(response.json())
     assert data
