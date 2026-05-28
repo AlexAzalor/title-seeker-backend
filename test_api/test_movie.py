@@ -149,6 +149,94 @@ def test_super_search(client: TestClient, db: Session):
     assert data
     assert len(data.items) == MOVIES_COUNT
 
+    ### Exclude specification search
+
+    # The Shawshank Redemption has "prison" specification
+    # Excluding it should remove the movie from the results
+    response = client.get("/api/movies/super-search/", params={"genre": "drama(10,100)"})
+    assert response.status_code == status.HTTP_200_OK
+    all_drama = s.PaginationDataOut.model_validate(response.json())
+    assert all_drama
+
+    response = client.get(
+        "/api/movies/super-search/", params={"genre": "drama(10,100)", "exclude_specification": "prison"}
+    )
+    assert response.status_code == status.HTTP_200_OK
+    drama_no_prison = s.PaginationDataOut.model_validate(response.json())
+    assert drama_no_prison
+
+    # Excluding a specification must reduce (or equal) the result count
+    assert drama_no_prison.total <= all_drama.total
+    # The Shawshank Redemption (has "prison" spec) must not appear in the excluded results
+    assert not any(item.key == "the-shawshank-redemption" for item in drama_no_prison.items)
+
+    ### Exclude genre search
+
+    # The Shawshank Redemption has "crime" genre
+    # Excluding it should remove the movie from the drama results
+    response = client.get("/api/movies/super-search/", params={"genre": "drama(10,100)"})
+    assert response.status_code == status.HTTP_200_OK
+    all_drama_for_genre = s.PaginationDataOut.model_validate(response.json())
+    assert all_drama_for_genre
+    assert any(item.key == "the-shawshank-redemption" for item in all_drama_for_genre.items)
+
+    response = client.get("/api/movies/super-search/", params={"genre": "drama(10,100)", "exclude_genre": "crime"})
+    assert response.status_code == status.HTTP_200_OK
+    drama_no_crime = s.PaginationDataOut.model_validate(response.json())
+    assert drama_no_crime
+
+    assert drama_no_crime.total <= all_drama_for_genre.total
+    assert not any(item.key == "the-shawshank-redemption" for item in drama_no_crime.items)
+
+    ### Exclude subgenre search
+
+    # Batman Begins has "superhero" subgenre
+    # Excluding it should remove the movie from the action results
+    response = client.get("/api/movies/super-search/", params={"genre": "action(10,100)"})
+    assert response.status_code == status.HTTP_200_OK
+    all_action = s.PaginationDataOut.model_validate(response.json())
+    assert all_action
+    assert any(item.key == "batman-begins" for item in all_action.items)
+
+    response = client.get(
+        "/api/movies/super-search/", params={"genre": "action(10,100)", "exclude_subgenre": "superhero"}
+    )
+    assert response.status_code == status.HTTP_200_OK
+    action_no_superhero = s.PaginationDataOut.model_validate(response.json())
+    assert action_no_superhero
+
+    assert action_no_superhero.total <= all_action.total
+    assert not any(item.key == "batman-begins" for item in action_no_superhero.items)
+
+    ### Exclude keyword search
+
+    # The Shawshank Redemption has "friendship-character-chemistry" keyword
+    # Excluding it should remove the movie from the drama results
+    response = client.get(
+        "/api/movies/super-search/",
+        params={"genre": "drama(10,100)", "exclude_keyword": "friendship-character-chemistry"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    drama_no_friendship = s.PaginationDataOut.model_validate(response.json())
+    assert drama_no_friendship
+
+    assert drama_no_friendship.total <= all_drama.total
+    assert not any(item.key == "the-shawshank-redemption" for item in drama_no_friendship.items)
+
+    ### Exclude action_time search
+
+    # The Shawshank Redemption has "20th-century" action time
+    # Excluding it should remove the movie from the drama results
+    response = client.get(
+        "/api/movies/super-search/", params={"genre": "drama(10,100)", "exclude_action_time": "20th-century"}
+    )
+    assert response.status_code == status.HTTP_200_OK
+    drama_no_20th = s.PaginationDataOut.model_validate(response.json())
+    assert drama_no_20th
+
+    assert drama_no_20th.total <= all_drama.total
+    assert not any(item.key == "the-shawshank-redemption" for item in drama_no_20th.items)
+
 
 def test_search(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie))
