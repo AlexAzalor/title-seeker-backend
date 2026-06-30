@@ -66,4 +66,5 @@ def create_shared_universe(
         key=new_su.key,
         name=new_su.get_name(lang),
         description=new_su.get_description(lang),
+        movie_count=0,
     )

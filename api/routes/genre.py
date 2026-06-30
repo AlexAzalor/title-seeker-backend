@@ -120,6 +120,7 @@ def create_genre(
         key=new_genre.key,
         name=new_genre.get_name(lang),
         description=new_genre.get_description(lang),
+        movie_count=new_genre.movie_count,
     )
 
 
@@ -183,6 +184,7 @@ def create_subgenre(
         name=new_subgenre.get_name(lang),
         description=new_subgenre.get_description(lang),
         parent_genre_key=form_data.parent_genre_key,
+        movie_count=new_subgenre.movie_count,
     )
 
 

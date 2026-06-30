@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from pydantic import BaseModel
+from pydantic.json_schema import WithJsonSchema
 
 from config import config
 
@@ -29,6 +32,7 @@ class GenreShort(BaseModel):
 
 class GenreBase(GenreShort):
     description: str
+    movie_count: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
 
 
 class SubgenreOut(GenreBase):

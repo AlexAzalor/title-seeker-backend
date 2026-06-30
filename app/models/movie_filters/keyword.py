@@ -20,8 +20,9 @@ class Keyword(db.Model, ModelMixin):
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
     uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()), nullable=True)
     key: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=False, unique=True, index=True)
+    movie_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False, default=0, server_default="0")
 
-    translations: orm.Mapped[list["KeywordTranslation"]] = orm.relationship()
+    translations: orm.Mapped[list["KeywordTranslation"]] = orm.relationship(cascade="all, delete-orphan")
 
     movies: orm.Mapped[list["Movie"]] = orm.relationship(
         "Movie",

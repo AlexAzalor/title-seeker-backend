@@ -116,6 +116,7 @@ class SharedUniverseOut(BaseSharedUniverse):
 
 class SimilarMovieOut(BaseMovie):
     poster: str
+    similarity_score: float
 
 
 class SimilarMovieOutList(BaseModel):

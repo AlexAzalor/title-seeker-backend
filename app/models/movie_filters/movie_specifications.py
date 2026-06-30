@@ -8,4 +8,5 @@ movie_specifications = sa.Table(
     sa.Column("movie_id", sa.ForeignKey("movies.id"), primary_key=True),
     sa.Column("specification_id", sa.ForeignKey("specifications.id"), primary_key=True),
     sa.Column("percentage_match", sa.Float, nullable=False, default=0.0),
+    sa.Column("rank", sa.Integer, nullable=True),
 )

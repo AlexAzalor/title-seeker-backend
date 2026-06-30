@@ -164,7 +164,7 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
                 description=genre.get_description(lang),
                 percentage_match=genre_matches.get(genre.id, 0.0),
             )
-            for genre in movie.genres
+            for genre in sorted(movie.genres, key=lambda g: genre_matches.get(g.id, 0.0), reverse=True)
         ],
         subgenres=[
             s.MovieFilterItem(
@@ -174,7 +174,7 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
                 description=subgenre.get_description(lang),
                 percentage_match=subgenre_matches.get(subgenre.id, 0.0),
             )
-            for subgenre in movie.subgenres
+            for subgenre in sorted(movie.subgenres, key=lambda sg: subgenre_matches.get(sg.id, 0.0), reverse=True)
         ],
         specifications=[
             s.MovieFilterItem(
@@ -183,7 +183,9 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
                 description=specification.get_description(lang),
                 percentage_match=specification_matches.get(specification.id, 0.0),
             )
-            for specification in movie.specifications
+            for specification in sorted(
+                movie.specifications, key=lambda sp: specification_matches.get(sp.id, 0.0), reverse=True
+            )
         ],
         keywords=[
             s.MovieFilterItem(
@@ -192,7 +194,7 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
                 description=keyword.get_description(lang),
                 percentage_match=keyword_matches.get(keyword.id, 0.0),
             )
-            for keyword in movie.keywords
+            for keyword in sorted(movie.keywords, key=lambda kw: keyword_matches.get(kw.id, 0.0), reverse=True)
         ],
         action_times=[
             s.MovieFilterItem(

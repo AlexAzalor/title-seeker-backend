@@ -55,6 +55,7 @@ def get_people_filters(db: Session, lang: s.Language):
             key=actor.key,
             name=actor.full_name(lang),
             another_lang_name=actor.full_name(another_lang),
+            movie_count=0,
         )
         for actor in actors
     ]
@@ -64,6 +65,7 @@ def get_people_filters(db: Session, lang: s.Language):
             key=director.key,
             name=director.full_name(lang),
             another_lang_name=director.full_name(another_lang),
+            movie_count=0,
         )
         for director in directors
     ]
@@ -73,6 +75,7 @@ def get_people_filters(db: Session, lang: s.Language):
             key=character.key,
             name=character.get_name(lang),
             another_lang_name=character.get_name(another_lang),
+            movie_count=0,
         )
         for character in characters
     ]
@@ -99,6 +102,7 @@ def get_genre_filters(db: Session, lang: s.Language):
             key=genre.key,
             name=genre.get_name(lang),
             description=genre.get_description(lang),
+            movie_count=genre.movie_count,
             subgenres=sorted(
                 [
                     s.SubgenreOut(
@@ -106,6 +110,7 @@ def get_genre_filters(db: Session, lang: s.Language):
                         name=subgenre.get_name(lang),
                         description=subgenre.get_description(lang),
                         parent_genre_key=subgenre.genre.key,
+                        movie_count=subgenre.movie_count,
                     )
                     for subgenre in genre.subgenres
                 ],
@@ -169,6 +174,7 @@ def get_filters(db: Session, lang: s.Language):
             name=specification.get_name(lang),
             description=specification.get_description(lang),
             percentage_match=0.0,
+            movie_count=specification.movie_count,
         )
         for specification in specifications
     ]
@@ -179,6 +185,7 @@ def get_filters(db: Session, lang: s.Language):
             name=keyword.get_name(lang),
             description=keyword.get_description(lang),
             percentage_match=0.0,
+            movie_count=keyword.movie_count,
         )
         for keyword in keywords
     ]
@@ -189,6 +196,7 @@ def get_filters(db: Session, lang: s.Language):
             name=action_time.get_name(lang),
             description=action_time.get_description(lang),
             percentage_match=0.0,
+            movie_count=0,
         )
         for action_time in action_times
     ]

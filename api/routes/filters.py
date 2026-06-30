@@ -151,6 +151,7 @@ def create_specification(
         name=new_specification.get_name(lang),
         description=new_specification.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -208,6 +209,7 @@ def create_keyword(
         name=new_keyword.get_name(lang),
         description=new_keyword.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -265,6 +267,7 @@ def create_action_time(
         name=new_action_time.get_name(lang),
         description=new_action_time.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -379,3 +382,51 @@ def get_filter_form_fields(
         log(log.WARNING, "No item found for key: %s", item_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No item found")
     return item_out
+
+
+@filter_router.delete(
+    "/keyword/{key}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Keywords successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Keyword is associated with multiple movies",
+            "model": list[s.MovieMenuItem],
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Keywords not found"},
+    },
+)
+def delete_keywords(
+    key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete keywords from a movie"""
+
+    keyword = db.scalar(
+        sa.select(m.Keyword)
+        .options(selectinload(m.Keyword.movies).selectinload(m.Movie.translations))
+        .where(m.Keyword.key == key)
+    )
+
+    if not keyword:
+        log(log.ERROR, "Keywords [%s] not found", key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keyword not found")
+
+    if keyword.movie_count > 1:
+        movie_list = [s.MovieMenuItem(key=movie.key, name=movie.get_title(s.Language.EN)) for movie in keyword.movies]
+        log(log.ERROR, "Keyword [%s] is associated with multiple movies and cannot be deleted", keyword.key)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[item.model_dump() for item in movie_list],
+        )
+
+    try:
+        db.delete(keyword)
+        db.commit()
+
+        log(log.INFO, "Keywords [%s] successfully deleted", keyword.key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error deleting keyword [%s]: %s", keyword.key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error deleting keyword")
