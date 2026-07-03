@@ -36,7 +36,7 @@ def get_specifications(
         .options(selectinload(m.Specification.translations))
         .join(m.Specification.translations)
         .where(m.SpecificationTranslation.language == lang.value)
-        .order_by(m.SpecificationTranslation.name)
+        .order_by(m.Specification.movie_count.desc())
     )
 
     items = get_all_items(db, specification_select, lang)
@@ -63,7 +63,7 @@ def get_keywords(
         .options(selectinload(m.Keyword.translations))
         .join(m.Keyword.translations)
         .where(m.KeywordTranslation.language == lang.value)
-        .order_by(m.KeywordTranslation.name)
+        .order_by(m.Keyword.movie_count.desc())
     )
 
     items = get_all_items(db, keyword_select, lang)
@@ -90,7 +90,7 @@ def get_action_times(
         .options(selectinload(m.ActionTime.translations))
         .join(m.ActionTime.translations)
         .where(m.ActionTimeTranslation.language == lang.value)
-        .order_by(m.ActionTimeTranslation.name)
+        .order_by(m.ActionTime.order.desc())
     )
 
     items = get_all_items(db, action_time_select, lang)
@@ -316,6 +316,9 @@ def update_filter_item(
         if filter_item.key != form_data.key:
             filter_item.key = form_data.key
 
+        if form_data.order is not None:
+            filter_item.order = form_data.order
+
         existing = {t.language: t for t in filter_item.translations}
 
         existing[s.Language.EN.value].name = form_data.name_en
@@ -376,6 +379,7 @@ def get_filter_form_fields(
         name_uk=item.get_name(s.Language.UK),
         description_en=item.get_description(s.Language.EN),
         description_uk=item.get_description(s.Language.UK),
+        order=getattr(item, "order", None),
     )
 
     if not item_out:

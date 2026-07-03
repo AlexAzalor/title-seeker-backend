@@ -21,6 +21,7 @@ class ActionTime(db.Model, ModelMixin):
     uuid: orm.Mapped[str] = orm.mapped_column(sa.String(36), default=lambda: str(uuid4()), nullable=True)
     key: orm.Mapped[str] = orm.mapped_column(sa.String(255), nullable=False, unique=True, index=True)
     movie_count: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False, default=0, server_default="0")
+    order: orm.Mapped[int] = orm.mapped_column(sa.Integer, nullable=False, default=0, server_default="0")
 
     translations: orm.Mapped[list["ActionTimeTranslation"]] = orm.relationship(cascade="all, delete-orphan")
 

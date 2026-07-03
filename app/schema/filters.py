@@ -28,6 +28,7 @@ class FilterFields(BaseModel):
     name_en: str
     description_uk: str
     description_en: str
+    order: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
 
 
 class FilterFieldsWithUUID(FilterFields):

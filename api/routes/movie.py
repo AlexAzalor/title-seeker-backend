@@ -268,6 +268,16 @@ def super_search_movies(
         if selected_spec_keys:
             query = query.where(~m.Movie.specifications.any(m.Specification.key.notin_(selected_spec_keys)))
 
+    if inner_exact_match and keyword:
+        selected_keyword_keys = extract_word(keyword)
+        if selected_keyword_keys:
+            query = query.where(~m.Movie.keywords.any(m.Keyword.key.notin_(selected_keyword_keys)))
+
+    if inner_exact_match and action_time:
+        selected_at_keys = extract_word(action_time)
+        if selected_at_keys:
+            query = query.where(~m.Movie.action_times.any(m.ActionTime.key.notin_(selected_at_keys)))
+
     # Exclude conditions are always AND — applied after the main filter
     if exclude_genre:
         for cond in get_exclude_genre_conditions(exclude_genre):
@@ -406,7 +416,7 @@ def get_movie_filters(
         .options(selectinload(m.Subgenre.translations))  # avoids N+1 queries
         .join(m.Subgenre.translations)
         .where(m.SubgenreTranslation.language == lang.value)
-        .order_by(m.SubgenreTranslation.name)  # this only works if joined
+        .order_by(m.Subgenre.movie_count.desc())  # this only works if joined
     ).all()
     if not subgenres:
         log(log.ERROR, "Subgenre [%s] not found")
@@ -443,15 +453,19 @@ def get_movie_filters(
         for subgenre in subgenres
     ]
 
-    vp_categories_out = [
-        s.VisualProfileCategoryOut(
-            key=category.key,
-            name=category.get_name(lang),
-            description=category.get_description(lang),
-            movie_count=vp_movie_counts.get(category.id, 0),
-        )
-        for category in visual_profile_categories
-    ]
+    vp_categories_out = sorted(
+        [
+            s.VisualProfileCategoryOut(
+                key=category.key,
+                name=category.get_name(lang),
+                description=category.get_description(lang),
+                movie_count=vp_movie_counts.get(category.id, 0),
+            )
+            for category in visual_profile_categories
+        ],
+        key=lambda x: x.movie_count,
+        reverse=True,
+    )
 
     return s.MovieFiltersListOut(
         genres=genres_out,
@@ -930,9 +944,11 @@ def get_genres_subgenres(
     """Get all genres and related subgenres for the movie page (for edit)"""
 
     genres = db.scalars(
-        sa.select(m.Genre).options(
+        sa.select(m.Genre)
+        .options(
             selectinload(m.Genre.translations), selectinload(m.Genre.subgenres).selectinload(m.Subgenre.translations)
         )
+        .order_by(m.Genre.movie_count.desc())
     ).all()
 
     if not genres:
@@ -957,7 +973,7 @@ def get_genres_subgenres(
                         )
                         for subgenre in genre.subgenres
                     ],
-                    key=lambda x: x.name,
+                    key=lambda x: x.movie_count if x.movie_count is not None else 0,
                 ),
             )
             for genre in genres

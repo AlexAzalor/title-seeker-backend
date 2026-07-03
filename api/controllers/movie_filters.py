@@ -24,7 +24,7 @@ def get_people_filters(db: Session, lang: s.Language):
         .join(actor_movie_count_sq, m.Actor.id == actor_movie_count_sq.c.id)
         .where(m.ActorTranslation.language == lang.value)
         .where(actor_movie_count_sq.c.movie_count >= min_movies)
-        .order_by(m.ActorTranslation.first_name)
+        .order_by(actor_movie_count_sq.c.movie_count.desc())
     ).all()
     if not actors_with_counts:
         log(log.ERROR, "Actors [%s] not found")
@@ -44,11 +44,7 @@ def get_people_filters(db: Session, lang: s.Language):
         .join(director_movie_count_sq, m.Director.id == director_movie_count_sq.c.id)
         .where(m.DirectorTranslation.language == lang.value)
         .where(director_movie_count_sq.c.movie_count >= 2)
-        .order_by(
-            sa.func.concat(
-                m.DirectorTranslation.first_name,
-            )
-        )
+        .order_by(director_movie_count_sq.c.movie_count.desc())
     ).all()
     if not directors_with_counts:
         log(log.ERROR, "Director [%s] not found")
@@ -71,7 +67,7 @@ def get_people_filters(db: Session, lang: s.Language):
         .join(character_movie_count_sq, m.Character.id == character_movie_count_sq.c.id)
         .where(m.CharacterTranslation.language == lang.value)
         .where(character_movie_count_sq.c.movie_count >= 2)
-        .order_by(m.CharacterTranslation.name)
+        .order_by(character_movie_count_sq.c.movie_count.desc())
     ).all()
     if not characters_with_counts:
         log(log.ERROR, "Characters [%s] not found")
@@ -120,7 +116,7 @@ def get_genre_filters(db: Session, lang: s.Language):
         )
         .join(m.Genre.translations)
         .where(m.GenreTranslation.language == lang.value)
-        .order_by(m.GenreTranslation.name)
+        .order_by(m.Genre.movie_count.desc())
     ).all()
     if not genres:
         log(log.ERROR, "Genres [%s] not found")
@@ -143,7 +139,8 @@ def get_genre_filters(db: Session, lang: s.Language):
                     )
                     for subgenre in genre.subgenres
                 ],
-                key=lambda x: x.name,
+                key=lambda x: x.movie_count if x.movie_count is not None else 0,
+                reverse=True,
             ),
         )
         for genre in genres
@@ -158,7 +155,7 @@ def get_filters(db: Session, lang: s.Language):
         .options(selectinload(m.Specification.translations))
         .join(m.Specification.translations)
         .where(m.SpecificationTranslation.language == lang.value)
-        .order_by(m.SpecificationTranslation.name)
+        .order_by(m.Specification.movie_count.desc())
     ).all()
     if not specifications:
         log(log.ERROR, "Specifications [%s] not found")
@@ -169,7 +166,7 @@ def get_filters(db: Session, lang: s.Language):
         .options(selectinload(m.Keyword.translations))
         .join(m.Keyword.translations)
         .where(m.KeywordTranslation.language == lang.value)
-        .order_by(m.KeywordTranslation.name)
+        .order_by(m.Keyword.movie_count.desc())
     ).all()
     if not keywords:
         log(log.ERROR, "Keywords [%s] not found")
@@ -180,7 +177,7 @@ def get_filters(db: Session, lang: s.Language):
         .options(selectinload(m.ActionTime.translations))
         .join(m.ActionTime.translations)
         .where(m.ActionTimeTranslation.language == lang.value)
-        .order_by(m.ActionTimeTranslation.name)
+        .order_by(m.ActionTime.order.desc())
     ).all()
     if not action_times:
         log(log.ERROR, "Action times [%s] not found")
@@ -243,15 +240,19 @@ def get_filters(db: Session, lang: s.Language):
         su_id: movie_count for su_id, movie_count in su_movie_count_rows if su_id is not None
     }
 
-    su_out = [
-        s.BaseSharedUniverse(
-            key=su.key,
-            name=su.get_name(lang),
-            description=su.get_description(lang),
-            movie_count=su_movie_counts.get(su.id, 0),
-        )
-        for su in shared_universes
-    ]
+    su_out = sorted(
+        [
+            s.BaseSharedUniverse(
+                key=su.key,
+                name=su.get_name(lang),
+                description=su.get_description(lang),
+                movie_count=su_movie_counts.get(su.id, 0),
+            )
+            for su in shared_universes
+        ],
+        key=lambda su: su.movie_count,
+        reverse=True,
+    )
 
     return (
         specifications_out,
