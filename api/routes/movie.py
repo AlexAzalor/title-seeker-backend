@@ -419,6 +419,19 @@ def get_movie_filters(
         log(log.ERROR, "Visual profile categories [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visual profile categories not found")
 
+    vp_movie_count_rows = (
+        db.execute(
+            sa.select(m.VisualProfile.category_id, sa.func.count(sa.distinct(m.VisualProfile.movie_id))).group_by(
+                m.VisualProfile.category_id
+            )
+        )
+        .tuples()
+        .all()
+    )
+    vp_movie_counts: dict[int, int] = {
+        vp_id: movie_count for vp_id, movie_count in vp_movie_count_rows if vp_id is not None
+    }
+
     subgenres_out = [
         s.SubgenreOut(
             key=subgenre.key,
@@ -435,6 +448,7 @@ def get_movie_filters(
             key=category.key,
             name=category.get_name(lang),
             description=category.get_description(lang),
+            movie_count=vp_movie_counts.get(category.id, 0),
         )
         for category in visual_profile_categories
     ]
@@ -847,6 +861,28 @@ def get_similar_movies(
             )
             for sim in deduped
         ],
+    )
+
+
+@movie_router.post(
+    "/recalculate-similarities/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.RecalculateSimilaritiesOut,
+    responses={status.HTTP_403_FORBIDDEN: {"description": "Admin access required"}},
+)
+def recalculate_similarities(
+    current_user: m.User = Depends(get_admin),
+):
+    """Recalculate filter counts and then recompute all pairwise similarity scores."""
+    from app.commands.recalculate_filter_counts import recalculate_filter_counts
+    from app.commands.calculate_similarities import calculate_similarities
+
+    recalculate_filter_counts()
+    pairs_upserted, pairs_skipped = calculate_similarities()
+
+    return s.RecalculateSimilaritiesOut(
+        pairs_upserted=pairs_upserted,
+        pairs_skipped=pairs_skipped,
     )
 
 

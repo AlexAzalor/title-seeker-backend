@@ -123,6 +123,11 @@ class SimilarMovieOutList(BaseModel):
     similar_movies: list[SimilarMovieOut]
 
 
+class RecalculateSimilaritiesOut(BaseModel):
+    pairs_upserted: int
+    pairs_skipped: int
+
+
 class MovieOut(BaseMovie):
     title_en: str | None = None
 

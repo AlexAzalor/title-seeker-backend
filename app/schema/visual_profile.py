@@ -51,6 +51,7 @@ class VisualProfileCategoryOut(BaseModel):
     key: str
     name: str
     description: str
+    movie_count: int = 0
 
 
 class VisualProfileData(VisualProfileCategoryOut):

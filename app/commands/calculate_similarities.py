@@ -29,8 +29,8 @@ from app.services.similarity_config import DEFAULT_SIMILARITY_CONFIG
 from app.services.similarity_engine import compute_similarity, extract_features
 
 
-def calculate_similarities() -> None:
-    """Entry point called by the Flask CLI command."""
+def calculate_similarities() -> tuple[int, int]:
+    """Entry point called by the Flask CLI command. Returns (pairs_upserted, pairs_skipped)."""
     config = DEFAULT_SIMILARITY_CONFIG
 
     with db.begin() as session:
@@ -101,6 +101,8 @@ def calculate_similarities() -> None:
             print(f"Removed {len(stale_ids)} stale similarity pairs.")
 
         print(f"Done. Upserted: {pairs_upserted} pairs. " f"Skipped (related/low-score): {pairs_skipped} pairs.")
+
+    return pairs_upserted, pairs_skipped
 
 
 def _load_movies(session: Session) -> list[m.Movie]:

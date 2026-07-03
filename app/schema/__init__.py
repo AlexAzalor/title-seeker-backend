@@ -46,6 +46,7 @@ from .movie import (
     MovieMenuItem,
     SimilarMovieOut,
     SimilarMovieOutList,
+    RecalculateSimilaritiesOut,
     QuickMovieList,
     PaginationDataOut,
 )

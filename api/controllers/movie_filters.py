@@ -7,44 +7,73 @@ from app.logger import log
 
 
 def get_people_filters(db: Session, lang: s.Language):
-    actors = db.scalars(
-        sa.select(m.Actor)
+    total_movies = db.scalar(sa.select(sa.func.count(m.Movie.id))) or 0
+    min_movies = max(1, int(total_movies * 0.01))
+
+    actor_movie_count_sq = (
+        sa.select(m.Actor.id, sa.func.count(m.Movie.id).label("movie_count"))
+        .join(m.Movie.actors)
+        .group_by(m.Actor.id)
+        .subquery()
+    )
+
+    actors_with_counts = db.execute(
+        sa.select(m.Actor, actor_movie_count_sq.c.movie_count)
         .options(selectinload(m.Actor.translations))
         .join(m.Actor.translations)
+        .join(actor_movie_count_sq, m.Actor.id == actor_movie_count_sq.c.id)
         .where(m.ActorTranslation.language == lang.value)
-        .order_by(
-            sa.func.concat(
-                m.ActorTranslation.first_name,
-            )
-        )
+        .where(actor_movie_count_sq.c.movie_count >= min_movies)
+        .order_by(m.ActorTranslation.first_name)
     ).all()
-    if not actors:
+    if not actors_with_counts:
         log(log.ERROR, "Actors [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Actors not found")
 
-    directors = db.scalars(
-        sa.select(m.Director)
+    director_movie_count_sq = (
+        sa.select(m.Director.id, sa.func.count(m.Movie.id).label("movie_count"))
+        .join(m.Movie.directors)
+        .group_by(m.Director.id)
+        .subquery()
+    )
+
+    directors_with_counts = db.execute(
+        sa.select(m.Director, director_movie_count_sq.c.movie_count)
         .options(selectinload(m.Director.translations))
         .join(m.Director.translations)
+        .join(director_movie_count_sq, m.Director.id == director_movie_count_sq.c.id)
         .where(m.DirectorTranslation.language == lang.value)
+        .where(director_movie_count_sq.c.movie_count >= 2)
         .order_by(
             sa.func.concat(
                 m.DirectorTranslation.first_name,
             )
         )
     ).all()
-    if not directors:
+    if not directors_with_counts:
         log(log.ERROR, "Director [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Director not found")
 
-    characters = db.scalars(
-        sa.select(m.Character)
+    character_movie_count_sq = (
+        sa.select(
+            m.Character.id,
+            sa.func.count(sa.distinct(m.MovieActorCharacter.movie_id)).label("movie_count"),
+        )
+        .join(m.Character.characters)
+        .group_by(m.Character.id)
+        .subquery()
+    )
+
+    characters_with_counts = db.execute(
+        sa.select(m.Character, character_movie_count_sq.c.movie_count)
         .options(selectinload(m.Character.translations))
         .join(m.Character.translations)
+        .join(character_movie_count_sq, m.Character.id == character_movie_count_sq.c.id)
         .where(m.CharacterTranslation.language == lang.value)
+        .where(character_movie_count_sq.c.movie_count >= 2)
         .order_by(m.CharacterTranslation.name)
     ).all()
-    if not characters:
+    if not characters_with_counts:
         log(log.ERROR, "Characters [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Characters not found")
 
@@ -55,9 +84,9 @@ def get_people_filters(db: Session, lang: s.Language):
             key=actor.key,
             name=actor.full_name(lang),
             another_lang_name=actor.full_name(another_lang),
-            movie_count=0,
+            movie_count=movie_count,
         )
-        for actor in actors
+        for actor, movie_count in actors_with_counts
     ]
 
     directors_out = [
@@ -65,9 +94,9 @@ def get_people_filters(db: Session, lang: s.Language):
             key=director.key,
             name=director.full_name(lang),
             another_lang_name=director.full_name(another_lang),
-            movie_count=0,
+            movie_count=movie_count,
         )
-        for director in directors
+        for director, movie_count in directors_with_counts
     ]
 
     characters_out = [
@@ -75,9 +104,9 @@ def get_people_filters(db: Session, lang: s.Language):
             key=character.key,
             name=character.get_name(lang),
             another_lang_name=character.get_name(another_lang),
-            movie_count=0,
+            movie_count=movie_count,
         )
-        for character in characters
+        for character, movie_count in characters_with_counts
     ]
 
     return actors_out, directors_out, characters_out
@@ -196,16 +225,30 @@ def get_filters(db: Session, lang: s.Language):
             name=action_time.get_name(lang),
             description=action_time.get_description(lang),
             percentage_match=0.0,
-            movie_count=0,
+            movie_count=action_time.movie_count,
         )
         for action_time in action_times
     ]
+
+    su_movie_count_rows = (
+        db.execute(
+            sa.select(m.Movie.shared_universe_id, sa.func.count(m.Movie.id))
+            .where(m.Movie.shared_universe_id.is_not(None))
+            .group_by(m.Movie.shared_universe_id)
+        )
+        .tuples()
+        .all()
+    )
+    su_movie_counts: dict[int, int] = {
+        su_id: movie_count for su_id, movie_count in su_movie_count_rows if su_id is not None
+    }
 
     su_out = [
         s.BaseSharedUniverse(
             key=su.key,
             name=su.get_name(lang),
             description=su.get_description(lang),
+            movie_count=su_movie_counts.get(su.id, 0),
         )
         for su in shared_universes
     ]
