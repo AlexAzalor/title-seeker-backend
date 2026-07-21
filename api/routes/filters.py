@@ -36,7 +36,7 @@ def get_specifications(
         .options(selectinload(m.Specification.translations))
         .join(m.Specification.translations)
         .where(m.SpecificationTranslation.language == lang.value)
-        .order_by(m.SpecificationTranslation.name)
+        .order_by(m.Specification.movie_count.desc())
     )
 
     items = get_all_items(db, specification_select, lang)
@@ -63,7 +63,7 @@ def get_keywords(
         .options(selectinload(m.Keyword.translations))
         .join(m.Keyword.translations)
         .where(m.KeywordTranslation.language == lang.value)
-        .order_by(m.KeywordTranslation.name)
+        .order_by(m.Keyword.movie_count.desc())
     )
 
     items = get_all_items(db, keyword_select, lang)
@@ -90,7 +90,7 @@ def get_action_times(
         .options(selectinload(m.ActionTime.translations))
         .join(m.ActionTime.translations)
         .where(m.ActionTimeTranslation.language == lang.value)
-        .order_by(m.ActionTimeTranslation.name)
+        .order_by(m.ActionTime.order.desc())
     )
 
     items = get_all_items(db, action_time_select, lang)
@@ -151,6 +151,7 @@ def create_specification(
         name=new_specification.get_name(lang),
         description=new_specification.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -208,6 +209,7 @@ def create_keyword(
         name=new_keyword.get_name(lang),
         description=new_keyword.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -265,6 +267,7 @@ def create_action_time(
         name=new_action_time.get_name(lang),
         description=new_action_time.get_description(lang),
         percentage_match=0.0,
+        movie_count=0,
     )
 
 
@@ -312,6 +315,9 @@ def update_filter_item(
     try:
         if filter_item.key != form_data.key:
             filter_item.key = form_data.key
+
+        if form_data.order is not None:
+            filter_item.order = form_data.order
 
         existing = {t.language: t for t in filter_item.translations}
 
@@ -373,9 +379,158 @@ def get_filter_form_fields(
         name_uk=item.get_name(s.Language.UK),
         description_en=item.get_description(s.Language.EN),
         description_uk=item.get_description(s.Language.UK),
+        order=getattr(item, "order", None),
     )
 
     if not item_out:
         log(log.WARNING, "No item found for key: %s", item_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No item found")
     return item_out
+
+
+@filter_router.delete(
+    "/specification/{key}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Specification successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Keyword is associated with multiple movies",
+            "model": list[s.MovieMenuItem],
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Specification not found"},
+    },
+)
+def delete_specification(
+    key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete specification from a movie"""
+
+    specification = db.scalar(
+        sa.select(m.Specification)
+        .options(selectinload(m.Specification.movies).selectinload(m.Movie.translations))
+        .where(m.Specification.key == key)
+    )
+
+    if not specification:
+        log(log.ERROR, "Specification [%s] not found", key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specification not found")
+
+    if specification.movie_count > 1:
+        movie_list = [
+            s.MovieMenuItem(key=movie.key, name=movie.get_title(s.Language.EN)) for movie in specification.movies
+        ]
+        log(log.ERROR, "Specification [%s] is associated with multiple movies and cannot be deleted", specification.key)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[item.model_dump() for item in movie_list],
+        )
+
+    try:
+        db.delete(specification)
+        db.commit()
+
+        log(log.INFO, "Specification [%s] successfully deleted", specification.key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error deleting specification [%s]: %s", specification.key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error deleting specification")
+
+
+@filter_router.delete(
+    "/keyword/{key}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Keywords successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Keyword is associated with multiple movies",
+            "model": list[s.MovieMenuItem],
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Keywords not found"},
+    },
+)
+def delete_keyword(
+    key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete keyword from a movie"""
+
+    keyword = db.scalar(
+        sa.select(m.Keyword)
+        .options(selectinload(m.Keyword.movies).selectinload(m.Movie.translations))
+        .where(m.Keyword.key == key)
+    )
+
+    if not keyword:
+        log(log.ERROR, "Keyword [%s] not found", key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Keyword not found")
+
+    if keyword.movie_count > 1:
+        movie_list = [s.MovieMenuItem(key=movie.key, name=movie.get_title(s.Language.EN)) for movie in keyword.movies]
+        log(log.ERROR, "Keyword [%s] is associated with multiple movies and cannot be deleted", keyword.key)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[item.model_dump() for item in movie_list],
+        )
+
+    try:
+        db.delete(keyword)
+        db.commit()
+
+        log(log.INFO, "Keyword [%s] successfully deleted", keyword.key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error deleting keyword [%s]: %s", keyword.key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error deleting keyword")
+
+
+@filter_router.delete(
+    "/action-time/{key}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Action time successfully deleted"},
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Keyword is associated with multiple movies",
+            "model": list[s.MovieMenuItem],
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Action time not found"},
+    },
+)
+def delete_action_time(
+    key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Delete action time from a movie"""
+
+    action_time = db.scalar(
+        sa.select(m.ActionTime)
+        .options(selectinload(m.ActionTime.movies).selectinload(m.Movie.translations))
+        .where(m.ActionTime.key == key)
+    )
+
+    if not action_time:
+        log(log.ERROR, "ActionTime [%s] not found", key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ActionTime not found")
+
+    if action_time.movie_count > 1:
+        movie_list = [
+            s.MovieMenuItem(key=movie.key, name=movie.get_title(s.Language.EN)) for movie in action_time.movies
+        ]
+        log(log.ERROR, "ActionTime [%s] is associated with multiple movies and cannot be deleted", action_time.key)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[item.model_dump() for item in movie_list],
+        )
+
+    try:
+        db.delete(action_time)
+        db.commit()
+
+        log(log.INFO, "ActionTime [%s] successfully deleted", action_time.key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error deleting action time [%s]: %s", action_time.key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error deleting action time")

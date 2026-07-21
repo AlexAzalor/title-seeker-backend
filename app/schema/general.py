@@ -1,6 +1,8 @@
 from enum import Enum
+from typing import Annotated
 from pydantic import BaseModel
 from config import config
+from pydantic.json_schema import WithJsonSchema
 
 CFG = config()
 
@@ -49,3 +51,4 @@ class MainItemMenu(BaseModel):
     name: str
     # To search for items regardless of the user's chosen language
     another_lang_name: str
+    movie_count: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None

@@ -306,6 +306,20 @@ def init(app: Flask):
     #     update_filters_with_uuid()
     #     print("done")
 
+    @app.cli.command("calculate-similarities")
+    def calculate_similarities_cmd():
+        """Populate/refresh the movie_similarities pre-computed cache table."""
+        from .calculate_similarities import calculate_similarities
+
+        calculate_similarities()
+
+    @app.cli.command("recalculate-filter-counts")
+    def recalculate_filter_counts_cmd():
+        """Refresh denormalized movie_count on all filter entities (genres, subgenres, specifications, keywords)."""
+        from .recalculate_filter_counts import recalculate_filter_counts
+
+        recalculate_filter_counts()
+
     @app.cli.command()
     def execute_all():
         """Execute all commands that related to movies"""

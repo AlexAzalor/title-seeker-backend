@@ -116,10 +116,16 @@ class SharedUniverseOut(BaseSharedUniverse):
 
 class SimilarMovieOut(BaseMovie):
     poster: str
+    similarity_score: float
 
 
 class SimilarMovieOutList(BaseModel):
     similar_movies: list[SimilarMovieOut]
+
+
+class RecalculateSimilaritiesOut(BaseModel):
+    pairs_upserted: int
+    pairs_skipped: int
 
 
 class MovieOut(BaseMovie):

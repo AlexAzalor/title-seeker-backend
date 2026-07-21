@@ -24,6 +24,7 @@ class VisualProfileField(BaseModel):
     name_uk: str
     description_en: str
     description_uk: str
+    movie_count: int = 0
 
 
 class VisualProfileFieldWithUUID(VisualProfileField):
@@ -51,6 +52,7 @@ class VisualProfileCategoryOut(BaseModel):
     key: str
     name: str
     description: str
+    movie_count: int = 0
 
 
 class VisualProfileData(VisualProfileCategoryOut):

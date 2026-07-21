@@ -1,5 +1,8 @@
 from enum import Enum
+from typing import Annotated
 from pydantic import BaseModel
+
+from pydantic.json_schema import WithJsonSchema
 
 from config import config
 
@@ -25,6 +28,7 @@ class FilterFields(BaseModel):
     name_en: str
     description_uk: str
     description_en: str
+    order: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
 
 
 class FilterFieldsWithUUID(FilterFields):
@@ -44,6 +48,7 @@ class FilterItemOut(BaseModel):
     name: str
     description: str
     percentage_match: float
+    movie_count: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
 
 
 class FilterList(BaseModel):

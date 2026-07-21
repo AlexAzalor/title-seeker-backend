@@ -44,23 +44,41 @@ def get_visual_profiles(
         log(log.WARNING, "No visual profiles found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No visual profiles found")
 
-    categories_out = [
-        s.VisualProfileData(
-            key=vp_category.key,
-            name=vp_category.get_name(lang),
-            description=vp_category.get_description(lang),
-            criteria=[
-                s.VisualProfileCriterionData(
-                    key=criterion.key,
-                    name=criterion.get_name(lang),
-                    description=criterion.get_description(lang),
-                    rating=0,
-                )
-                for criterion in vp_category.criteria
-            ],
+    vp_movie_count_rows = (
+        db.execute(
+            sa.select(m.VisualProfile.category_id, sa.func.count(sa.distinct(m.VisualProfile.movie_id))).group_by(
+                m.VisualProfile.category_id
+            )
         )
-        for vp_category in sorted(visual_profiles, key=lambda x: x.id)
-    ]
+        .tuples()
+        .all()
+    )
+    vp_movie_counts: dict[int, int] = {
+        vp_id: movie_count for vp_id, movie_count in vp_movie_count_rows if vp_id is not None
+    }
+
+    categories_out = sorted(
+        [
+            s.VisualProfileData(
+                key=vp_category.key,
+                name=vp_category.get_name(lang),
+                description=vp_category.get_description(lang),
+                movie_count=vp_movie_counts.get(vp_category.id, 0),
+                criteria=[
+                    s.VisualProfileCriterionData(
+                        key=criterion.key,
+                        name=criterion.get_name(lang),
+                        description=criterion.get_description(lang),
+                        rating=0,
+                    )
+                    for criterion in vp_category.criteria
+                ],
+            )
+            for vp_category in visual_profiles
+        ],
+        key=lambda x: x.movie_count,
+        reverse=True,
+    )
 
     return s.VisualProfileListOut(items=categories_out)
 
@@ -265,29 +283,47 @@ def get_visual_profile_forms(
         log(log.ERROR, "Impact criterion not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Impact criterion not found")
 
-    categories_out = [
-        s.VisualProfileForm(
-            uuid=category.uuid,
-            key=category.key,
-            name_en=category.get_name(s.Language.EN),
-            name_uk=category.get_name(s.Language.UK),
-            description_en=category.get_description(s.Language.EN),
-            description_uk=category.get_description(s.Language.UK),
-            criteria=[
-                s.VisualProfileFieldWithUUID(
-                    uuid=criterion.uuid,
-                    key=criterion.key,
-                    name_en=criterion.get_name(s.Language.EN),
-                    name_uk=criterion.get_name(s.Language.UK),
-                    description_en=criterion.get_description(s.Language.EN),
-                    description_uk=criterion.get_description(s.Language.UK),
-                )
-                for criterion in sorted(category.criteria, key=lambda x: x.id)
-                if criterion.key != CFG.UNIQUE_CRITERION_KEY
-            ],
+    vp_movie_count_rows = (
+        db.execute(
+            sa.select(m.VisualProfile.category_id, sa.func.count(sa.distinct(m.VisualProfile.movie_id))).group_by(
+                m.VisualProfile.category_id
+            )
         )
-        for category in sorted(categories, key=lambda x: x.id)
-    ]
+        .tuples()
+        .all()
+    )
+    vp_movie_counts: dict[int, int] = {
+        vp_id: movie_count for vp_id, movie_count in vp_movie_count_rows if vp_id is not None
+    }
+
+    categories_out = sorted(
+        [
+            s.VisualProfileForm(
+                uuid=category.uuid,
+                key=category.key,
+                name_en=category.get_name(s.Language.EN),
+                name_uk=category.get_name(s.Language.UK),
+                description_en=category.get_description(s.Language.EN),
+                description_uk=category.get_description(s.Language.UK),
+                movie_count=vp_movie_counts.get(category.id, 0),
+                criteria=[
+                    s.VisualProfileFieldWithUUID(
+                        uuid=criterion.uuid,
+                        key=criterion.key,
+                        name_en=criterion.get_name(s.Language.EN),
+                        name_uk=criterion.get_name(s.Language.UK),
+                        description_en=criterion.get_description(s.Language.EN),
+                        description_uk=criterion.get_description(s.Language.UK),
+                    )
+                    for criterion in sorted(category.criteria, key=lambda x: x.id)
+                    if criterion.key != CFG.UNIQUE_CRITERION_KEY
+                ],
+            )
+            for category in sorted(categories, key=lambda x: x.id)
+        ],
+        key=lambda x: x.movie_count,
+        reverse=True,
+    )
 
     items = s.VisualProfileFormOut(
         impact=s.VisualProfileFieldWithUUID(

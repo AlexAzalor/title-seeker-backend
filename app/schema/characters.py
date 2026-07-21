@@ -1,5 +1,7 @@
-from pydantic import BaseModel
+from typing import Annotated
 
+from pydantic import BaseModel
+from pydantic.json_schema import WithJsonSchema
 from config import config
 
 CFG = config()
@@ -29,3 +31,4 @@ class CharacterFormIn(BaseModel):
 class CharacterOut(BaseModel):
     key: str
     name: str
+    movie_count: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None

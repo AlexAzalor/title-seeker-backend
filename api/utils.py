@@ -139,6 +139,7 @@ def get_all_items(db: Session, items_select: sa.Select, lang: s.Language):
             name=item.get_name(lang),
             description=item.get_description(lang),
             percentage_match=0.0,
+            movie_count=item.movie_count,
         )
         for item in items
     ]

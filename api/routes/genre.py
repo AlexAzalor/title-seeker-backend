@@ -33,7 +33,7 @@ def get_genres(
         .options(selectinload(m.Genre.translations))
         .join(m.Genre.translations)
         .where(m.GenreTranslation.language == lang.value)
-        .order_by(m.GenreTranslation.name)
+        .order_by(m.Genre.movie_count.desc())
     )
 
     items = get_all_items(db, genre_selection_query, lang)
@@ -60,7 +60,7 @@ def get_subgenres(
         .options(selectinload(m.Subgenre.translations))
         .join(m.Subgenre.translations)
         .where(m.SubgenreTranslation.language == lang.value)
-        .order_by(m.SubgenreTranslation.name)
+        .order_by(m.Subgenre.movie_count.desc())
     )
 
     items = get_all_items(db, subgenre_selection_query, lang)
@@ -120,6 +120,7 @@ def create_genre(
         key=new_genre.key,
         name=new_genre.get_name(lang),
         description=new_genre.get_description(lang),
+        movie_count=new_genre.movie_count,
     )
 
 
@@ -183,6 +184,7 @@ def create_subgenre(
         name=new_subgenre.get_name(lang),
         description=new_subgenre.get_description(lang),
         parent_genre_key=form_data.parent_genre_key,
+        movie_count=new_subgenre.movie_count,
     )
 
 

@@ -27,6 +27,20 @@ def test_visual_profile_categories(client: TestClient, db: Session, auth_user_ow
     assert data
     assert data.items
 
+    expected_movie_counts = {
+        category_id: movie_count
+        for category_id, movie_count in db.execute(
+            sa.select(m.VisualProfile.category_id, sa.func.count(sa.distinct(m.VisualProfile.movie_id))).group_by(
+                m.VisualProfile.category_id
+            )
+        ).all()
+        if category_id is not None
+    }
+    actual_movie_counts = {item.key: item.movie_count for item in data.items}
+
+    for category in db.scalars(sa.select(m.VisualProfileCategory)).all():
+        assert actual_movie_counts[category.key] == expected_movie_counts.get(category.id, 0)
+
     # Create a new category with a new criterion
     form_data = s.VisualProfileFormIn(
         key=NEW_CATEGORY_KEY,
