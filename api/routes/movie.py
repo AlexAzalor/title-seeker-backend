@@ -406,7 +406,7 @@ def get_movie_filters(
     """Get all movie filters"""
 
     specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
-    actors_out, directors_out, characters_out = get_people_filters(db, lang)
+    actors_out, directors_out, characters_out = get_people_filters(db, lang, 5, 2)
     genres_out = get_genre_filters(db, lang)
 
     # selectinload - used to reduce the number of database requests, especially for loops and working with languages (.get_name(lang)).

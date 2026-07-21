@@ -1,3 +1,5 @@
+from typing import Union
+
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 import app.models as m
@@ -6,74 +8,85 @@ from fastapi import HTTPException, status
 from app.logger import log
 
 
-def get_people_filters(db: Session, lang: s.Language):
-    total_movies = db.scalar(sa.select(sa.func.count(m.Movie.id))) or 0
-    min_movies = max(1, int(total_movies * 0.01))
+def get_people_filters(
+    db: Session, lang: s.Language, min_actors_m: Union[int, None] = None, min_m: Union[int, None] = None
+):
+    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
 
+    # Actors — outerjoin so actors with 0 movies are included when min_m is None
     actor_movie_count_sq = (
         sa.select(m.Actor.id, sa.func.count(m.Movie.id).label("movie_count"))
-        .join(m.Movie.actors)
+        .outerjoin(m.Actor.movies)
         .group_by(m.Actor.id)
         .subquery()
     )
 
-    actors_with_counts = db.execute(
+    actor_query = (
         sa.select(m.Actor, actor_movie_count_sq.c.movie_count)
         .options(selectinload(m.Actor.translations))
         .join(m.Actor.translations)
         .join(actor_movie_count_sq, m.Actor.id == actor_movie_count_sq.c.id)
         .where(m.ActorTranslation.language == lang.value)
-        .where(actor_movie_count_sq.c.movie_count >= min_movies)
         .order_by(actor_movie_count_sq.c.movie_count.desc())
-    ).all()
-    if not actors_with_counts:
+    )
+    if min_actors_m is not None:
+        actor_query = actor_query.where(actor_movie_count_sq.c.movie_count >= min_actors_m)
+
+    actors = db.execute(actor_query).all()
+    if not actors:
         log(log.ERROR, "Actors [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Actors not found")
 
+    # Directors — outerjoin so directors with 0 movies are included when min_m is None
     director_movie_count_sq = (
         sa.select(m.Director.id, sa.func.count(m.Movie.id).label("movie_count"))
-        .join(m.Movie.directors)
+        .outerjoin(m.Director.movies)
         .group_by(m.Director.id)
         .subquery()
     )
 
-    directors_with_counts = db.execute(
+    director_query = (
         sa.select(m.Director, director_movie_count_sq.c.movie_count)
         .options(selectinload(m.Director.translations))
         .join(m.Director.translations)
         .join(director_movie_count_sq, m.Director.id == director_movie_count_sq.c.id)
         .where(m.DirectorTranslation.language == lang.value)
-        .where(director_movie_count_sq.c.movie_count >= 2)
         .order_by(director_movie_count_sq.c.movie_count.desc())
-    ).all()
-    if not directors_with_counts:
+    )
+    if min_m is not None:
+        director_query = director_query.where(director_movie_count_sq.c.movie_count >= min_m)
+
+    directors = db.execute(director_query).all()
+    if not directors:
         log(log.ERROR, "Director [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Director not found")
 
+    # Characters — outerjoin so characters with 0 movies are included when min_m is None
     character_movie_count_sq = (
         sa.select(
             m.Character.id,
             sa.func.count(sa.distinct(m.MovieActorCharacter.movie_id)).label("movie_count"),
         )
-        .join(m.Character.characters)
+        .outerjoin(m.Character.characters)
         .group_by(m.Character.id)
         .subquery()
     )
 
-    characters_with_counts = db.execute(
+    character_query = (
         sa.select(m.Character, character_movie_count_sq.c.movie_count)
         .options(selectinload(m.Character.translations))
         .join(m.Character.translations)
         .join(character_movie_count_sq, m.Character.id == character_movie_count_sq.c.id)
         .where(m.CharacterTranslation.language == lang.value)
-        .where(character_movie_count_sq.c.movie_count >= 2)
         .order_by(character_movie_count_sq.c.movie_count.desc())
-    ).all()
-    if not characters_with_counts:
+    )
+    if min_m is not None:
+        character_query = character_query.where(character_movie_count_sq.c.movie_count >= min_m)
+
+    characters = db.execute(character_query).all()
+    if not characters:
         log(log.ERROR, "Characters [%s] not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Characters not found")
-
-    another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
 
     actors_out = [
         s.MainItemMenu(
@@ -82,7 +95,7 @@ def get_people_filters(db: Session, lang: s.Language):
             another_lang_name=actor.full_name(another_lang),
             movie_count=movie_count,
         )
-        for actor, movie_count in actors_with_counts
+        for actor, movie_count in actors
     ]
 
     directors_out = [
@@ -92,7 +105,7 @@ def get_people_filters(db: Session, lang: s.Language):
             another_lang_name=director.full_name(another_lang),
             movie_count=movie_count,
         )
-        for director, movie_count in directors_with_counts
+        for director, movie_count in directors
     ]
 
     characters_out = [
@@ -102,7 +115,7 @@ def get_people_filters(db: Session, lang: s.Language):
             another_lang_name=character.get_name(another_lang),
             movie_count=movie_count,
         )
-        for character, movie_count in characters_with_counts
+        for character, movie_count in characters
     ]
 
     return actors_out, directors_out, characters_out
