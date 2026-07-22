@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
 import json
+from typing import Annotated
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, WithJsonSchema, model_validator
 
 from app.schema.filters import FilterItemField, FilterItemOut, MovieFilterItem
 from app.schema.general import MainItemMenu
@@ -137,8 +138,8 @@ class MovieOut(BaseMovie):
     release_date: datetime
     duration: str
     budget: str
-    domestic_gross: str
-    worldwide_gross: str
+    domestic_gross: Annotated[str | None, WithJsonSchema({"type": "string"})] = None
+    worldwide_gross: Annotated[str | None, WithJsonSchema({"type": "string"})] = None
 
     # Filters
     actors: list[MovieActorOut]
@@ -293,3 +294,40 @@ class MovieCarousel(BaseMovie):
 
 class MovieCarouselList(BaseModel):
     movies: list[MovieCarousel]
+
+
+class MovieDescriptionOut(BaseModel):
+    description_en: str
+    description_uk: str
+
+
+class MovieEditDescription(BaseModel):
+    movie_key: str
+    description_en: str
+    description_uk: str
+
+
+class MovieEditActors(BaseModel):
+    movie_key: str
+    actors: list[ActorCharacterKey]
+
+
+class MovieGetActors(BaseModel):
+    actors: list[MainItemMenu]
+    characters: list[MainItemMenu]
+
+
+class MovieGetDirectors(BaseModel):
+    directors: list[MainItemMenu]
+
+
+class MovieEditDirectors(BaseModel):
+    movie_key: str
+    directors: list[str]
+
+
+class MovieBoxOfficeIn(BaseModel):
+    movie_key: str
+    budget: int
+    domestic_gross: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
+    worldwide_gross: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None

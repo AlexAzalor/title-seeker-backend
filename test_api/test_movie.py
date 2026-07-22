@@ -499,6 +499,175 @@ def test_get_random_movies(client: TestClient):
 #     assert data.similar_movies
 
 
+def test_get_movie_description(client: TestClient, db: Session):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    response = client.get(f"/api/movies/description/{movie.key}")
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieDescriptionOut.model_validate(response.json())
+    assert data
+    assert data.description_en is not None
+    assert data.description_uk is not None
+
+    # Test with non-existent movie key
+    response = client.get("/api/movies/description/non-existent-movie")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_edit_description(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieEditDescription(
+        movie_key=movie.key,
+        description_en="Updated description EN",
+        description_uk="Updated description UK",
+    )
+
+    response = client.put(
+        "/api/movies/description/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.get_description(s.Language.EN) == "Updated description EN"
+    assert movie.get_description(s.Language.UK) == "Updated description UK"
+
+    # Test with simple user - should fail
+    response = client.put(
+        "/api/movies/description/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_actors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    response = client.get("/api/movies/actors/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieGetActors.model_validate(response.json())
+    assert data
+    assert data.actors
+    assert data.characters
+
+    # Test with simple user - should fail
+    response = client.get("/api/movies/actors/", params={"user_uuid": auth_simple_user.uuid})
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_actors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    actors_keys = [actor.key for actor in movie.actors]
+    chars_keys = [char.character.key for char in movie.characters]
+
+    actor = db.scalar(sa.select(m.Actor).where(m.Actor.key.not_in(actors_keys)))
+    assert actor
+    character = db.scalar(sa.select(m.Character).where(m.Character.key.not_in(chars_keys)))
+    assert character
+    form_data = s.MovieEditActors(
+        movie_key=movie.key,
+        actors=[s.ActorCharacterKey(key=actor.key, character_key=character.key)],
+    )
+
+    response = client.put(
+        "/api/movies/actors/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert any(rel.actor_id == actor.id and rel.character_id == character.id for rel in movie.characters)
+
+    # Test with simple user - should fail
+    response = client.put(
+        "/api/movies/actors/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_directors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    response = client.get("/api/movies/directors/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieGetDirectors.model_validate(response.json())
+    assert data
+    assert data.directors
+
+    # Test with simple user - should fail
+    response = client.get("/api/movies/directors/", params={"user_uuid": auth_simple_user.uuid})
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_directors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    director = db.scalar(sa.select(m.Director))
+    assert director
+
+    form_data = s.MovieEditDirectors(
+        movie_key=movie.key,
+        directors=[director.key],
+    )
+
+    response = client.put(
+        "/api/movies/directors/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert any(d.key == director.key for d in movie.directors)
+
+    # Test with simple user - should fail
+    response = client.put(
+        "/api/movies/directors/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_box_office(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieBoxOfficeIn(
+        movie_key=movie.key,
+        budget=25000000,
+        domestic_gross=16000000,
+        worldwide_gross=16000000,
+    )
+
+    response = client.put(
+        "/api/movies/box-office/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.budget == form_data.budget
+    assert movie.domestic_gross == form_data.domestic_gross
+    assert movie.worldwide_gross == form_data.worldwide_gross
+
+    # Test with simple user - should fail
+    response = client.put(
+        "/api/movies/box-office/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
     genres = db.scalars(sa.select(m.Genre)).all()
     assert genres

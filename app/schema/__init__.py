@@ -49,6 +49,13 @@ from .movie import (
     RecalculateSimilaritiesOut,
     QuickMovieList,
     PaginationDataOut,
+    MovieDescriptionOut,
+    MovieEditDescription,
+    MovieEditActors,
+    MovieGetActors,
+    MovieGetDirectors,
+    MovieEditDirectors,
+    MovieBoxOfficeIn,
 )
 from .people import (
     PersonExportCreate,

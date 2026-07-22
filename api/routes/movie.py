@@ -21,7 +21,6 @@ from api.controllers.create_movie import (
     remove_quick_movie,
     set_percentage_match,
 )
-
 from api.controllers.movie import build_movie_query, get_main_genres_for_movies, get_movie_data
 from api.controllers.movie_filters import get_filters, get_genre_filters, get_people_filters
 from api.controllers.super_search import (
@@ -1224,3 +1223,225 @@ def edit_action_times(
     except Exception as e:
         log(log.ERROR, "Error updating action time [%s]: %s", form_data.movie_key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating action time")
+
+
+@movie_router.get(
+    "/description/{movie_key}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieDescriptionOut,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
+    },
+)
+def get_movie_description(
+    movie_key: str,
+    current_user: m.User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get movie description in English and Ukrainian for the given movie key."""
+
+    movie = db.scalar(sa.select(m.Movie).options(selectinload(m.Movie.translations)).where(m.Movie.key == movie_key))
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    return s.MovieDescriptionOut(
+        description_en=movie.get_description(s.Language.EN),
+        description_uk=movie.get_description(s.Language.UK),
+    )
+
+
+@movie_router.put(
+    "/description/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Action Times already exists"},
+        status.HTTP_201_CREATED: {"description": "Action Times successfully created"},
+    },
+)
+def edit_description(
+    form_data: s.MovieEditDescription,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie description"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    try:
+        existing = {t.language: t for t in movie.translations}
+
+        if s.Language.EN.value not in existing or s.Language.UK.value not in existing:
+            log(log.ERROR, "Movie translation [%s] not found", form_data.movie_key)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie translation not found")
+
+        existing[s.Language.EN.value].description = form_data.description_en
+        existing[s.Language.UK.value].description = form_data.description_uk
+        db.commit()
+
+        log(log.INFO, "Descriptions [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating description [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating description")
+
+
+@movie_router.get(
+    "/actors/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieGetActors,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Actors not found"}},
+)
+def get_actors(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all actors (same data as in pre-create)"""
+
+    actors_out, _, characters_out = get_people_filters(db, lang)
+
+    return s.MovieGetActors(
+        actors=actors_out,
+        characters=characters_out,
+    )
+
+
+@movie_router.put(
+    "/actors/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating actors"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
+    },
+)
+def edit_actors(
+    form_data: s.MovieEditActors,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie actors and their characters"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    if not form_data.actors:
+        log(log.ERROR, "No actors provided for movie [%s]", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No actors provided")
+
+    try:
+        # Remove existing actor-character relations for this movie
+        db.execute(sa.delete(m.MovieActorCharacter).where(m.MovieActorCharacter.movie_id == movie.id))
+        # Clear the actors many-to-many association
+        movie.actors.clear()
+        db.flush()
+
+        # Re-add actors and characters using the existing helper
+        add_new_characters(movie.id, db, form_data.actors)
+
+        db.commit()
+        log(log.INFO, "Actors for movie [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error updating actors for movie [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error updating actors - {e}")
+
+
+@movie_router.get(
+    "/directors/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieGetDirectors,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Directors not found"}},
+)
+def get_directors(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get all directors (same data as in pre-create)"""
+
+    _, directors_out, _ = get_people_filters(db, lang)
+
+    return s.MovieGetDirectors(directors=directors_out)
+
+
+@movie_router.put(
+    "/directors/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating directors"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
+    },
+)
+def edit_directors(
+    form_data: s.MovieEditDirectors,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie directors and their characters"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    if not form_data.directors:
+        log(log.ERROR, "No directors provided for movie [%s]", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No directors provided")
+
+    try:
+        db.execute(sa.delete(m.movie_directors).where(m.movie_directors.c.movie_id == movie.id))
+
+        movie.directors.clear()
+        db.flush()
+
+        # Re-add directors using the existing helper
+        directors = db.scalars(sa.select(m.Director).where(m.Director.key.in_(form_data.directors))).all()
+        movie.directors.extend(directors)
+
+        db.commit()
+        log(log.INFO, "Directors for movie [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error updating directors for movie [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error updating directors - {e}")
+
+
+@movie_router.put(
+    "/box-office/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating box office"},
+        status.HTTP_201_CREATED: {"description": "Box office successfully updated"},
+    },
+)
+def edit_box_office(
+    form_data: s.MovieBoxOfficeIn,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie Box office"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    try:
+        movie.budget = form_data.budget
+        movie.domestic_gross = form_data.domestic_gross
+        movie.worldwide_gross = form_data.worldwide_gross
+        db.commit()
+
+        log(log.INFO, "Box office [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        log(log.ERROR, "Error updating Box office [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating Box office")
