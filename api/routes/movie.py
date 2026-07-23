@@ -1295,7 +1295,7 @@ def edit_description(
     response_model=s.MovieGetActors,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Actors not found"}},
 )
-def get_actors(
+def get_movie_actors(
     lang: s.Language = s.Language.UK,
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
@@ -1359,7 +1359,7 @@ def edit_actors(
     response_model=s.MovieGetDirectors,
     responses={status.HTTP_404_NOT_FOUND: {"description": "Directors not found"}},
 )
-def get_directors(
+def get_movie_directors(
     lang: s.Language = s.Language.UK,
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),

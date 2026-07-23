@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from pydantic import BaseModel, model_validator
 
+from app.schema.general import MainItemMenu
 from config import config
 
 CFG = config()
@@ -48,17 +49,20 @@ class PeopleList(BaseModel):
     people: list[TopPerson]
 
 
-class PersonForm(BaseModel):
-    """Form for creating a new person"""
-
+class PersonFields(BaseModel):
     key: str
     first_name_uk: str
     last_name_uk: str
     first_name_en: str
     last_name_en: str
-    born: str
     born_in_uk: str
     born_in_en: str
+
+
+class PersonForm(PersonFields):
+    """Form for creating a new person"""
+
+    born: str
     died: str | None = None
 
     @model_validator(mode="before")
@@ -67,6 +71,12 @@ class PersonForm(BaseModel):
         if isinstance(value, str):
             return cls(**json.loads(value))
         return value
+
+
+class PersonFormWithID(PersonFields):
+    id: int
+    born: datetime
+    died: datetime | None = None
 
 
 class MoviePersonOut(BaseModel):
@@ -81,3 +91,11 @@ class MoviePersonOut(BaseModel):
 
 class MovieActorOut(MoviePersonOut):
     character_name: str
+
+
+class ActorOut(PersonBase):
+    movie_count: int
+
+
+class PeopleListOut(BaseModel):
+    people: list[MainItemMenu]

@@ -47,6 +47,8 @@ class SearchResults(BaseModel):
 class MainItemMenu(BaseModel):
     """For ItemsSelector menu on the frontend"""
 
+    id: int
+
     key: str
     name: str
     # To search for items regardless of the user's chosen language

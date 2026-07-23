@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, model_validator
 from pydantic.json_schema import WithJsonSchema
 from config import config
 
@@ -32,3 +33,26 @@ class CharacterOut(BaseModel):
     key: str
     name: str
     movie_count: Annotated[int | None, WithJsonSchema({"type": "integer"})] = None
+
+
+class CharacterFormFieldsOut(BaseModel):
+    id: int
+    key: str
+    name_uk: str
+    name_en: str
+
+
+class CharacterFormPutIn(BaseModel):
+    """Form for updating a new character"""
+
+    id: int
+    key: str
+    name_en: str
+    name_uk: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value

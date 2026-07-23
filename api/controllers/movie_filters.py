@@ -90,6 +90,7 @@ def get_people_filters(
 
     actors_out = [
         s.MainItemMenu(
+            id=actor.id,
             key=actor.key,
             name=actor.full_name(lang),
             another_lang_name=actor.full_name(another_lang),
@@ -100,6 +101,7 @@ def get_people_filters(
 
     directors_out = [
         s.MainItemMenu(
+            id=director.id,
             key=director.key,
             name=director.full_name(lang),
             another_lang_name=director.full_name(another_lang),
@@ -110,6 +112,7 @@ def get_people_filters(
 
     characters_out = [
         s.MainItemMenu(
+            id=character.id,
             key=character.key,
             name=character.get_name(lang),
             another_lang_name=character.get_name(another_lang),

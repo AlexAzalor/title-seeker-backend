@@ -67,6 +67,8 @@ from .people import (
     MoviePersonOut,
     MovieActorOut,
     PersonWithAvatar,
+    PeopleListOut,
+    PersonFormWithID,
 )
 from .genre import (
     GenreFormFields,
@@ -97,7 +99,14 @@ from .user import (
     UsersListOut,
 )
 from .rating import RatingCriterion, RatingExportCreate, RatingsJSONFile
-from .characters import CharacterExportCreate, CharactersJSONFile, CharacterOut, CharacterFormIn
+from .characters import (
+    CharacterExportCreate,
+    CharactersJSONFile,
+    CharacterOut,
+    CharacterFormIn,
+    CharacterFormFieldsOut,
+    CharacterFormPutIn,
+)
 from .shared_universe import SharedUniverseExportCreate, SharedUniversesJSONFile, BaseSharedUniverse
 from .filters import (
     FilterEnum,
