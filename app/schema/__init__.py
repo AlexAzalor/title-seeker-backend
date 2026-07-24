@@ -159,3 +159,5 @@ from .knowledge_base.dto import (
     KBQuestionsListOut,
     KBQuestionIn,
 )
+
+from .dashboard import DashboardStatsOut
