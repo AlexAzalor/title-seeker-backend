@@ -405,7 +405,7 @@ def get_movie_filters(
     """Get all movie filters"""
 
     specifications_out, keywords_out, action_times_out, su_out = get_filters(db, lang)
-    actors_out, directors_out, characters_out = get_people_filters(db, lang, 5, 2)
+    actors_out, directors_out, characters_out = get_people_filters(db, lang)
     genres_out = get_genre_filters(db, lang)
 
     # selectinload - used to reduce the number of database requests, especially for loops and working with languages (.get_name(lang)).
@@ -1344,6 +1344,12 @@ def edit_actors(
 
         # Re-add actors and characters using the existing helper
         add_new_characters(movie.id, db, form_data.actors)
+
+        # Re-populate the movie.actors many-to-many association so that
+        # actor-based searches (which query the movie_actors junction table) work.
+        actor_keys = [a.key for a in form_data.actors]
+        new_actors = db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(actor_keys))).all()
+        movie.actors.extend(new_actors)
 
         db.commit()
         log(log.INFO, "Actors for movie [%s] successfully updated", form_data.movie_key)

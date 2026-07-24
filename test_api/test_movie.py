@@ -562,16 +562,20 @@ def test_edit_actors(client: TestClient, db: Session, auth_user_owner: m.User, a
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
     assert movie
 
-    actors_keys = [actor.key for actor in movie.actors]
-    chars_keys = [char.character.key for char in movie.characters]
+    old_actor_ids = {actor.id for actor in movie.actors}
+    old_char_ids = {rel.character_id for rel in movie.characters}
 
-    actor = db.scalar(sa.select(m.Actor).where(m.Actor.key.not_in(actors_keys)))
-    assert actor
-    character = db.scalar(sa.select(m.Character).where(m.Character.key.not_in(chars_keys)))
-    assert character
+    # Pick an actor and character that are not currently associated with this movie
+    new_actor = db.scalar(sa.select(m.Actor).where(m.Actor.key.not_in([a.key for a in movie.actors])))
+    assert new_actor
+    new_character = db.scalar(
+        sa.select(m.Character).where(m.Character.key.not_in([r.character.key for r in movie.characters]))
+    )
+    assert new_character
+
     form_data = s.MovieEditActors(
         movie_key=movie.key,
-        actors=[s.ActorCharacterKey(key=actor.key, character_key=character.key)],
+        actors=[s.ActorCharacterKey(key=new_actor.key, character_key=new_character.key)],
     )
 
     response = client.put(
@@ -582,7 +586,19 @@ def test_edit_actors(client: TestClient, db: Session, auth_user_owner: m.User, a
     assert response.status_code == status.HTTP_200_OK
 
     db.refresh(movie)
-    assert any(rel.actor_id == actor.id and rel.character_id == character.id for rel in movie.characters)
+
+    # Both the many-to-many (movie_actors) and the rich join (movie_actor_character)
+    # must reflect the new state — the missing movie_actors sync was the original bug.
+    assert len(movie.actors) == 1
+    assert movie.actors[0].id == new_actor.id
+
+    assert len(movie.characters) == 1
+    assert movie.characters[0].actor_id == new_actor.id
+    assert movie.characters[0].character_id == new_character.id
+
+    # Old actors must be gone from both tables
+    assert not any(a.id in old_actor_ids for a in movie.actors)
+    assert not any(rel.character_id in old_char_ids for rel in movie.characters)
 
     # Test with simple user - should fail
     response = client.put(

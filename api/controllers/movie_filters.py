@@ -1,5 +1,3 @@
-from typing import Union
-
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 import app.models as m
@@ -8,9 +6,7 @@ from fastapi import HTTPException, status
 from app.logger import log
 
 
-def get_people_filters(
-    db: Session, lang: s.Language, min_actors_m: Union[int, None] = None, min_m: Union[int, None] = None
-):
+def get_people_filters(db: Session, lang: s.Language):
     another_lang = s.Language.EN if lang == s.Language.UK else s.Language.UK
 
     # Actors — outerjoin so actors with 0 movies are included when min_m is None
@@ -29,8 +25,6 @@ def get_people_filters(
         .where(m.ActorTranslation.language == lang.value)
         .order_by(actor_movie_count_sq.c.movie_count.desc())
     )
-    if min_actors_m is not None:
-        actor_query = actor_query.where(actor_movie_count_sq.c.movie_count >= min_actors_m)
 
     actors = db.execute(actor_query).all()
     if not actors:
@@ -53,8 +47,6 @@ def get_people_filters(
         .where(m.DirectorTranslation.language == lang.value)
         .order_by(director_movie_count_sq.c.movie_count.desc())
     )
-    if min_m is not None:
-        director_query = director_query.where(director_movie_count_sq.c.movie_count >= min_m)
 
     directors = db.execute(director_query).all()
     if not directors:
@@ -80,8 +72,6 @@ def get_people_filters(
         .where(m.CharacterTranslation.language == lang.value)
         .order_by(character_movie_count_sq.c.movie_count.desc())
     )
-    if min_m is not None:
-        character_query = character_query.where(character_movie_count_sq.c.movie_count >= min_m)
 
     characters = db.execute(character_query).all()
     if not characters:
