@@ -5,9 +5,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, WithJsonSchema, model_validator
 
-from app.schema.filters import FilterItemField, FilterItemOut, MovieFilterItem
+from app.schema.filters import FilterEnum, FilterItemField, FilterItemOut, MovieFilterItem
 from app.schema.general import MainItemMenu
-from app.schema.genre import GenreOut, GenreShort, SubgenreOut
+from app.schema.genre import GenreItemFieldEditIn, GenreOut, SubgenreOut
 from app.schema.pagination import BasePagination
 from app.schema.people import MovieActorOut, MoviePersonOut, PersonWithAvatar
 from app.schema.rating import RatingCriterion, BaseRatingCriteria
@@ -177,6 +177,8 @@ class MovieOut(BaseMovie):
     shared_universe: SharedUniverseOut | None = None
     shared_universe_order: int | None = None
 
+    updated_at: datetime
+
 
 class MoviePreviewOut(BaseMovie):
     poster: str
@@ -287,13 +289,21 @@ class MovieCarousel(BaseMovie):
     location: str
     description: str
 
-    genres: list[GenreShort]
+    genres: list[GenreItemFieldEditIn]
     actors: list[PersonWithAvatar]
     directors: list[PersonWithAvatar]
 
 
+class MovieCarouselFilter(BaseModel):
+    key: str
+    name: str
+    description: str
+    type: FilterEnum
+
+
 class MovieCarouselList(BaseModel):
     movies: list[MovieCarousel]
+    movie_filter: MovieCarouselFilter | None = None
 
 
 class MovieDescriptionOut(BaseModel):

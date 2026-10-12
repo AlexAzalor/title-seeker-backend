@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Body, HTTPException, Depends, status
 
 from api.dependency.user import get_admin
@@ -5,10 +7,46 @@ from api.utils import get_all_items
 import app.models as m
 import sqlalchemy as sa
 
+from app.models.movie_filters.movie_keywords import movie_keywords
 import app.schema as s
 from app.logger import log
 from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
+from app.models.movie_filters.movie_specifications import movie_specifications
+
+_EXCLUDED_SPECIFICATION_KEYS = frozenset({"rewatch", "didnt-watch"})
+_EXCLUDED_KEYWORD_KEYS = frozenset({"rewatch", "ordinary-world", "franchise"})
+_VISUAL_PROFILE_CRITERIA_COUNT = 6
+_PERFECT_VISUAL_PROFILE_RATING = 5
+
+
+def _perfect_visual_profile_ids():
+    return (
+        sa.select(m.VisualProfile.id)
+        .join(
+            m.VisualProfileRating,
+            m.VisualProfileRating.title_visual_profile_id == m.VisualProfile.id,
+        )
+        .group_by(m.VisualProfile.id)
+        .having(
+            sa.func.count(m.VisualProfileRating.id) == _VISUAL_PROFILE_CRITERIA_COUNT,
+            sa.func.min(m.VisualProfileRating.rating) == _PERFECT_VISUAL_PROFILE_RATING,
+        )
+    )
+
+
+def _visual_profile_category_ids_with_perfect_movies(min_movies: int = 10):
+    return (
+        sa.select(m.VisualProfile.category_id)
+        .join(m.Movie, m.Movie.id == m.VisualProfile.movie_id)
+        .where(
+            m.VisualProfile.id.in_(_perfect_visual_profile_ids()),
+            m.Movie.is_deleted.is_(False),
+        )
+        .group_by(m.VisualProfile.category_id)
+        .having(sa.func.count(sa.distinct(m.VisualProfile.movie_id)) >= min_movies)
+    )
+
 
 filter_router = APIRouter(
     prefix="/filters",
@@ -534,3 +572,333 @@ def delete_action_time(
         db.rollback()
         log(log.ERROR, "Error deleting action time [%s]: %s", action_time.key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error deleting action time")
+
+
+# Top 10 Movies by Specification
+
+
+@filter_router.get(
+    "/top-movies-by-specification/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCarouselList,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "No suitable specification found"},
+    },
+)
+def get_top_movies_by_specification(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get 10 random movies from a random specification that has at least 10 movies (with percentage_match = 100)"""
+
+    specification = db.scalar(
+        sa.select(m.Specification)
+        .options(selectinload(m.Specification.translations))
+        .where(
+            m.Specification.key.not_in(_EXCLUDED_SPECIFICATION_KEYS),
+            m.Specification.movie_count >= 10,
+        )
+        .order_by(sa.func.random())
+        .limit(1)
+    )
+
+    if not specification:
+        log(log.ERROR, "No suitable specification found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No suitable specification found")
+
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .join(movie_specifications, m.Movie.id == movie_specifications.c.movie_id)
+            .where(
+                movie_specifications.c.specification_id == specification.id,
+                movie_specifications.c.percentage_match == 100.0,
+                m.Movie.is_deleted.is_(False),
+            )
+            .options(
+                selectinload(m.Movie.translations),
+                selectinload(m.Movie.genres).selectinload(m.Genre.translations),
+                selectinload(m.Movie.actors).selectinload(m.Actor.translations),
+                selectinload(m.Movie.directors).selectinload(m.Director.translations),
+            )
+            .order_by(sa.func.random())
+            .limit(10)
+        )
+        .unique()
+        .all()
+    )
+
+    if not movies_db:
+        log(log.ERROR, "No movies found for specification [%s]", specification.key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No movies found for this specification")
+
+    def get_genre_matches(movie_id: int):
+        return {(mg.genre_id): mg.percentage_match for mg in db.query(m.movie_genres).filter_by(movie_id=movie_id)}
+
+    return s.MovieCarouselList(
+        movie_filter=s.MovieCarouselFilter(
+            key=specification.key,
+            name=specification.get_name(lang),
+            description=specification.get_description(lang),
+            type=s.FilterEnum.SPECIFICATION,
+        ),
+        movies=[
+            s.MovieCarousel(
+                key=movie.key,
+                title=movie.get_title(lang),
+                description=movie.get_description(lang),
+                poster=movie.poster,
+                # Only year
+                release_date=movie.release_date if movie.release_date else datetime.now(),
+                duration=movie.formatted_duration(lang.value),
+                location=movie.get_location(lang),
+                # SHow only 60-100 PM
+                genres=[
+                    s.GenreItemFieldEditIn(
+                        key=genre.key,
+                        name=genre.get_name(lang),
+                        percentage_match=get_genre_matches(movie.id).get(genre.id, 0.0),
+                    )
+                    for genre in sorted(
+                        movie.genres, key=lambda g: get_genre_matches(movie.id).get(g.id, 0.0), reverse=True
+                    )
+                ],
+                actors=[
+                    s.PersonWithAvatar(
+                        key=actor.key,
+                        full_name=actor.full_name(lang),
+                        avatar_url=actor.avatar,
+                    )
+                    for actor in movie.actors
+                ],
+                directors=[
+                    s.PersonWithAvatar(
+                        key=director.key,
+                        full_name=director.full_name(lang),
+                        avatar_url=director.avatar if director.avatar else "",
+                    )
+                    for director in movie.directors
+                ],
+            )
+            for movie in movies_db
+        ],
+    )
+
+
+# Top 10 Movies by Keyword
+@filter_router.get(
+    "/top-movies-by-keyword/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCarouselList,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "No suitable keyword found"},
+    },
+)
+def get_top_movies_by_keyword(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get 10 random movies from a random keyword that has at least 10 movies (with percentage_match = 100)"""
+
+    keyword = db.scalar(
+        sa.select(m.Keyword)
+        .options(selectinload(m.Keyword.translations))
+        .where(
+            m.Keyword.key.not_in(_EXCLUDED_KEYWORD_KEYS),
+            m.Keyword.movie_count >= 10,
+        )
+        .order_by(sa.func.random())
+        .limit(1)
+    )
+
+    if not keyword:
+        log(log.ERROR, "No suitable keyword found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No suitable keyword found")
+
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .join(movie_keywords, m.Movie.id == movie_keywords.c.movie_id)
+            .where(
+                movie_keywords.c.keyword_id == keyword.id,
+                movie_keywords.c.percentage_match == 100.0,
+                m.Movie.is_deleted.is_(False),
+            )
+            .options(
+                selectinload(m.Movie.translations),
+                selectinload(m.Movie.genres).selectinload(m.Genre.translations),
+                selectinload(m.Movie.actors).selectinload(m.Actor.translations),
+                selectinload(m.Movie.directors).selectinload(m.Director.translations),
+            )
+            .order_by(sa.func.random())
+            .limit(10)
+        )
+        .unique()
+        .all()
+    )
+
+    if not movies_db:
+        log(log.ERROR, "No movies found for keyword [%s]", keyword.key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No movies found for this keyword")
+
+    def get_genre_matches(movie_id: int):
+        return {(mg.genre_id): mg.percentage_match for mg in db.query(m.movie_genres).filter_by(movie_id=movie_id)}
+
+    return s.MovieCarouselList(
+        movie_filter=s.MovieCarouselFilter(
+            key=keyword.key,
+            name=keyword.get_name(lang),
+            description=keyword.get_description(lang),
+            type=s.FilterEnum.KEYWORD,
+        ),
+        movies=[
+            s.MovieCarousel(
+                key=movie.key,
+                title=movie.get_title(lang),
+                description=movie.get_description(lang),
+                poster=movie.poster,
+                # Only year
+                release_date=movie.release_date if movie.release_date else datetime.now(),
+                duration=movie.formatted_duration(lang.value),
+                location=movie.get_location(lang),
+                # SHow only 60-100 PM
+                genres=[
+                    s.GenreItemFieldEditIn(
+                        key=genre.key,
+                        name=genre.get_name(lang),
+                        percentage_match=get_genre_matches(movie.id).get(genre.id, 0.0),
+                    )
+                    for genre in sorted(
+                        movie.genres, key=lambda g: get_genre_matches(movie.id).get(g.id, 0.0), reverse=True
+                    )
+                ],
+                actors=[
+                    s.PersonWithAvatar(
+                        key=actor.key,
+                        full_name=actor.full_name(lang),
+                        avatar_url=actor.avatar,
+                    )
+                    for actor in movie.actors
+                ],
+                directors=[
+                    s.PersonWithAvatar(
+                        key=director.key,
+                        full_name=director.full_name(lang),
+                        avatar_url=director.avatar if director.avatar else "",
+                    )
+                    for director in movie.directors
+                ],
+            )
+            for movie in movies_db
+        ],
+    )
+
+
+# Top 10 Movies by Visual Profile
+@filter_router.get(
+    "/top-movies-by-visual-profile/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCarouselList,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "No suitable visual profile found"},
+    },
+)
+def get_top_movies_by_visual_profile(
+    lang: s.Language = s.Language.UK,
+    db: Session = Depends(get_db),
+):
+    """Get 10 random movies from a random visual profile category where all 6 ratings are 5"""
+
+    category = db.scalar(
+        sa.select(m.VisualProfileCategory)
+        .options(selectinload(m.VisualProfileCategory.translations))
+        .where(m.VisualProfileCategory.id.in_(_visual_profile_category_ids_with_perfect_movies()))
+        .order_by(sa.func.random())
+        .limit(1)
+    )
+
+    if not category:
+        log(log.ERROR, "No suitable visual profile category found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No suitable visual profile category found",
+        )
+
+    movies_db = (
+        db.scalars(
+            sa.select(m.Movie)
+            .join(m.VisualProfile, m.VisualProfile.movie_id == m.Movie.id)
+            .where(
+                m.VisualProfile.category_id == category.id,
+                m.VisualProfile.id.in_(_perfect_visual_profile_ids()),
+                m.Movie.is_deleted.is_(False),
+            )
+            .options(
+                selectinload(m.Movie.translations),
+                selectinload(m.Movie.genres).selectinload(m.Genre.translations),
+                selectinload(m.Movie.actors).selectinload(m.Actor.translations),
+                selectinload(m.Movie.directors).selectinload(m.Director.translations),
+            )
+            .order_by(sa.func.random())
+            .limit(10)
+        )
+        .unique()
+        .all()
+    )
+
+    if not movies_db:
+        log(log.ERROR, "No movies found for visual profile category [%s]", category.key)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No movies found for this visual profile category",
+        )
+
+    def get_genre_matches(movie_id: int):
+        return {(mg.genre_id): mg.percentage_match for mg in db.query(m.movie_genres).filter_by(movie_id=movie_id)}
+
+    return s.MovieCarouselList(
+        movie_filter=s.MovieCarouselFilter(
+            key=category.key,
+            name=category.get_name(lang),
+            description=category.get_description(lang),
+            type=s.FilterEnum.VISUAL_PROFILE,
+        ),
+        movies=[
+            s.MovieCarousel(
+                key=movie.key,
+                title=movie.get_title(lang),
+                description=movie.get_description(lang),
+                poster=movie.poster,
+                release_date=movie.release_date if movie.release_date else datetime.now(),
+                duration=movie.formatted_duration(lang.value),
+                location=movie.get_location(lang),
+                genres=[
+                    s.GenreItemFieldEditIn(
+                        key=genre.key,
+                        name=genre.get_name(lang),
+                        percentage_match=get_genre_matches(movie.id).get(genre.id, 0.0),
+                    )
+                    for genre in sorted(
+                        movie.genres, key=lambda g: get_genre_matches(movie.id).get(g.id, 0.0), reverse=True
+                    )
+                ],
+                actors=[
+                    s.PersonWithAvatar(
+                        key=actor.key,
+                        full_name=actor.full_name(lang),
+                        avatar_url=actor.avatar,
+                    )
+                    for actor in movie.actors
+                ],
+                directors=[
+                    s.PersonWithAvatar(
+                        key=director.key,
+                        full_name=director.full_name(lang),
+                        avatar_url=director.avatar if director.avatar else "",
+                    )
+                    for director in movie.directors
+                ],
+            )
+            for movie in movies_db
+        ],
+    )

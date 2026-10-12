@@ -37,6 +37,7 @@ from .movie import (
     QuickMovieJSON,
     QuickMovie,
     MovieCarousel,
+    MovieCarouselFilter,
     MovieCarouselList,
     RelatedMovie,
     RelatedMovieOut,

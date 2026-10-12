@@ -738,6 +738,9 @@ def get_random_list(
         .all()
     )
 
+    def get_genre_matches(movie_id: int):
+        return {(mg.genre_id): mg.percentage_match for mg in db.query(m.movie_genres).filter_by(movie_id=movie_id)}
+
     return s.MovieCarouselList(
         movies=[
             s.MovieCarousel(
@@ -749,11 +752,14 @@ def get_random_list(
                 duration=movie.formatted_duration(lang.value),
                 location=movie.get_location(lang),
                 genres=[
-                    s.GenreShort(
+                    s.GenreItemFieldEditIn(
                         key=genre.key,
                         name=genre.get_name(lang),
+                        percentage_match=get_genre_matches(movie.id).get(genre.id, 0.0),
                     )
-                    for genre in movie.genres
+                    for genre in sorted(
+                        movie.genres, key=lambda g: get_genre_matches(movie.id).get(g.id, 0.0), reverse=True
+                    )
                 ],
                 actors=[
                     s.PersonWithAvatar(

@@ -343,6 +343,7 @@ def get_directors_with_most_movies(
         sa.select(m.Director, subquery.c.movie_count)
         .options(selectinload(m.Director.translations))
         .join(subquery, m.Director.id == subquery.c.id)
+        .where(m.Director.key != "unknown-director")
         .order_by(subquery.c.movie_count.desc())
         .limit(TOP_PEOPLE_LIMIT)
     ).all()
