@@ -162,3 +162,4 @@ from .knowledge_base.dto import (
 )
 
 from .dashboard import DashboardStatsOut
+from .audit_log import AuditLogOut, AuditLogListOut
