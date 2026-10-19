@@ -6,7 +6,7 @@ from typing import Annotated, Sequence
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, status, File, UploadFile
 
 from sqlalchemy.orm import Session, selectinload
 
@@ -21,7 +21,31 @@ from api.controllers.create_movie import (
     remove_quick_movie,
     set_percentage_match,
 )
-from api.controllers.movie import build_movie_query, get_main_genres_for_movies, get_movie_data
+from api.controllers.movie import (
+    build_movie_query,
+    get_main_genres_for_movies,
+    get_movie_data,
+    get_ranked_similar_movies,
+)
+from api.controllers.audit_log import (
+    MOVIE_ACTION_TIMES_UPDATED,
+    MOVIE_ACTORS_UPDATED,
+    MOVIE_BOX_OFFICE_UPDATED,
+    MOVIE_DESCRIPTION_UPDATED,
+    MOVIE_DIRECTORS_UPDATED,
+    MOVIE_ENTITY,
+    MOVIE_GENRES_UPDATED,
+    MOVIE_KEYWORDS_UPDATED,
+    MOVIE_SPECIFICATIONS_UPDATED,
+    record_audit,
+    log_movie_visit,
+    record_similar_movies_change,
+    snapshot_similar_movies,
+    snapshot_movie_actors,
+    snapshot_movie_directors,
+    snapshot_movie_filter,
+    snapshot_movie_genres,
+)
 from api.controllers.movie_filters import get_filters, get_genre_filters, get_people_filters
 from api.controllers.super_search import (
     get_duration_query_conditions,
@@ -105,6 +129,7 @@ def get_movies(
 )
 def get_movie(
     movie_key: str,
+    background_tasks: BackgroundTasks,
     lang: s.Language = s.Language.UK,
     current_user: m.User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -135,6 +160,8 @@ def get_movie(
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    background_tasks.add_task(log_movie_visit, movie.id, current_user.id if current_user else None)
 
     return get_movie_data(
         movie,
@@ -803,72 +830,7 @@ def get_similar_movies(
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
 
-    config = DEFAULT_SIMILARITY_CONFIG
-    limit = config.default_similar_count
-    # Fetch extra candidates so collection deduplication doesn't leave us short.
-    fetch_limit = limit * 4
-
-    # movie_similarities stores pairs with movie_a_id < movie_b_id.
-    # We query both directions and union them so we always find the movie
-    # regardless of which side of the pair it's on.
-    rows_as_a = db.execute(
-        sa.select(m.MovieSimilarity.movie_b_id, m.MovieSimilarity.score)
-        .where(m.MovieSimilarity.movie_a_id == movie.id)
-        .order_by(m.MovieSimilarity.score.desc())
-        .limit(fetch_limit)
-    ).all()
-
-    rows_as_b = db.execute(
-        sa.select(m.MovieSimilarity.movie_a_id, m.MovieSimilarity.score)
-        .where(m.MovieSimilarity.movie_b_id == movie.id)
-        .order_by(m.MovieSimilarity.score.desc())
-        .limit(fetch_limit)
-    ).all()
-
-    # Merge both sides, sort by score descending, deduplicate IDs
-    all_pairs: list[tuple[int, float]] = []
-    seen_pair_ids: set[int] = set()
-    for other_id, score in sorted(
-        [(oid, sc) for oid, sc in rows_as_a] + [(oid, sc) for oid, sc in rows_as_b],
-        key=lambda x: x[1],
-        reverse=True,
-    ):
-        if other_id not in seen_pair_ids:
-            seen_pair_ids.add(other_id)
-            all_pairs.append((other_id, score))
-
-    candidate_ids = [other_id for other_id, _ in all_pairs[:fetch_limit]]
-
-    if not candidate_ids:
-        return s.SimilarMovieOutList(similar_movies=[])
-
-    similar_movies = db.scalars(
-        sa.select(m.Movie).options(selectinload(m.Movie.translations)).where(m.Movie.id.in_(candidate_ids))
-    ).all()
-
-    # Restore score-based order (IN clause does not guarantee order)
-    id_to_score = {other_id: score for other_id, score in all_pairs}
-    ordered_candidates = sorted(
-        similar_movies,
-        key=lambda mov: id_to_score.get(mov.id, 0.0),
-        reverse=True,
-    )
-
-    # Deduplicate collections: keep only the highest-scored movie per collection.
-    # Collection key for members: collection_base_movie_id (the base movie's ID).
-    # Collection key for the base movie or standalone movies: the movie's own ID.
-    # Since ordered_candidates is sorted by score descending, the first occurrence
-    # of a collection key is always the highest-scored one. Equal scores preserve
-    # insertion order (i.e. the first one encountered wins).
-    seen_collection_keys: set[int] = set()
-    deduped: list[m.Movie] = []
-    for mov in ordered_candidates:
-        collection_key = mov.collection_base_movie_id if mov.collection_base_movie_id else mov.id
-        if collection_key not in seen_collection_keys:
-            seen_collection_keys.add(collection_key)
-            deduped.append(mov)
-        if len(deduped) == limit:
-            break
+    ranked = get_ranked_similar_movies(db, movie.id, DEFAULT_SIMILARITY_CONFIG.default_similar_count)
 
     return s.SimilarMovieOutList(
         similar_movies=[
@@ -876,9 +838,9 @@ def get_similar_movies(
                 key=sim.key,
                 title=sim.get_title(lang),
                 poster=sim.poster,
-                similarity_score=round(id_to_score.get(sim.id, 0.0), 2),
+                similarity_score=round(score, 2),
             )
-            for sim in deduped
+            for sim, score in ranked
         ],
     )
 
@@ -891,14 +853,23 @@ def get_similar_movies(
 )
 def recalculate_similarities(
     current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
 ):
     """Recalculate filter counts and then recompute all pairwise similarity scores."""
     from app.commands.recalculate_filter_counts import recalculate_filter_counts
     from app.commands.calculate_similarities import calculate_similarities
 
+    movie_ids = list(db.scalars(sa.select(m.Movie.id).where(m.Movie.is_deleted.is_(False))))
+    old_snapshots = {movie_id: snapshot_similar_movies(db, movie_id) for movie_id in movie_ids}
+    db.commit()  # end the read transaction so the snapshots below see the recalculated data
+
     recalculate_filter_counts()
     pairs_upserted, pairs_skipped = calculate_similarities()
 
+    # The calculation runs in its own transaction, so audit rows are committed separately.
+    for movie_id in movie_ids:
+        record_similar_movies_change(db, movie_id, current_user, old_snapshots[movie_id])
+    db.commit()
     return s.RecalculateSimilaritiesOut(
         pairs_upserted=pairs_upserted,
         pairs_skipped=pairs_skipped,
@@ -1020,13 +991,15 @@ def edit_genres_subgenres(
     subgenres = db.scalars(sa.select(m.Subgenre).where(m.Subgenre.key.in_(items_keys))).all()
 
     try:
+        old_snapshot = snapshot_movie_genres(db, movie.id)
+
         # Clear existing old genres and subgenres
         movie.genres.clear()
         movie.subgenres.clear()
         # Extend with new genres and subgenres
         movie.genres.extend(genres)
         movie.subgenres.extend(subgenres)
-        db.commit()
+        db.flush()
 
         for item in form_data.genres:
             genre = db.scalar(sa.select(m.Genre).where(m.Genre.key == item.key))
@@ -1058,6 +1031,16 @@ def edit_genres_subgenres(
                     )
                 )
                 db.execute(movie_subgenre)
+
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_GENRES_UPDATED,
+            user=current_user,
+            old=old_snapshot,
+            new=snapshot_movie_genres(db, movie.id),
+        )
         db.commit()
 
         log(log.INFO, "Genre [%s] successfully updated", movie_key)
@@ -1095,9 +1078,11 @@ def edit_specifications(
         raise HTTPException(status_code=404, detail="Specification not found")
 
     try:
+        old_snapshot = snapshot_movie_filter(db, movie.id, m.Specification, m.movie_specifications, "specification_id")
+
         movie.specifications.clear()
         movie.specifications.extend(specifications)
-        db.commit()
+        db.flush()
 
         for item in form_data.items:
             specification = db.scalar(sa.select(m.Specification).where(m.Specification.key == item.key))
@@ -1113,6 +1098,19 @@ def edit_specifications(
                 )
             )
             db.execute(movie_specification)
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_SPECIFICATIONS_UPDATED,
+            user=current_user,
+            old={"specifications": old_snapshot},
+            new={
+                "specifications": snapshot_movie_filter(
+                    db, movie.id, m.Specification, m.movie_specifications, "specification_id"
+                )
+            },
+        )
         db.commit()
 
         log(log.INFO, "Specification [%s] successfully updated", form_data.movie_key)
@@ -1150,9 +1148,11 @@ def edit_Keywords(
         raise HTTPException(status_code=404, detail="Keywords not found")
 
     try:
+        old_snapshot = snapshot_movie_filter(db, movie.id, m.Keyword, m.movie_keywords, "keyword_id")
+
         movie.keywords.clear()
         movie.keywords.extend(keywords)
-        db.commit()
+        db.flush()
 
         for item in form_data.items:
             keyword = db.scalar(sa.select(m.Keyword).where(m.Keyword.key == item.key))
@@ -1168,6 +1168,15 @@ def edit_Keywords(
                 )
             )
             db.execute(movie_keyword)
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_KEYWORDS_UPDATED,
+            user=current_user,
+            old={"keywords": old_snapshot},
+            new={"keywords": snapshot_movie_filter(db, movie.id, m.Keyword, m.movie_keywords, "keyword_id")},
+        )
         db.commit()
 
         log(log.INFO, "Keywords [%s] successfully updated", form_data.movie_key)
@@ -1205,9 +1214,11 @@ def edit_action_times(
         raise HTTPException(status_code=404, detail="Action Times not found")
 
     try:
+        old_snapshot = snapshot_movie_filter(db, movie.id, m.ActionTime, m.movie_action_times, "action_time_id")
+
         movie.action_times.clear()
         movie.action_times.extend(action_times)
-        db.commit()
+        db.flush()
 
         for item in form_data.items:
             action_time = db.scalar(sa.select(m.ActionTime).where(m.ActionTime.key == item.key))
@@ -1223,6 +1234,19 @@ def edit_action_times(
                 )
             )
             db.execute(movie_action_time)
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_ACTION_TIMES_UPDATED,
+            user=current_user,
+            old={"action_times": old_snapshot},
+            new={
+                "action_times": snapshot_movie_filter(
+                    db, movie.id, m.ActionTime, m.movie_action_times, "action_time_id"
+                )
+            },
+        )
         db.commit()
 
         log(log.INFO, "Action Times [%s] successfully updated", form_data.movie_key)
@@ -1285,8 +1309,24 @@ def edit_description(
             log(log.ERROR, "Movie translation [%s] not found", form_data.movie_key)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie translation not found")
 
-        existing[s.Language.EN.value].description = form_data.description_en
-        existing[s.Language.UK.value].description = form_data.description_uk
+        new = {
+            s.Language.EN.value: form_data.description_en,
+            s.Language.UK.value: form_data.description_uk,
+        }
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_DESCRIPTION_UPDATED,
+            user=current_user,
+            old={lang: t.description for lang, t in existing.items()},
+            new=new,
+        )
+
+        for lang, description in new.items():
+            existing[lang].description = description
+
+        # single commit: description update and audit record are atomic
         db.commit()
 
         log(log.INFO, "Descriptions [%s] successfully updated", form_data.movie_key)
@@ -1342,6 +1382,8 @@ def edit_actors(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No actors provided")
 
     try:
+        old_actors = snapshot_movie_actors(db, movie.id)
+
         # Remove existing actor-character relations for this movie
         db.execute(sa.delete(m.MovieActorCharacter).where(m.MovieActorCharacter.movie_id == movie.id))
         # Clear the actors many-to-many association
@@ -1356,6 +1398,17 @@ def edit_actors(
         actor_keys = [a.key for a in form_data.actors]
         new_actors = db.scalars(sa.select(m.Actor).where(m.Actor.key.in_(actor_keys))).all()
         movie.actors.extend(new_actors)
+        db.flush()
+
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_ACTORS_UPDATED,
+            user=current_user,
+            old={"actors": old_actors},
+            new={"actors": snapshot_movie_actors(db, movie.id)},
+        )
 
         db.commit()
         log(log.INFO, "Actors for movie [%s] successfully updated", form_data.movie_key)
@@ -1409,7 +1462,7 @@ def edit_directors(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No directors provided")
 
     try:
-        db.execute(sa.delete(m.movie_directors).where(m.movie_directors.c.movie_id == movie.id))
+        old_directors = snapshot_movie_directors(movie)
 
         movie.directors.clear()
         db.flush()
@@ -1417,6 +1470,16 @@ def edit_directors(
         # Re-add directors using the existing helper
         directors = db.scalars(sa.select(m.Director).where(m.Director.key.in_(form_data.directors))).all()
         movie.directors.extend(directors)
+
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_DIRECTORS_UPDATED,
+            user=current_user,
+            old={"directors": old_directors},
+            new={"directors": snapshot_movie_directors(movie)},
+        )
 
         db.commit()
         log(log.INFO, "Directors for movie [%s] successfully updated", form_data.movie_key)
@@ -1448,9 +1511,23 @@ def edit_box_office(
         raise HTTPException(status_code=404, detail="Movie not found")
 
     try:
-        movie.budget = form_data.budget
-        movie.domestic_gross = form_data.domestic_gross
-        movie.worldwide_gross = form_data.worldwide_gross
+        new = {
+            "budget": form_data.budget,
+            "domestic_gross": form_data.domestic_gross,
+            "worldwide_gross": form_data.worldwide_gross,
+        }
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_BOX_OFFICE_UPDATED,
+            user=current_user,
+            old={key: getattr(movie, key) for key in new},
+            new=new,
+        )
+
+        for key, value in new.items():
+            setattr(movie, key, value)
         db.commit()
 
         log(log.INFO, "Box office [%s] successfully updated", form_data.movie_key)

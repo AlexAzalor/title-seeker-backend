@@ -11,11 +11,13 @@ from .shared_universe import shared_universe_router
 from .visual_profile import visual_profile_router
 from .knowledge_base import knowledge_base_router
 from .dashboard import dashboard_router
+from .audit_log import audit_log_router
 
 router = APIRouter(prefix="/api", tags=["API"])
 
 
 router.include_router(dashboard_router)
+router.include_router(audit_log_router)
 router.include_router(knowledge_base_router)
 router.include_router(movie_router)
 router.include_router(visual_profile_router)

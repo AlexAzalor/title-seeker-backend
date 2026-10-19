@@ -1,5 +1,14 @@
 from datetime import timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
+from api.controllers.audit_log import (
+    MOVIE_ENTITY,
+    MOVIE_RATING_CREATED,
+    MOVIE_RATING_UPDATED,
+    MOVIE_VISUAL_PROFILE_UPDATED,
+    record_audit,
+    snapshot_movie_overall_rating,
+    snapshot_visual_profile,
+)
 from api.dependency.user import get_admin, get_current_user
 from api.utils import process_movie_rating
 import app.models as m
@@ -62,7 +71,27 @@ def rate_movie(
     db.flush()
     log(log.DEBUG, "Rating for movie [%s] created", movie.key)
 
+    old_overall = snapshot_movie_overall_rating(movie)
     process_movie_rating(movie)
+
+    # user_rating: everything is "new" (old is empty, so unset optional criteria are omitted)
+    # overall_rating: the movie's aggregate before and after
+    record_audit(
+        db,
+        entity_type=MOVIE_ENTITY,
+        entity_id=movie.id,
+        event_type=MOVIE_RATING_CREATED,
+        user=current_user,
+        old={"user_rating": {}, "overall_rating": old_overall},
+        new={
+            "user_rating": {
+                "rating": new_rating.rating,
+                **{key: getattr(new_rating, key) for key in rating_data.model_dump()},
+            },
+            "overall_rating": snapshot_movie_overall_rating(movie),
+        },
+        grouped=True,
+    )
 
     db.commit()
 
@@ -95,23 +124,34 @@ def update_rate_movie(
         log(log.ERROR, "Rating for movie [%s] not found", data.movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rating not found")
 
-    rating_data = data.rating_criteria
+    # Two groups: "user_rating" (this user's score and criteria) and "overall_rating" (the movie's aggregate)
+    optional_criteria = {"visual_effects", "scare_factor", "humor", "animation_cartoon"}
+    new = {
+        "rating": data.rating,
+        **{
+            key: (value or None) if key in optional_criteria else value
+            for key, value in data.rating_criteria.model_dump().items()
+        },
+    }
+    old_user = {key: getattr(rating, key) for key in new}
+    old_overall = snapshot_movie_overall_rating(movie)
 
-    rating.rating = data.rating
-    rating.acting = rating_data.acting
-    rating.plot_storyline = rating_data.plot_storyline
-    rating.script_dialogue = rating_data.script_dialogue
-    rating.music = rating_data.music
-    rating.enjoyment = rating_data.enjoyment
-    rating.production_design = rating_data.production_design
-    rating.visual_effects = rating_data.visual_effects if rating_data.visual_effects else None
-    rating.scare_factor = rating_data.scare_factor if rating_data.scare_factor else None
-    rating.humor = rating_data.humor if rating_data.humor else None
-    rating.animation_cartoon = rating_data.animation_cartoon if rating_data.animation_cartoon else None
+    for key, value in new.items():
+        setattr(rating, key, value)
 
-    db.commit()
-
+    # process_movie_rating autoflushes, so the rating, averages and audit row share one commit
     process_movie_rating(movie)
+
+    record_audit(
+        db,
+        entity_type=MOVIE_ENTITY,
+        entity_id=movie.id,
+        event_type=MOVIE_RATING_UPDATED,
+        user=current_user,
+        old={"user_rating": old_user, "overall_rating": old_overall},
+        new={"user_rating": new, "overall_rating": snapshot_movie_overall_rating(movie)},
+        grouped=True,
+    )
 
     db.commit()
 
@@ -313,6 +353,8 @@ def update_title_visual_profile(
         log(log.ERROR, "User [%s] has no visual profile for movie [%s]", current_user.email, data.movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User has no visual profile for this movie")
 
+    old_snapshot = snapshot_visual_profile(db, user_vp)
+
     # Change category and its criteria
     if user_vp.category.key != data.category_key:
         category = db.scalar(sa.select(m.VisualProfileCategory).where(m.VisualProfileCategory.key == data.category_key))
@@ -339,7 +381,6 @@ def update_title_visual_profile(
                 order=idx + 1,
             )
             db.add(new_rating)
-        db.commit()
         log(log.DEBUG, "Title visual profile for movie [%s] updated with new category", data.movie_key)
 
     # Update existing criteria ratings
@@ -367,6 +408,18 @@ def update_title_visual_profile(
 
             criterion_rating.rating = criterion.rating
             criterion_rating.order = idx + 1
-            db.commit()
+
+    # Autoflush inside the snapshot makes pending changes visible; one commit keeps profile and audit row atomic
+    new_snapshot = snapshot_visual_profile(db, user_vp)
+    record_audit(
+        db,
+        entity_type=MOVIE_ENTITY,
+        entity_id=movie.id,
+        event_type=MOVIE_VISUAL_PROFILE_UPDATED,
+        user=current_user,
+        old=old_snapshot,
+        new=new_snapshot,
+    )
+    db.commit()
 
     log(log.DEBUG, "Title visual profile for movie [%s] updated", data.movie_key)
