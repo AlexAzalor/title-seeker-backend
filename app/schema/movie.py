@@ -178,6 +178,7 @@ class MovieOut(BaseMovie):
     shared_universe_order: int | None = None
 
     updated_at: datetime
+    created_at: datetime
 
 
 class MoviePreviewOut(BaseMovie):

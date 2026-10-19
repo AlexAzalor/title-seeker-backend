@@ -110,6 +110,7 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
     return s.MovieOut(
         key=movie_key,
         updated_at=movie.updated_at,
+        created_at=movie.created_at,
         title=movie.get_title(lang),
         title_en=movie.get_title(s.Language.EN) if lang == s.Language.UK else None,
         description=movie.get_description(lang),

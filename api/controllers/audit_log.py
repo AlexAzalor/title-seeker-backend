@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import sqlalchemy as sa
@@ -8,8 +8,11 @@ from sqlalchemy.orm import Session
 import app.models as m
 from api.controllers.movie import get_ranked_similar_movies
 import app.schema as s
+from app.logger import log
 
 MOVIE_ENTITY = "movie"
+MOVIE_VISITED = "movie.visited"
+MOVIE_VISIT_COOLDOWN = timedelta(hours=24)
 MOVIE_DESCRIPTION_UPDATED = "movie.description.updated"
 MOVIE_BOX_OFFICE_UPDATED = "movie.box_office.updated"
 MOVIE_ACTORS_UPDATED = "movie.actors.updated"
@@ -34,6 +37,45 @@ def resolve_entity_id(db: Session, entity_type: str, entity_key: str) -> int | N
     """Map a public entity key to its internal id. Raises KeyError for an unsupported entity type."""
     model = KEYED_ENTITY_MODELS[entity_type]
     return db.scalar(sa.select(model.id).where(model.key == entity_key))
+
+
+def log_movie_visit(movie_id: int, user_id: int | None) -> None:
+    """Background task: record a movie page visit, at most once per 24h per (movie, user).
+
+    Uses its own session because the request-scoped one is closed once the response is sent.
+    Never raises, so a logging failure cannot affect the response.
+    """
+    from app.database import db
+
+    try:
+        with db.Session() as session:
+            now = datetime.now(UTC).replace(tzinfo=None)
+            recent = session.scalar(
+                sa.select(m.AuditLog.id)
+                .where(
+                    m.AuditLog.entity_type == MOVIE_ENTITY,
+                    m.AuditLog.entity_id == movie_id,
+                    m.AuditLog.event_type == MOVIE_VISITED,
+                    m.AuditLog.user_id.is_(None) if user_id is None else m.AuditLog.user_id == user_id,
+                    m.AuditLog.created_at >= now - MOVIE_VISIT_COOLDOWN,
+                )
+                .limit(1)
+            )
+            if recent:
+                return
+
+            session.add(
+                m.AuditLog(
+                    entity_type=MOVIE_ENTITY,
+                    entity_id=movie_id,
+                    event_type=MOVIE_VISITED,
+                    user_id=user_id,
+                    changes={"visited_at": now.isoformat()},
+                )
+            )
+            session.commit()
+    except Exception as e:
+        log(log.ERROR, "Failed to log movie [%s] visit: %s", movie_id, e)
 
 
 def _diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -126,7 +168,7 @@ def snapshot_movie_directors(movie: m.Movie) -> list[dict]:
 
 
 def snapshot_visual_profile(db: Session, visual_profile: m.VisualProfile) -> dict:
-    """English-only snapshot of a user's visual profile: category plus scored criteria in display order.
+    """Localized snapshot of a user's visual profile: category plus scored criteria in display order.
 
     Reads through queries (not relationships) so it is accurate after the category/ratings were swapped in the same session.
     """
@@ -137,11 +179,11 @@ def snapshot_visual_profile(db: Session, visual_profile: m.VisualProfile) -> dic
         .order_by(m.VisualProfileRating.order, m.VisualProfileRating.id)
     ).all()
     return {
-        "category": {"key": category.key, "name": _en_name(category.translations, "name")} if category else None,
+        "category": {"key": category.key, "name": _localized(category.translations)} if category else None,
         "criteria": [
             {
                 "key": r.criterion.key,
-                "name": _en_name(r.criterion.translations, "name"),
+                "name": _localized(r.criterion.translations),
                 "rating": r.rating,
                 "order": r.order,
             }

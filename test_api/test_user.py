@@ -139,6 +139,7 @@ def test_set_language(client: TestClient, auth_simple_user: m.User):
 def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_owner: m.User):
     OLD_RATING_VALUE = 3
     NEW_RATING_VALUE = 5
+    expected_languages = {s.Language.EN.value, s.Language.UK.value}
 
     movie = db.scalar(sa.select(m.Movie))
     assert movie
@@ -187,6 +188,13 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
     assert len(new_criteria) == 6
     assert {"key", "name", "rating", "order"} == set(new_criteria[0])
     assert all(c["rating"] == NEW_RATING_VALUE for c in new_criteria)
+    criterion_by_key = {criterion.key: criterion for criterion in movie.visual_profiles[0].category.criteria}
+    for criterion_snapshot in new_criteria:
+        assert set(criterion_snapshot["name"]) == expected_languages
+        assert criterion_snapshot["name"] == {
+            translation.language: translation.name
+            for translation in criterion_by_key[criterion_snapshot["key"]].translations
+        }
 
     # Test update category with new criteria
     new_category = db.scalar(
@@ -215,5 +223,18 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
     audit = last_audit()
     assert audit
     assert audit.changes["category"]["new"]["key"] == new_category.key
+    assert set(audit.changes["category"]["new"]["name"]) == expected_languages
+    assert set(audit.changes["category"]["old"]["name"]) == expected_languages
+    assert audit.changes["category"]["new"]["name"] == {
+        translation.language: translation.name for translation in new_category.translations
+    }
     assert audit.changes["category"]["old"]["key"] != new_category.key
-    assert {c["key"] for c in audit.changes["criteria"]["new"]} == {c.key for c in new_category.criteria}
+    new_criteria = audit.changes["criteria"]["new"]
+    assert {c["key"] for c in new_criteria} == {c.key for c in new_category.criteria}
+    criterion_by_key = {criterion.key: criterion for criterion in new_category.criteria}
+    for criterion_snapshot in new_criteria:
+        assert set(criterion_snapshot["name"]) == expected_languages
+        assert criterion_snapshot["name"] == {
+            translation.language: translation.name
+            for translation in criterion_by_key[criterion_snapshot["key"]].translations
+        }

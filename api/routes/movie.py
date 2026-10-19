@@ -6,7 +6,7 @@ from typing import Annotated, Sequence
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 import sqlalchemy as sa
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, status, File, UploadFile
 
 from sqlalchemy.orm import Session, selectinload
 
@@ -38,6 +38,7 @@ from api.controllers.audit_log import (
     MOVIE_KEYWORDS_UPDATED,
     MOVIE_SPECIFICATIONS_UPDATED,
     record_audit,
+    log_movie_visit,
     record_similar_movies_change,
     snapshot_similar_movies,
     snapshot_movie_actors,
@@ -128,6 +129,7 @@ def get_movies(
 )
 def get_movie(
     movie_key: str,
+    background_tasks: BackgroundTasks,
     lang: s.Language = s.Language.UK,
     current_user: m.User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -158,6 +160,8 @@ def get_movie(
     if not movie:
         log(log.ERROR, "Movie [%s] not found", movie_key)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    background_tasks.add_task(log_movie_visit, movie.id, current_user.id if current_user else None)
 
     return get_movie_data(
         movie,
