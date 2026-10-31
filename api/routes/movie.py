@@ -1534,3 +1534,47 @@ def edit_box_office(
     except Exception as e:
         log(log.ERROR, "Error updating Box office [%s]: %s", form_data.movie_key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating Box office")
+
+
+# TODO: remove later
+# def collect_request_info(request: Request) -> dict:
+#     return {
+#         "ip_address": (request.client.host if request.client else None),
+#         "user_agent": request.headers.get("user-agent"),
+#         "accept_language": request.headers.get("accept-language"),
+#         "referer": request.headers.get("referer"),
+#         "origin": request.headers.get("origin"),
+#     }
+
+
+# TODO: remove later
+# @movie_router.post(
+#     "/user-info/",
+#     status_code=status.HTTP_201_CREATED,
+#     responses={status.HTTP_400_BAD_REQUEST: {"description": "Error saving user info"}},
+# )
+# def save_user_info(
+#     form_data: s.MovieUserInfoIn,
+#     request: Request,
+#     current_user: m.User | None = Depends(get_current_user),
+#     db: Session = Depends(get_db),
+# ):
+#     """Store user info (JSON.stringify-ed string from the frontend) in the audit log"""
+
+#     try:
+#         db.add(
+#             m.AuditLog(
+#                 entity_type="user",
+#                 entity_id=current_user.id if current_user else 0,
+#                 event_type=MOVIE_USER_INFO,
+#                 user_id=current_user.id if current_user else None,
+#                 changes={
+#                     "user_info": form_data.user_info if form_data.user_info else str(collect_request_info(request))
+#                 },
+#             )
+#         )
+#         db.commit()
+#     except Exception as e:
+#         db.rollback()
+#         log(log.ERROR, "Error saving user info: %s", e)
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error saving user info")

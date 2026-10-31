@@ -1,5 +1,5 @@
 import base64
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 import sqlalchemy as sa
@@ -27,10 +27,25 @@ MOVIE_ACTION_TIMES_UPDATED = "movie.action_times.updated"
 MOVIE_SIMILAR_MOVIES_UPDATED = "movie.similar_movies.updated"
 SIMILAR_MOVIES_AUDIT_LIMIT = 5
 
-# entity_type -> model with a unique string `key` column. Register new entity types here.
-KEYED_ENTITY_MODELS = {
-    MOVIE_ENTITY: m.Movie,
+EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
+    "content": (
+        MOVIE_DESCRIPTION_UPDATED,
+        MOVIE_BOX_OFFICE_UPDATED,
+        MOVIE_ACTORS_UPDATED,
+        MOVIE_DIRECTORS_UPDATED,
+        MOVIE_VISUAL_PROFILE_UPDATED,
+        MOVIE_GENRES_UPDATED,
+        MOVIE_SPECIFICATIONS_UPDATED,
+        MOVIE_KEYWORDS_UPDATED,
+        MOVIE_ACTION_TIMES_UPDATED,
+        MOVIE_SIMILAR_MOVIES_UPDATED,
+    ),
+    "ratings": (MOVIE_RATING_CREATED, MOVIE_RATING_UPDATED),
+    "visits": (MOVIE_VISITED,),
 }
+
+# entity_type -> model with a unique string `key` column. Register new entity types here.
+KEYED_ENTITY_MODELS: dict[str, type[m.Movie]] = {MOVIE_ENTITY: m.Movie}
 
 
 def resolve_entity_id(db: Session, entity_type: str, entity_key: str) -> int | None:
@@ -292,6 +307,123 @@ def decode_cursor(cursor: str) -> tuple[datetime, int]:
         raise ValueError("Invalid cursor") from e
 
 
+def get_general_audit_history(
+    db: Session,
+    limit: int,
+    cursor: str | None = None,
+    event_types: list[str] | None = None,
+    *,
+    categories: list[str] | None = None,
+    exclude_event_types: list[str] | None = None,
+    include_visits: bool = False,
+    user_id: int | None = None,
+    entity_type: str | None = None,
+    entity_key: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    search: str | None = None,
+    sort: str = "desc",
+    lang: s.Language = s.Language.EN,
+) -> s.AuditLogSummaryListOut:
+    """Keyset-paginated history of all entities without change details.
+
+    Items are grouped by UTC day; a day may continue on the next page.
+    `movie.user.info` is hidden unless requested via `event_types`/`categories`.
+    `movie.visited` is hidden unless requested via `event_types`/`categories` or `include_visits`.
+    Raises ValueError for a malformed cursor, KeyError for an unsupported entity type or category.
+    """
+    included = set(event_types or [])
+    for category in categories or []:
+        included.update(EVENT_CATEGORIES[category])
+    excluded = set(exclude_event_types or [])
+    if not include_visits and MOVIE_VISITED not in included:
+        excluded.add(MOVIE_VISITED)
+
+    movie = sa.orm.aliased(m.Movie)
+    translation = sa.orm.aliased(m.MovieTranslation)
+    query = (
+        sa.select(
+            m.AuditLog.id,
+            m.AuditLog.event_type,
+            m.AuditLog.entity_type,
+            m.AuditLog.created_at,
+            m.AuditLog.user_id,
+            m.User.first_name,
+            m.User.last_name,
+            movie.key.label("entity_key"),
+            movie.poster.label("entity_poster"),
+            translation.title.label("entity_title"),
+        )
+        .outerjoin(m.User, m.User.id == m.AuditLog.user_id)
+        .outerjoin(movie, sa.and_(m.AuditLog.entity_type == MOVIE_ENTITY, m.AuditLog.entity_id == movie.id))
+        .outerjoin(translation, sa.and_(translation.movie_id == movie.id, translation.language == lang.value))
+    )
+
+    if included:
+        query = query.where(m.AuditLog.event_type.in_(included))
+    if excluded:
+        query = query.where(m.AuditLog.event_type.not_in(excluded))
+    if user_id is not None:
+        query = query.where(m.AuditLog.user_id == user_id)
+    if entity_type:
+        if entity_type not in KEYED_ENTITY_MODELS:
+            raise KeyError(entity_type)
+        query = query.where(m.AuditLog.entity_type == entity_type)
+    if entity_key:
+        query = query.where(movie.key == entity_key)
+    if date_from:
+        query = query.where(m.AuditLog.created_at >= datetime.combine(date_from, time.min))
+    if date_to:
+        query = query.where(m.AuditLog.created_at < datetime.combine(date_to + timedelta(days=1), time.min))
+    if search:
+        pattern = "%" + search.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        any_title = sa.exists().where(
+            m.MovieTranslation.movie_id == movie.id, m.MovieTranslation.title.ilike(pattern, escape="\\")
+        )
+        query = query.where(any_title)
+
+    ascending = sort == "asc"
+    order = (
+        (m.AuditLog.created_at.asc(), m.AuditLog.id.asc())
+        if ascending
+        else (m.AuditLog.created_at.desc(), m.AuditLog.id.desc())
+    )
+    query = query.order_by(*order).limit(limit + 1)
+
+    if cursor:
+        cursor_created_at, cursor_id = decode_cursor(cursor)
+        position = sa.tuple_(m.AuditLog.created_at, m.AuditLog.id)
+        cursor_position = sa.tuple_(sa.literal(cursor_created_at), sa.literal(cursor_id))
+        query = query.where(position > cursor_position if ascending else position < cursor_position)
+
+    rows = db.execute(query).all()
+    has_more = len(rows) > limit
+    rows = rows[:limit]
+
+    groups: list[s.AuditLogDayGroupOut] = []
+    for row in rows:
+        item = s.AuditLogSummaryOut(
+            id=row.id,
+            event_type=row.event_type,
+            entity_type=row.entity_type,
+            entity_key=row.entity_key,
+            entity_title=row.entity_title,
+            entity_poster=row.entity_poster,
+            user_id=row.user_id,
+            user_name=f"{row.first_name or ''} {row.last_name or ''}".strip() or None,
+            created_at=row.created_at,
+        )
+        day = row.created_at.date()
+        if not groups or groups[-1].date != day:
+            groups.append(s.AuditLogDayGroupOut(date=day, items=[]))
+        groups[-1].items.append(item)
+
+    return s.AuditLogSummaryListOut(
+        groups=groups,
+        next_cursor=encode_cursor(rows[-1].created_at, rows[-1].id) if has_more else None,
+    )
+
+
 def get_audit_history(
     db: Session,
     entity_type: str,
@@ -337,4 +469,23 @@ def get_audit_history(
     return s.AuditLogListOut(
         items=items,
         next_cursor=encode_cursor(rows[-1][0].created_at, rows[-1][0].id) if has_more else None,
+    )
+
+
+def get_audit_users(db: Session) -> s.AuditLogUserListOut:
+    """Users that authored at least one audit event, for the history user filter."""
+    rows = db.execute(
+        sa.select(m.User.id, m.User.first_name, m.User.last_name, m.User.role)
+        .where(m.User.id.in_(sa.select(m.AuditLog.user_id).distinct()))
+        .order_by(m.User.first_name, m.User.last_name, m.User.id)
+    ).all()
+    return s.AuditLogUserListOut(
+        users=[
+            s.AuditLogUserOut(
+                id=row.id,
+                full_name=f"{row.first_name or ''} {row.last_name or ''}".strip(),
+                role=row.role,
+            )
+            for row in rows
+        ]
     )
