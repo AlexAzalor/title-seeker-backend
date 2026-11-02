@@ -11,6 +11,7 @@ from app import schema as s
 from app import models as m
 
 from app.logger import log
+from app.schema.rating import RatingCriterion
 
 
 def custom_generate_unique_id(route: APIRoute):
@@ -95,11 +96,14 @@ def calculate_average_rating(ratings: list[m.Rating], attribute: str) -> float:
     return round(sum(values) / len(values), 2) if values else 0.0
 
 
-def process_movie_rating(movie: m.Movie):
+def process_movie_rating(movie: m.Movie, criterion_type: RatingCriterion | None = None):
     """
     Process the movie rating and calculate averages for various criteria.
     """
     movie_ratings = movie.ratings
+
+    if criterion_type is not None:
+        movie.rating_criterion = criterion_type
 
     movie.average_rating = calculate_average_rating(movie_ratings, "rating")
     movie.ratings_count = len(movie_ratings)

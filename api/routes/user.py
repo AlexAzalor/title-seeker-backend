@@ -135,12 +135,13 @@ def update_rate_movie(
     }
     old_user = {key: getattr(rating, key) for key in new}
     old_overall = snapshot_movie_overall_rating(movie)
+    old_criterion = movie.rating_criterion
 
     for key, value in new.items():
         setattr(rating, key, value)
 
     # process_movie_rating autoflushes, so the rating, averages and audit row share one commit
-    process_movie_rating(movie)
+    process_movie_rating(movie, data.rating_criterion_type)
 
     record_audit(
         db,
@@ -148,8 +149,16 @@ def update_rate_movie(
         entity_id=movie.id,
         event_type=MOVIE_RATING_UPDATED,
         user=current_user,
-        old={"user_rating": old_user, "overall_rating": old_overall},
-        new={"user_rating": new, "overall_rating": snapshot_movie_overall_rating(movie)},
+        old={
+            "user_rating": old_user,
+            "overall_rating": old_overall,
+            "rating_criterion": {"type": old_criterion},
+        },
+        new={
+            "user_rating": new,
+            "overall_rating": snapshot_movie_overall_rating(movie),
+            "rating_criterion": {"type": movie.rating_criterion},
+        },
         grouped=True,
     )
 

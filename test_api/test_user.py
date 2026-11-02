@@ -26,6 +26,7 @@ def test_rate_movie(client: TestClient, db: Session):
         uuid=user.uuid,
         movie_key=movie.key,
         rating=7.69,
+        rating_criterion_type=s.RatingCriterion.BASIC,
         rating_criteria=s.RatingCriteria(
             acting=1.83,
             plot_storyline=1.65,
@@ -61,6 +62,7 @@ def test_rate_movie(client: TestClient, db: Session):
         uuid=user.uuid,
         movie_key=movie.key,
         rating=9.08,
+        rating_criterion_type=s.RatingCriterion.BASIC,
         rating_criteria=s.RatingCriteria(
             acting=2.42,
             plot_storyline=1.85,

@@ -1,3 +1,5 @@
+from typing import Any
+
 import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -655,7 +657,7 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
         )
         assert response.status_code == status.HTTP_200_OK
 
-    params = {"user_uuid": auth_user_owner.uuid, "limit": 1}
+    params: dict[str, Any] = {"user_uuid": auth_user_owner.uuid, "limit": 1}
     response = client.get("/api/audit-logs", params=params)
     assert response.status_code == status.HTTP_200_OK
     page1 = response.json()
@@ -685,7 +687,7 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
 
     assert item["entity_title"] and "entity_poster" in item
 
-    base = {"user_uuid": auth_user_owner.uuid, "limit": 100}
+    base: dict[str, Any] = {"user_uuid": auth_user_owner.uuid, "limit": 100}
 
     def ids(**extra):
         response = client.get("/api/audit-logs", params={**base, **extra})
