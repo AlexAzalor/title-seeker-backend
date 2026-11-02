@@ -31,6 +31,7 @@ from api.controllers.audit_log import (
     MOVIE_ACTION_TIMES_UPDATED,
     MOVIE_ACTORS_UPDATED,
     MOVIE_BOX_OFFICE_UPDATED,
+    MOVIE_CREATED,
     MOVIE_DESCRIPTION_UPDATED,
     MOVIE_DIRECTORS_UPDATED,
     MOVIE_ENTITY,
@@ -662,6 +663,16 @@ def create_movie(
 
         if is_quick_movie:
             remove_quick_movie(form_data.key)
+
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=new_movie.id,
+            event_type=MOVIE_CREATED,
+            user=current_user,
+            old={},
+            new={"key": new_movie.key},
+        )
 
         db.commit()
         log(log.INFO, "Movie [%s] successfully created", form_data.key)

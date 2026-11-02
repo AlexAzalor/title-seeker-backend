@@ -13,6 +13,7 @@ from app.logger import log
 MOVIE_ENTITY = "movie"
 MOVIE_VISITED = "movie.visited"
 MOVIE_VISIT_COOLDOWN = timedelta(hours=24)
+MOVIE_CREATED = "movie.created"
 MOVIE_DESCRIPTION_UPDATED = "movie.description.updated"
 MOVIE_BOX_OFFICE_UPDATED = "movie.box_office.updated"
 MOVIE_ACTORS_UPDATED = "movie.actors.updated"
@@ -29,6 +30,7 @@ SIMILAR_MOVIES_AUDIT_LIMIT = 5
 
 EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
     "content": (
+        MOVIE_CREATED,
         MOVIE_DESCRIPTION_UPDATED,
         MOVIE_BOX_OFFICE_UPDATED,
         MOVIE_ACTORS_UPDATED,
