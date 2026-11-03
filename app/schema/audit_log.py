@@ -10,6 +10,7 @@ class AuditLogOut(BaseModel):
     event_type: str
     user_id: int | None
     user_name: str | None
+    user_role: str | None
     changes: dict[str, Any]
     created_at: datetime
 
@@ -27,6 +28,7 @@ class AuditLogSummaryOut(BaseModel):
     entity_poster: str | None
     user_id: int | None
     user_name: str | None
+    user_role: str | None
     created_at: datetime
 
 
@@ -36,6 +38,7 @@ class AuditLogDayGroupOut(BaseModel):
 
 
 class AuditLogSummaryListOut(BaseModel):
+    latest_event: AuditLogSummaryOut | None  # newest event overall, ignores all filters and pagination
     groups: list[AuditLogDayGroupOut]
     next_cursor: str | None  # None when there are no more records
 

@@ -667,6 +667,7 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     assert page1["groups"][0]["date"] == item["created_at"][:10]
     assert item["user_id"] == auth_user_owner.id
     assert "user_name" in item
+    assert item["user_role"] == auth_user_owner.role
     assert item["event_type"] == "movie.description.updated"
     assert item["entity_type"] == "movie"
     assert item["entity_key"] == movie.key
@@ -676,14 +677,14 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["groups"][0]["items"][0]["id"] < item["id"]
 
-    response = client.get("/api/audit-logs", params={**params, "event_type": "movie.visited"})
+    response = client.get("/api/audit-logs", params={**params, "category": "visits"})
     assert response.status_code == status.HTTP_200_OK
     assert all(i["event_type"] == "movie.visited" for g in response.json()["groups"] for i in g["items"])
 
-    response = client.get(
-        "/api/audit-logs", params={**params, "event_type": ["movie.visited", "movie.description.updated"]}
-    )
-    assert response.json()["groups"]
+    latest = page1["latest_event"]
+    assert latest["id"] == item["id"]
+    filtered = client.get("/api/audit-logs", params={**params, "category": "ratings", "date_to": "2000-01-01"}).json()
+    assert filtered["groups"] == [] and filtered["latest_event"]["id"] == latest["id"]
 
     assert item["entity_title"] and "entity_poster" in item
 
@@ -702,16 +703,20 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     assert ids(entity_type="movie", entity_key="no-such-movie") == []
     assert ids(category="content") == everything
     assert ids(category="ratings") == []
-    assert ids(exclude_event_type="movie.description.updated") == []
+    assert ids(event_type="movie.description.updated") == everything
+    assert ids(event_type=["movie.description.updated", "movie.created"]) == everything
+    assert ids(event_type="movie.keywords.updated") == []
+    assert ids(category="similar_movies") == []
     assert ids(search=item["entity_title"][:3]) == everything
     assert ids(search="zzzzzz-nothing") == []
     today = item["created_at"][:10]
-    assert ids(date_from=today, date_to=today) == everything
+    assert ids(date_from=today, date_to=today, timezone="UTC") == everything
     assert ids(date_to="2000-01-01") == []
     assert ids(sort="asc", limit=1)
 
     for bad in (
         {"category": "nope"},
+        {"category": "content", "event_type": "movie.visited"},
         {"entity_key": "x"},
         {"entity_type": "unknown"},
         {"date_from": "2026-02-01", "date_to": "2026-01-01"},

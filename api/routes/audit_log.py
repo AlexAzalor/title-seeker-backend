@@ -1,10 +1,12 @@
 from datetime import date
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from api.controllers.audit_log import (
+    DEFAULT_EVENT_CATEGORY,
     EVENT_CATEGORIES,
     get_audit_history,
     get_audit_users,
@@ -16,8 +18,17 @@ import app.models as m
 import app.schema as s
 from app.database import get_db
 from app.logger import log
+from config import config
+
+CFG = config()
 
 audit_log_router = APIRouter(prefix="/audit-logs", tags=["Audit logs"])
+
+
+def normalize_timezone(timezone: str | None) -> str:
+    if timezone is None:
+        return CFG.DEFAULT_TIMEZONE
+    return CFG.TIMEZONE_ALIASES.get(timezone, timezone)
 
 
 @audit_log_router.get(
@@ -29,18 +40,18 @@ audit_log_router = APIRouter(prefix="/audit-logs", tags=["Audit logs"])
 def get_general_history(
     cursor: str | None = None,
     limit: int = Query(20, ge=1, le=100),
-    event_type: list[str] | None = Query(None, description="Include only these event types (repeatable)"),
-    category: list[str] | None = Query(None, description=f"Include event categories: {', '.join(EVENT_CATEGORIES)}"),
-    exclude_event_type: list[str] | None = Query(None, description="Exclude these event types (repeatable)"),
-    include_visits: bool = Query(
-        False,
-        description="`movie.visited` is hidden by default; `movie.user.info` needs event_type or",
+    category: str = Query(DEFAULT_EVENT_CATEGORY, description=f"One event category: {', '.join(EVENT_CATEGORIES)}"),
+    event_type: list[str] | None = Query(
+        None, description="Subset of the category's event types (repeatable, OR). Empty means the whole category"
     ),
     user_id: int | None = None,
     entity_type: str | None = None,
     entity_key: str | None = Query(None, description="Requires `entity_type`"),
-    date_from: date | None = Query(None, description="UTC day, inclusive"),
-    date_to: date | None = Query(None, description="UTC day, inclusive"),
+    date_from: date | None = Query(None, description="Day in `timezone`, inclusive"),
+    date_to: date | None = Query(None, description="Day in `timezone`, inclusive"),
+    timezone: str | None = Query(
+        None, description="IANA timezone of the date filters, e.g. Europe/Kyiv. Defaults to the server setting"
+    ),
     search: str | None = Query(None, min_length=1, max_length=128, description="Movie title (any language)"),
     sort: Literal["asc", "desc"] = "desc",
     lang: s.Language = s.Language.UK,
@@ -57,24 +68,32 @@ def get_general_history(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="entity_key requires entity_type")
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="date_from is after date_to")
-    bad_categories = [c for c in category or [] if c not in EVENT_CATEGORIES]
-    if bad_categories:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown category: {bad_categories[0]}")
+    if category not in EVENT_CATEGORIES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown category: {category}")
+    timezone = normalize_timezone(timezone)
+    try:
+        tz = ZoneInfo(timezone)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown timezone: {timezone}")
+    bad_events = [e for e in event_type or [] if e not in EVENT_CATEGORIES[category]]
+    if bad_events:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Event type {bad_events[0]} is not in category {category}"
+        )
 
     try:
         return get_general_audit_history(
             db,
             limit,
             cursor,
-            event_type,
-            categories=category,
-            exclude_event_types=exclude_event_type,
-            include_visits=include_visits,
+            category,
+            event_types=event_type,
             user_id=user_id,
             entity_type=entity_type,
             entity_key=entity_key,
             date_from=date_from,
             date_to=date_to,
+            tz=tz,
             search=search,
             sort=sort,
             lang=lang,
