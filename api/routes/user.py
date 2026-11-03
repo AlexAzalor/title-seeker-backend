@@ -420,6 +420,9 @@ def update_title_visual_profile(
 
     # Autoflush inside the snapshot makes pending changes visible; one commit keeps profile and audit row atomic
     new_snapshot = snapshot_visual_profile(db, user_vp)
+    # Category changed: both category and criteria are diffed (full before/after profile).
+    # Only criteria changed: diff criteria and show the category as plain context.
+    context = None if old_snapshot["category"] != new_snapshot["category"] else {"category": new_snapshot["category"]}
     record_audit(
         db,
         entity_type=MOVIE_ENTITY,
@@ -428,6 +431,7 @@ def update_title_visual_profile(
         user=current_user,
         old=old_snapshot,
         new=new_snapshot,
+        context=context,
     )
     db.commit()
 

@@ -184,8 +184,7 @@ def test_title_visual_profile_movie(client: TestClient, db: Session, auth_user_o
     audit = last_audit()
     assert audit
     assert audit.user_id == auth_user_owner.id
-    # same category: only the criteria list is logged, with full details per entry
-    assert "category" not in audit.changes
+    assert "category" in audit.changes
     new_criteria = audit.changes["criteria"]["new"]
     assert len(new_criteria) == 6
     assert {"key", "name", "rating", "order"} == set(new_criteria[0])

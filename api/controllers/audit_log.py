@@ -113,6 +113,7 @@ def record_audit(
     old: dict[str, Any],
     new: dict[str, Any],
     grouped: bool = False,
+    context: dict[str, Any] | None = None,
 ) -> m.AuditLog | None:
     """Single entry point for audit logging.
 
@@ -145,6 +146,8 @@ def record_audit(
         changes = _diff(old, new)
     if not changes:
         return None
+    # Context is stored as a plain value (no old/new) next to the real changes
+    changes = {**changes, **(context or {})}
 
     entry = m.AuditLog(
         entity_type=entity_type,
@@ -152,7 +155,6 @@ def record_audit(
         event_type=event_type,
         user_id=user.id,
         changes=changes,
-        created_at=datetime(2026, 11, 2, 22, 0, 0),
     )
     db.add(entry)
     return entry
@@ -355,9 +357,13 @@ def _summary_item(row: Any) -> s.AuditLogSummaryOut:
 
 
 def get_latest_audit_event(db: Session, lang: s.Language) -> s.AuditLogSummaryOut | None:
-    """Most recent event of any type, independent of all filters."""
+    """Most recent non-similar-movies event, independent of all other filters."""
     _, query = _summary_query(lang)
-    row = db.execute(query.order_by(m.AuditLog.created_at.desc(), m.AuditLog.id.desc()).limit(1)).first()
+    row = db.execute(
+        query.where(m.AuditLog.event_type != MOVIE_SIMILAR_MOVIES_UPDATED)
+        .order_by(m.AuditLog.created_at.desc(), m.AuditLog.id.desc())
+        .limit(1)
+    ).first()
     return _summary_item(row) if row else None
 
 
