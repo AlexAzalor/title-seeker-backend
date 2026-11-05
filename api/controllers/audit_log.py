@@ -17,6 +17,7 @@ MOVIE_VISIT_COOLDOWN = timedelta(hours=24)
 MOVIE_CREATED = "movie.created"
 MOVIE_DESCRIPTION_UPDATED = "movie.description.updated"
 MOVIE_BOX_OFFICE_UPDATED = "movie.box_office.updated"
+MOVIE_POSTER_UPDATED = "movie.poster.updated"
 MOVIE_ACTORS_UPDATED = "movie.actors.updated"
 MOVIE_DIRECTORS_UPDATED = "movie.directors.updated"
 MOVIE_RATING_UPDATED = "movie.rating.updated"
@@ -35,6 +36,7 @@ EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
         MOVIE_CREATED,
         MOVIE_DESCRIPTION_UPDATED,
         MOVIE_BOX_OFFICE_UPDATED,
+        MOVIE_POSTER_UPDATED,
         MOVIE_ACTORS_UPDATED,
         MOVIE_DIRECTORS_UPDATED,
         MOVIE_VISUAL_PROFILE_UPDATED,
@@ -99,8 +101,30 @@ def log_movie_visit(movie_id: int, user_id: int | None) -> None:
         log(log.ERROR, "Failed to log movie [%s] visit: %s", movie_id, e)
 
 
-def _diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    return {key: {"old": old.get(key), "new": value} for key, value in new.items() if old.get(key) != value}
+def _trim_list(old: Any, new: Any) -> tuple[Any, Any]:
+    """For lists, drop items present unchanged on both sides so only added/removed/modified items remain.
+    A pure reorder keeps the full lists, since the order itself is the change."""
+    if not isinstance(old, list) or not isinstance(new, list):
+        return old, new
+    trimmed_old = [item for item in old if item not in new]
+    trimmed_new = [item for item in new if item not in old]
+    if not trimmed_old and not trimmed_new:
+        return old, new
+    return trimmed_old, trimmed_new
+
+
+def _diff(
+    old: dict[str, Any], new: dict[str, Any], allow_same: bool = False, trim_lists: bool = True
+) -> dict[str, dict[str, Any]]:
+    result = {}
+    for key, value in new.items():
+        old_value = old.get(key)
+        if old_value == value and not allow_same:
+            continue
+        if trim_lists and old_value != value:
+            old_value, value = _trim_list(old_value, value)
+        result[key] = {"old": old_value, "new": value}
+    return result
 
 
 def record_audit(
@@ -114,6 +138,10 @@ def record_audit(
     new: dict[str, Any],
     grouped: bool = False,
     context: dict[str, Any] | None = None,
+    # If allow_same is True, an audit entry will be created even if there are no changes.
+    allow_same: bool = False,
+    # If trim_lists is False, list values are stored in full (e.g. radar chart data that needs every point).
+    trim_lists: bool = True,
 ) -> m.AuditLog | None:
     """Single entry point for audit logging.
 
@@ -140,10 +168,13 @@ def record_audit(
         # {"uk": {"old": "Старий опис", "new": "Оновлений опис"}}
     """
     if grouped:
-        changes = {group: _diff(old.get(group, {}), values) for group, values in new.items()}
+        changes = {
+            group: _diff(old.get(group, {}), values, allow_same=allow_same, trim_lists=trim_lists)
+            for group, values in new.items()
+        }
         changes = {group: diff for group, diff in changes.items() if diff}
     else:
-        changes = _diff(old, new)
+        changes = _diff(old, new, allow_same=allow_same, trim_lists=trim_lists)
     if not changes:
         return None
     # Context is stored as a plain value (no old/new) next to the real changes

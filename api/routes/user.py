@@ -432,6 +432,8 @@ def update_title_visual_profile(
         old=old_snapshot,
         new=new_snapshot,
         context=context,
+        allow_same=True,
+        trim_lists=False,
     )
     db.commit()
 

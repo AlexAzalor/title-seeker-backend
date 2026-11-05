@@ -12,6 +12,10 @@ from sqlalchemy.orm import Session, selectinload
 
 from api.controllers.create_movie import (
     add_image_to_s3_bucket,
+    delete_image_from_s3_bucket,
+    get_image_metadata,
+    get_poster_metadata,
+    get_versioned_poster_filename,
     add_poster_to_new_movie,
     add_new_characters,
     add_new_movie_rating,
@@ -20,6 +24,14 @@ from api.controllers.create_movie import (
     get_movies_data_from_file,
     remove_quick_movie,
     set_percentage_match,
+)
+from api.controllers.collection import (
+    CollectionError,
+    add_movie_to_collection,
+    build_collection_out,
+    get_movie_or_error,
+    remove_movie_from_collection,
+    update_collection_movie,
 )
 from api.controllers.movie import (
     build_movie_query,
@@ -35,6 +47,7 @@ from api.controllers.audit_log import (
     MOVIE_DESCRIPTION_UPDATED,
     MOVIE_DIRECTORS_UPDATED,
     MOVIE_ENTITY,
+    MOVIE_POSTER_UPDATED,
     MOVIE_GENRES_UPDATED,
     MOVIE_KEYWORDS_UPDATED,
     MOVIE_SPECIFICATIONS_UPDATED,
@@ -1545,6 +1558,176 @@ def edit_box_office(
     except Exception as e:
         log(log.ERROR, "Error updating Box office [%s]: %s", form_data.movie_key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating Box office")
+
+
+@movie_router.put(
+    "/poster/{movie_key}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating poster"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
+    },
+)
+def change_movie_poster(
+    movie_key: str,
+    file: UploadFile = File(...),
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Replace the movie poster (S3 in production, local uploads otherwise)"""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == movie_key))
+
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    old_poster = movie.poster
+
+    try:
+        content = file.file.read()
+        file.file.seek(0)
+        new_image = get_image_metadata(content)
+    except Exception as e:
+        log(log.ERROR, "Invalid poster image for movie [%s]: %s", movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image file")
+
+    old_image = get_poster_metadata(old_poster, UPLOAD_DIRECTORY)
+
+    try:
+        # Unique name per version, so Next.js image cache is not reused
+        file.filename = get_versioned_poster_filename(old_poster, file.filename)
+        if CFG.ENV == "production":
+            file_name = f"{movie.id}_{file.filename}"
+            add_image_to_s3_bucket(file, "posters", file_name)
+            movie.poster = file_name
+        else:
+            add_poster_to_new_movie(movie, file, UPLOAD_DIRECTORY)
+
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_POSTER_UPDATED,
+            user=current_user,
+            old={"poster": old_poster, **old_image},
+            new={"poster": movie.poster, **new_image},
+            allow_same=True,
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error updating poster for movie [%s]: %s", movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating poster")
+
+    if CFG.ENV == "production" and old_poster and old_poster != movie.poster:
+        try:
+            delete_image_from_s3_bucket("posters", old_poster)
+        except Exception:
+            log(log.WARNING, "Old poster [%s] was not removed from S3", old_poster)
+
+    log(log.INFO, "Poster for movie [%s] successfully updated", movie_key)
+    return {"poster": movie.poster}
+
+
+@movie_router.get(
+    "/collection/{movie_key}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCollectionOut,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movie not found"}},
+)
+def get_movie_collection(
+    movie_key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Get related movies (collection) of the movie, ordered. Standalone movie returns itself only"""
+
+    try:
+        return build_collection_out(db, get_movie_or_error(db, movie_key))
+    except CollectionError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+
+@movie_router.post(
+    "/collection/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=s.MovieCollectionOut,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid relation"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
+    },
+)
+def add_collection_movie(
+    form_data: s.MovieCollectionAdd,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Link a movie to a collection. If the target is standalone, it becomes the base of a new collection"""
+
+    try:
+        base = add_movie_to_collection(db, form_data)
+        db.commit()
+    except CollectionError as e:
+        db.rollback()
+        log(log.ERROR, "Collection add failed [%s]: %s", form_data.movie_key, e.message)
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+    log(log.INFO, "Movie [%s] linked to collection of [%s]", form_data.movie_key, form_data.target_movie_key)
+    return build_collection_out(db, base)
+
+
+@movie_router.put(
+    "/collection/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCollectionOut,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid relation"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found or not in a collection"},
+    },
+)
+def update_collection_movie_relation(
+    form_data: s.MovieCollectionUpdate,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Change relation type and/or order of a movie in its collection"""
+
+    try:
+        base = update_collection_movie(db, form_data)
+        db.commit()
+    except CollectionError as e:
+        db.rollback()
+        log(log.ERROR, "Collection update failed [%s]: %s", form_data.movie_key, e.message)
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+    return build_collection_out(db, base)
+
+
+@movie_router.delete(
+    "/collection/{movie_key}",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieCollectionOut,
+    responses={status.HTTP_404_NOT_FOUND: {"description": "Movie not found or not in a collection"}},
+)
+def remove_collection_movie(
+    movie_key: str,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Unlink a movie from its collection. Returns the remaining collection (empty if it was dissolved)"""
+
+    try:
+        base = remove_movie_from_collection(db, movie_key)
+        db.commit()
+    except CollectionError as e:
+        db.rollback()
+        log(log.ERROR, "Collection remove failed [%s]: %s", movie_key, e.message)
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+
+    if base is None:
+        return s.MovieCollectionOut(base_movie_key=None, movies=[])
+    return build_collection_out(db, base)
 
 
 # TODO: remove later

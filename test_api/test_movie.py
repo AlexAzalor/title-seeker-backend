@@ -970,11 +970,11 @@ def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_o
         .order_by(m.AuditLog.id.desc())
     )
     assert audit
-    if "genres" in audit.changes:
+    if audit.changes.get("genres", {}).get("new"):
         entry = audit.changes["genres"]["new"][0]
         assert entry["key"] == test_genre.key and entry["percentage_match"] == test_genre.percentage_match
         assert {"en", "uk"} <= set(entry["name"])
-    if "subgenres" in audit.changes:
+    if audit.changes.get("subgenres", {}).get("new"):
         entry = audit.changes["subgenres"]["new"][0]
         assert entry["key"] == test_subgenre.key and entry["percentage_match"] == test_subgenre.percentage_match
         assert entry["genre"]["key"] and {"en", "uk"} <= set(entry["genre"]["name"])
@@ -984,3 +984,53 @@ def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_o
         "/api/movies/genres-subgenres/", params={"movie_key": movie.key, "user_uuid": auth_simple_user.uuid}
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_manage_movie_collection(client: TestClient, db: Session, auth_user_owner: m.User):
+    movies = db.scalars(
+        sa.select(m.Movie).where(m.Movie.relation_type.is_(None), m.Movie.collection_base_movie_id.is_(None))
+    ).all()
+    assert len(movies) >= 3
+    a, b, c = movies[:3]
+    params = {"user_uuid": auth_user_owner.uuid}
+
+    # standalone target becomes base
+    response = client.post(
+        "/api/movies/collection/",
+        json={"movie_key": b.key, "target_movie_key": a.key, "relation_type": "sequel"},
+        params=params,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.MovieCollectionOut.model_validate(response.json())
+    assert data.base_movie_key == a.key
+    assert [x.key for x in data.movies] == [a.key, b.key]
+
+    # add to existing collection via a member, at position 2
+    response = client.post(
+        "/api/movies/collection/",
+        json={"movie_key": c.key, "target_movie_key": b.key, "relation_type": "prequel", "collection_order": 2},
+        params=params,
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    data = s.MovieCollectionOut.model_validate(response.json())
+    assert [x.key for x in data.movies] == [a.key, c.key, b.key]
+    assert [x.collection_order for x in data.movies] == [1, 2, 3]
+
+    # reorder
+    response = client.put("/api/movies/collection/", json={"movie_key": c.key, "collection_order": 3}, params=params)
+    assert response.status_code == status.HTTP_200_OK
+    assert [x.key for x in s.MovieCollectionOut.model_validate(response.json()).movies] == [a.key, b.key, c.key]
+
+    # remove base: next movie is promoted
+    response = client.delete(f"/api/movies/collection/{a.key}", params=params)
+    assert response.status_code == status.HTTP_200_OK
+    data = s.MovieCollectionOut.model_validate(response.json())
+    assert data.base_movie_key == b.key
+    assert [x.collection_order for x in data.movies] == [1, 2]
+
+    # removing the last member dissolves the collection
+    response = client.delete(f"/api/movies/collection/{c.key}", params=params)
+    assert response.status_code == status.HTTP_200_OK
+    assert s.MovieCollectionOut.model_validate(response.json()).movies == []
+    db.refresh(b)
+    assert b.relation_type is None and b.collection_order is None

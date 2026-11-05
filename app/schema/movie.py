@@ -318,6 +318,32 @@ class MovieEditDescription(BaseModel):
     description_uk: str
 
 
+class MovieCollectionItemOut(BaseMovie):
+    poster: str
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
+
+
+class MovieCollectionOut(BaseModel):
+    base_movie_key: str | None = None
+    movies: list[MovieCollectionItemOut]
+
+
+class MovieCollectionAdd(BaseModel):
+    # Movie to link
+    movie_key: str
+    # Any movie of the collection, or a standalone movie (it becomes the base)
+    target_movie_key: str
+    relation_type: RelatedMovie
+    collection_order: int | None = None
+
+
+class MovieCollectionUpdate(BaseModel):
+    movie_key: str
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
+
+
 class MovieEditActors(BaseModel):
     movie_key: str
     actors: list[ActorCharacterKey]
