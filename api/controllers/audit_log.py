@@ -16,6 +16,8 @@ MOVIE_VISITED = "movie.visited"
 MOVIE_VISIT_COOLDOWN = timedelta(hours=24)
 MOVIE_CREATED = "movie.created"
 MOVIE_DESCRIPTION_UPDATED = "movie.description.updated"
+MOVIE_TITLE_UPDATED = "movie.title.updated"
+MOVIE_DETAILS_UPDATED = "movie.details.updated"
 MOVIE_BOX_OFFICE_UPDATED = "movie.box_office.updated"
 MOVIE_POSTER_UPDATED = "movie.poster.updated"
 MOVIE_ACTORS_UPDATED = "movie.actors.updated"
@@ -35,6 +37,8 @@ EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
     "content": (
         MOVIE_CREATED,
         MOVIE_DESCRIPTION_UPDATED,
+        MOVIE_TITLE_UPDATED,
+        MOVIE_DETAILS_UPDATED,
         MOVIE_BOX_OFFICE_UPDATED,
         MOVIE_POSTER_UPDATED,
         MOVIE_ACTORS_UPDATED,

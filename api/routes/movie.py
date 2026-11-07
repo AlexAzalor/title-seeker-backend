@@ -45,12 +45,14 @@ from api.controllers.audit_log import (
     MOVIE_BOX_OFFICE_UPDATED,
     MOVIE_CREATED,
     MOVIE_DESCRIPTION_UPDATED,
+    MOVIE_DETAILS_UPDATED,
     MOVIE_DIRECTORS_UPDATED,
     MOVIE_ENTITY,
     MOVIE_POSTER_UPDATED,
     MOVIE_GENRES_UPDATED,
     MOVIE_KEYWORDS_UPDATED,
     MOVIE_SPECIFICATIONS_UPDATED,
+    MOVIE_TITLE_UPDATED,
     record_audit,
     log_movie_visit,
     record_similar_movies_change,
@@ -1359,6 +1361,55 @@ def edit_description(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating description")
 
 
+@movie_router.put(
+    "/title/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating title"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie or translation not found"},
+    },
+)
+def edit_title(
+    form_data: s.MovieEditTitle,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie title in English and Ukrainian."""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    existing = {translation.language: translation for translation in movie.translations}
+    if s.Language.EN.value not in existing or s.Language.UK.value not in existing:
+        log(log.ERROR, "Movie translation [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie translation not found")
+
+    new = {
+        s.Language.EN.value: form_data.title_en,
+        s.Language.UK.value: form_data.title_uk,
+    }
+    try:
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_TITLE_UPDATED,
+            user=current_user,
+            old={lang: translation.title for lang, translation in existing.items()},
+            new=new,
+        )
+        for lang, title in new.items():
+            existing[lang].title = title
+        db.commit()
+        log(log.INFO, "Titles [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error updating title [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating title") from e
+
+
 @movie_router.get(
     "/actors/",
     status_code=status.HTTP_200_OK,
@@ -1558,6 +1609,65 @@ def edit_box_office(
     except Exception as e:
         log(log.ERROR, "Error updating Box office [%s]: %s", form_data.movie_key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating Box office")
+
+
+@movie_router.put(
+    "/details/",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating movie details"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie or translation not found"},
+    },
+)
+def edit_movie_details(
+    form_data: s.MovieEditDetails,
+    current_user: m.User = Depends(get_admin),
+    db: Session = Depends(get_db),
+):
+    """Edit movie release date, duration, and locations."""
+
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == form_data.movie_key))
+    if not movie:
+        log(log.ERROR, "Movie [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    existing = {translation.language: translation for translation in movie.translations}
+    if s.Language.EN.value not in existing or s.Language.UK.value not in existing:
+        log(log.ERROR, "Movie translation [%s] not found", form_data.movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie translation not found")
+
+    new = {
+        "release_date": form_data.release_date.isoformat(),
+        "duration": form_data.duration,
+        s.Language.EN.value: {"location": form_data.location_en},
+        s.Language.UK.value: {"location": form_data.location_uk},
+    }
+    old = {
+        "release_date": movie.release_date.isoformat() if movie.release_date else None,
+        "duration": movie.duration,
+        s.Language.EN.value: {"location": existing[s.Language.EN.value].location},
+        s.Language.UK.value: {"location": existing[s.Language.UK.value].location},
+    }
+    try:
+        record_audit(
+            db,
+            entity_type=MOVIE_ENTITY,
+            entity_id=movie.id,
+            event_type=MOVIE_DETAILS_UPDATED,
+            user=current_user,
+            old=old,
+            new=new,
+        )
+        movie.release_date = form_data.release_date
+        movie.duration = form_data.duration
+        existing[s.Language.EN.value].location = form_data.location_en
+        existing[s.Language.UK.value].location = form_data.location_uk
+        db.commit()
+        log(log.INFO, "Movie details [%s] successfully updated", form_data.movie_key)
+    except Exception as e:
+        db.rollback()
+        log(log.ERROR, "Error updating movie details [%s]: %s", form_data.movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error updating movie details") from e
 
 
 @movie_router.put(

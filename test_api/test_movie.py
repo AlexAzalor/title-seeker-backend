@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 import sqlalchemy as sa
@@ -601,6 +602,87 @@ def test_edit_description(client: TestClient, db: Session, auth_user_owner: m.Us
     response = client.put(
         "/api/movies/description/",
         json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_title(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieEditTitle(
+        movie_key=movie.key,
+        title_en="Updated title EN",
+        title_uk="Updated title UK",
+    )
+    response = client.put(
+        "/api/movies/title/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.get_title(s.Language.EN) == form_data.title_en
+    assert movie.get_title(s.Language.UK) == form_data.title_uk
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.title.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.user_id == auth_user_owner.id
+    assert audit.changes["en"]["new"] == form_data.title_en
+    assert audit.changes["uk"]["new"] == form_data.title_uk
+
+    response = client.put(
+        "/api/movies/title/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_movie_details(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieEditDetails(
+        movie_key=movie.key,
+        release_date=datetime.datetime(2025, 3, 4),
+        duration=123,
+        location_en="Updated location EN",
+        location_uk="Updated location UK",
+    )
+    response = client.put(
+        "/api/movies/details/",
+        json=form_data.model_dump(mode="json"),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.release_date is not None
+    assert movie.release_date.isoformat() == form_data.release_date.isoformat()
+    assert movie.duration == form_data.duration
+    assert movie.get_location(s.Language.EN) == form_data.location_en
+    assert movie.get_location(s.Language.UK) == form_data.location_uk
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.details.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.user_id == auth_user_owner.id
+    assert audit.changes["release_date"]["new"] == form_data.release_date.isoformat()
+    assert audit.changes["duration"]["new"] == form_data.duration
+    assert audit.changes["en"]["new"] == {"location": form_data.location_en}
+    assert audit.changes["uk"]["new"] == {"location": form_data.location_uk}
+
+    response = client.put(
+        "/api/movies/details/",
+        json=form_data.model_dump(mode="json"),
         params={"user_uuid": auth_simple_user.uuid},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN

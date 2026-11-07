@@ -52,6 +52,8 @@ from .movie import (
     PaginationDataOut,
     MovieDescriptionOut,
     MovieEditDescription,
+    MovieEditTitle,
+    MovieEditDetails,
     MovieCollectionItemOut,
     MovieCollectionOut,
     MovieCollectionAdd,

@@ -318,6 +318,20 @@ class MovieEditDescription(BaseModel):
     description_uk: str
 
 
+class MovieEditTitle(BaseModel):
+    movie_key: str
+    title_en: str
+    title_uk: str
+
+
+class MovieEditDetails(BaseModel):
+    movie_key: str
+    release_date: datetime
+    duration: int
+    location_en: str
+    location_uk: str
+
+
 class MovieCollectionItemOut(BaseMovie):
     poster: str
     relation_type: RelatedMovie | None = None
