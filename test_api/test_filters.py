@@ -11,6 +11,19 @@ from config import config
 CFG = config()
 
 
+def assert_filter_audit(db: Session, movie: m.Movie, event_type: str, field: str, new_key: str, pm: float):
+    db.expire_all()
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == event_type)
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    entry = next(e for e in audit.changes[field]["new"] if e["key"] == new_key)
+    assert entry["percentage_match"] == pm
+    assert {"en", "uk"} <= set(entry["name"])
+
+
 def test_get_specifications(client: TestClient, db: Session, auth_user_owner: m.User):
     specifications = db.scalars(sa.select(m.Specification)).all()
     assert specifications
@@ -107,6 +120,7 @@ def test_create_specification(client: TestClient, db: Session, auth_user_owner: 
     )
     assert response.status_code == status.HTTP_200_OK
     assert [s for spec in movie.specifications if spec.key == NEW_SPEC_KEY]
+    assert_filter_audit(db, movie, "movie.specifications.updated", "specifications", NEW_SPEC_KEY, 70.0)
 
     # Test edit specification by simple user
     response = client.put(
@@ -207,6 +221,7 @@ def test_create_keyword(client: TestClient, db: Session, auth_user_owner: m.User
     )
     assert response.status_code == status.HTTP_200_OK
     assert [s for keyword in movie.keywords if keyword.key == NEW_KEYWORD_KEY]
+    assert_filter_audit(db, movie, "movie.keywords.updated", "keywords", NEW_KEYWORD_KEY, 70.0)
 
 
 def test_create_action_time(client: TestClient, db: Session, auth_user_owner: m.User):
@@ -263,3 +278,4 @@ def test_create_action_time(client: TestClient, db: Session, auth_user_owner: m.
     )
     assert response.status_code == status.HTTP_200_OK
     assert [s for at in movie.action_times if at.key == NEW_AT_KEY]
+    assert_filter_audit(db, movie, "movie.action_times.updated", "action_times", NEW_AT_KEY, 70.0)

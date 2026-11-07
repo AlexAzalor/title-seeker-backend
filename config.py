@@ -66,6 +66,14 @@ class BaseConfig(BaseSettings):
 
     UNIQUE_CRITERION_KEY: str = "impact"
 
+    # Timezone for audit log date filters when the client doesn't send one
+    DEFAULT_TIMEZONE: str = "Europe/Kyiv"
+
+    # Timezone aliases for handling different representations of the same timezone.
+    TIMEZONE_ALIASES: dict[str, str] = {
+        "Europe/Kiev": "Europe/Kyiv",
+    }
+
     @staticmethod
     def configure(app):
         # Implement this method to do further configuration on your app.

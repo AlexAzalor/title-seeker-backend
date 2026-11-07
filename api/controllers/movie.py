@@ -110,6 +110,7 @@ def get_movie_data(movie: m.Movie, db: Session, lang: s.Language, current_user: 
     return s.MovieOut(
         key=movie_key,
         updated_at=movie.updated_at,
+        created_at=movie.created_at,
         title=movie.get_title(lang),
         title_en=movie.get_title(s.Language.EN) if lang == s.Language.UK else None,
         description=movie.get_description(lang),
@@ -316,3 +317,74 @@ def build_movie_query(sort_by: s.SortBy, is_reverse: bool, current_user: m.User 
     else:
         order = get_order(sort_by, is_reverse)
         return sa.select(m.Movie).options(selectinload(m.Movie.translations)).order_by(order)
+
+
+def get_ranked_similar_movies(db: Session, movie_id: int, limit: int) -> list[tuple[m.Movie, float]]:
+    """Top `limit` similar movies by pre-computed score, one per collection, best first."""
+
+    # Fetch extra candidates so collection deduplication doesn't leave us short.
+    fetch_limit = limit * 4
+
+    # movie_similarities stores pairs with movie_a_id < movie_b_id.
+    # We query both directions and union them so we always find the movie
+    # regardless of which side of the pair it's on.
+    rows_as_a = db.execute(
+        sa.select(m.MovieSimilarity.movie_b_id, m.MovieSimilarity.score)
+        .where(m.MovieSimilarity.movie_a_id == movie_id)
+        .order_by(m.MovieSimilarity.score.desc())
+        .limit(fetch_limit)
+    ).all()
+
+    rows_as_b = db.execute(
+        sa.select(m.MovieSimilarity.movie_a_id, m.MovieSimilarity.score)
+        .where(m.MovieSimilarity.movie_b_id == movie_id)
+        .order_by(m.MovieSimilarity.score.desc())
+        .limit(fetch_limit)
+    ).all()
+
+    # Merge both sides, sort by score descending, deduplicate IDs
+    all_pairs: list[tuple[int, float]] = []
+    seen_pair_ids: set[int] = set()
+    for other_id, score in sorted(
+        [(oid, sc) for oid, sc in rows_as_a] + [(oid, sc) for oid, sc in rows_as_b],
+        key=lambda x: x[1],
+        reverse=True,
+    ):
+        if other_id not in seen_pair_ids:
+            seen_pair_ids.add(other_id)
+            all_pairs.append((other_id, score))
+
+    candidate_ids = [other_id for other_id, _ in all_pairs[:fetch_limit]]
+
+    if not candidate_ids:
+        return []
+
+    similar_movies = db.scalars(
+        sa.select(m.Movie).options(selectinload(m.Movie.translations)).where(m.Movie.id.in_(candidate_ids))
+    ).all()
+
+    # Restore score-based order (IN clause does not guarantee order)
+    id_to_score = {other_id: score for other_id, score in all_pairs}
+    ordered_candidates = sorted(
+        similar_movies,
+        key=lambda mov: id_to_score.get(mov.id, 0.0),
+        reverse=True,
+    )
+
+    # Deduplicate collections: keep only the highest-scored movie per collection.
+    # Collection key for members: collection_base_movie_id (the base movie's ID).
+    # Collection key for the base movie or standalone movies: the movie's own ID.
+    # Since ordered_candidates is sorted by score descending, the first occurrence
+    # of a collection key is always the highest-scored one. Equal scores preserve
+    # insertion order (i.e. the first one encountered wins).
+    seen_collection_keys: set[int] = set()
+    deduped: list[m.Movie] = []
+    for mov in ordered_candidates:
+        collection_key = mov.collection_base_movie_id if mov.collection_base_movie_id else mov.id
+        if collection_key not in seen_collection_keys:
+            seen_collection_keys.add(collection_key)
+            deduped.append(mov)
+        if len(deduped) == limit:
+            break
+
+    return [(mov, id_to_score.get(mov.id, 0.0)) for mov in deduped]

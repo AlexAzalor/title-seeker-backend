@@ -178,6 +178,7 @@ class MovieOut(BaseMovie):
     shared_universe_order: int | None = None
 
     updated_at: datetime
+    created_at: datetime
 
 
 class MoviePreviewOut(BaseMovie):
@@ -315,6 +316,46 @@ class MovieEditDescription(BaseModel):
     movie_key: str
     description_en: str
     description_uk: str
+
+
+class MovieEditTitle(BaseModel):
+    movie_key: str
+    title_en: str
+    title_uk: str
+
+
+class MovieEditDetails(BaseModel):
+    movie_key: str
+    release_date: datetime
+    duration: int
+    location_en: str
+    location_uk: str
+
+
+class MovieCollectionItemOut(BaseMovie):
+    poster: str
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
+
+
+class MovieCollectionOut(BaseModel):
+    base_movie_key: str | None = None
+    movies: list[MovieCollectionItemOut]
+
+
+class MovieCollectionAdd(BaseModel):
+    # Movie to link
+    movie_key: str
+    # Any movie of the collection, or a standalone movie (it becomes the base)
+    target_movie_key: str
+    relation_type: RelatedMovie
+    collection_order: int | None = None
+
+
+class MovieCollectionUpdate(BaseModel):
+    movie_key: str
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
 
 
 class MovieEditActors(BaseModel):

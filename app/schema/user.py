@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel
 
+from app.schema.rating import RatingCriterion
 from config import config
 
 CFG = config()
@@ -53,6 +54,7 @@ class UserRateMovieIn(BaseModel):
     uuid: str
     movie_key: str
     rating: float
+    rating_criterion_type: RatingCriterion
     rating_criteria: RatingCriteria
 
 
