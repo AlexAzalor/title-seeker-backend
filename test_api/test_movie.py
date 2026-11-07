@@ -688,6 +688,50 @@ def test_edit_movie_details(client: TestClient, db: Session, auth_user_owner: m.
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_general_audit_history_excludes_event_types(client: TestClient, db: Session, auth_user_owner: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    db.add_all(
+        [
+            m.AuditLog(
+                entity_type="movie",
+                entity_id=movie.id,
+                event_type="movie.description.updated",
+                user_id=auth_user_owner.id,
+                changes={},
+            ),
+            m.AuditLog(
+                entity_type="movie",
+                entity_id=movie.id,
+                event_type="movie.created",
+                user_id=auth_user_owner.id,
+                changes={},
+            ),
+        ]
+    )
+    db.flush()
+    db.commit()
+    params = {"user_uuid": auth_user_owner.uuid, "event_type": ["movie.description.updated", "movie.created"]}
+
+    response = client.get(
+        "/api/audit-logs",
+        params={**params, "exclude_event_type": "movie.description.updated"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    events = [item["event_type"] for group in response.json()["groups"] for item in group["items"]]
+    assert events == ["movie.created"]
+
+    response = client.get(
+        "/api/audit-logs",
+        params={
+            **params,
+            "exclude_event_type": ["movie.description.updated", "movie.created"],
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["groups"] == []
+
+
 def test_edit_description_audit_log(client: TestClient, db: Session, auth_user_owner: m.User):
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
     assert movie
@@ -788,6 +832,17 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     assert ids(event_type="movie.description.updated") == everything
     assert ids(event_type=["movie.description.updated", "movie.created"]) == everything
     assert ids(event_type="movie.keywords.updated") == []
+    description_ids = ids(event_type="movie.description.updated")
+    assert ids(exclude_event_type="movie.description.updated") == [
+        event_id for event_id in everything if event_id not in description_ids
+    ]
+    assert (
+        ids(
+            event_type=["movie.description.updated", "movie.created"],
+            exclude_event_type="movie.description.updated",
+        )
+        == []
+    )
     assert ids(category="similar_movies") == []
     assert ids(search=item["entity_title"][:3]) == everything
     assert ids(search="zzzzzz-nothing") == []
@@ -799,6 +854,7 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     for bad in (
         {"category": "nope"},
         {"category": "content", "event_type": "movie.visited"},
+        {"category": "content", "exclude_event_type": "movie.similar_movies.updated"},
         {"entity_key": "x"},
         {"entity_type": "unknown"},
         {"date_from": "2026-02-01", "date_to": "2026-01-01"},

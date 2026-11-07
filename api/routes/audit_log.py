@@ -44,6 +44,9 @@ def get_general_history(
     event_type: list[str] | None = Query(
         None, description="Subset of the category's event types (repeatable, OR). Empty means the whole category"
     ),
+    exclude_event_type: list[str] | None = Query(
+        None, description="Event types to omit from the category (repeatable)"
+    ),
     user_id: int | None = None,
     entity_type: str | None = None,
     entity_key: str | None = Query(None, description="Requires `entity_type`"),
@@ -60,7 +63,7 @@ def get_general_history(
 ):
     """Get the general history of all entities, without change details.
 
-    Items are grouped by UTC day (`groups`); a day can continue on the next page.
+    Items are grouped by day in `timezone` (`groups`); a day can continue on the next page.
     Keep the same filters and `sort` while paginating with `next_cursor`.
     """
 
@@ -80,6 +83,12 @@ def get_general_history(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Event type {bad_events[0]} is not in category {category}"
         )
+    bad_excluded_events = [e for e in exclude_event_type or [] if e not in EVENT_CATEGORIES[category]]
+    if bad_excluded_events:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Event type {bad_excluded_events[0]} is not in category {category}",
+        )
 
     try:
         return get_general_audit_history(
@@ -88,6 +97,7 @@ def get_general_history(
             cursor,
             category,
             event_types=event_type,
+            exclude_event_types=exclude_event_type,
             user_id=user_id,
             entity_type=entity_type,
             entity_key=entity_key,

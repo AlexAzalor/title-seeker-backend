@@ -409,6 +409,7 @@ def get_general_audit_history(
     category: str = DEFAULT_EVENT_CATEGORY,
     *,
     event_types: list[str] | None = None,
+    exclude_event_types: list[str] | None = None,
     user_id: int | None = None,
     entity_type: str | None = None,
     entity_key: str | None = None,
@@ -421,15 +422,18 @@ def get_general_audit_history(
 ) -> s.AuditLogSummaryListOut:
     """Keyset-paginated history of all entities without change details.
 
-    Items are grouped by UTC day; a day may continue on the next page.
+    Items are grouped by day in `tz` (UTC by default); a day may continue on the next page.
     Exactly one event category is shown at a time (default "content"); the other filters
     (user, entity, date, search) are combined with it using AND.
     `event_types` narrows the category to a subset of its events (OR between them).
+    `exclude_event_types` removes matching events from the selected category.
     Raises ValueError for a malformed cursor, KeyError for an unsupported entity type or category.
     """
     included = EVENT_CATEGORIES[category]
     if event_types:
         included = tuple(e for e in included if e in event_types)
+    if exclude_event_types:
+        included = tuple(e for e in included if e not in exclude_event_types)
 
     movie, query = _summary_query(lang)
 
@@ -480,7 +484,7 @@ def get_general_audit_history(
     groups: list[s.AuditLogDayGroupOut] = []
     for row in rows:
         item = _summary_item(row)
-        day = row.created_at.date()
+        day = row.created_at.replace(tzinfo=UTC).astimezone(tz).date()
         if not groups or groups[-1].date != day:
             groups.append(s.AuditLogDayGroupOut(date=day, items=[]))
         groups[-1].items.append(item)
