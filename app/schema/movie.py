@@ -332,30 +332,34 @@ class MovieEditDetails(BaseModel):
     location_uk: str
 
 
-class MovieCollectionItemOut(BaseMovie):
+class MovieCollectionItem(BaseModel):
+    movie_key: str
+    relation_type: RelatedMovie
+    collection_order: int = Field(ge=1)
+
+
+class MovieStandaloneItemOut(BaseMovie):
     poster: str
     relation_type: RelatedMovie | None = None
     collection_order: int | None = None
+    key: str
+    name: str
 
 
-class MovieCollectionOut(BaseModel):
-    base_movie_key: str | None = None
-    movies: list[MovieCollectionItemOut]
+class MovieStandaloneOut(MovieStandaloneItemOut):
+    # Non-base movies of the collection, ordered
+    movies: list[MovieStandaloneItemOut]
 
 
-class MovieCollectionAdd(BaseModel):
-    # Movie to link
-    movie_key: str
-    # Any movie of the collection, or a standalone movie (it becomes the base)
-    target_movie_key: str
-    relation_type: RelatedMovie
-    collection_order: int | None = None
+class MovieStandaloneList(BaseModel):
+    bases: list[MovieStandaloneOut]
 
 
-class MovieCollectionUpdate(BaseModel):
-    movie_key: str
-    relation_type: RelatedMovie | None = None
-    collection_order: int | None = None
+class MovieEditCollection(BaseModel):
+    # An existing base movie, or a standalone movie that becomes the base
+    base_movie_key: str
+    # Full list of collection members (without the base)
+    movies: list[MovieCollectionItem]
 
 
 class MovieEditActors(BaseModel):

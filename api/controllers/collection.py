@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 import app.models as m
 import app.schema as s
@@ -14,140 +14,133 @@ class CollectionError(Exception):
         self.status_code = status_code
 
 
-def get_movie_or_error(db: Session, key: str) -> m.Movie:
+def _get_movie(db: Session, key: str) -> m.Movie:
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == key, m.Movie.is_deleted.is_(False)))
     if not movie:
         raise CollectionError(f"Movie [{key}] not found", 404)
     return movie
 
 
-def get_collection_base(movie: m.Movie) -> m.Movie | None:
-    """Base movie of the collection the movie belongs to (None for standalone movies)"""
-    if movie.collection_base_movie_id:
-        return movie.collection_base_movie
-    if movie.relation_type == BASE:
-        return movie
-    return None
-
-
-def get_collection_movies(db: Session, base: m.Movie) -> list[m.Movie]:
-    members = db.scalars(sa.select(m.Movie).where(m.Movie.collection_base_movie_id == base.id)).all()
-    return sorted(
-        [base, *members],
-        key=lambda mov: (mov.collection_order if mov.collection_order is not None else float("inf"), mov.id),
+def _item_out(movie: m.Movie) -> s.MovieStandaloneItemOut:
+    return s.MovieStandaloneItemOut(
+        key=movie.key,
+        title=movie.get_title(),
+        poster=movie.poster,
+        relation_type=s.RelatedMovie(movie.relation_type) if movie.relation_type else None,
+        collection_order=movie.collection_order,
+        name=movie.get_title(),
     )
 
 
-def _renumber(movies: list[m.Movie], moved: m.Movie | None = None, position: int | None = None):
-    """Make orders contiguous (1..n). The moved movie is placed at `position` (1-based)."""
-    rest = [mov for mov in movies if mov is not moved]
-    if moved is not None:
-        index = len(rest) if position is None else max(0, min(position - 1, len(rest)))
-        rest.insert(index, moved)
-    for i, mov in enumerate(rest, start=1):
-        mov.collection_order = i
+def _sort_key(movie: m.Movie):
+    return (movie.collection_order if movie.collection_order is not None else float("inf"), movie.id)
 
 
-def build_collection_out(db: Session, movie: m.Movie) -> s.MovieCollectionOut:
-    base = get_collection_base(movie)
-    movies = get_collection_movies(db, base) if base else [movie]
-    return s.MovieCollectionOut(
-        base_movie_key=base.key if base else None,
-        movies=[
-            s.MovieCollectionItemOut(
-                key=mov.key,
-                title=mov.get_title(),
-                poster=mov.poster,
-                relation_type=s.RelatedMovie(mov.relation_type) if mov.relation_type else None,
-                collection_order=mov.collection_order,
+def get_standalone_movies_data(db: Session, lang: s.Language = s.Language.UK) -> s.MovieStandaloneList:
+    bases = db.scalars(
+        sa.select(m.Movie)
+        .options(selectinload(m.Movie.translations))
+        .join(m.Movie.translations)
+        .where(m.Movie.relation_type.is_(None), m.MovieTranslation.language == lang.value)
+        .order_by(
+            # Ignore "The" at the beginning of the title (not remove)
+            sa.func.regexp_replace(m.MovieTranslation.title, r"^(The\s)", "", "i"),
+        )
+    ).all()
+    return s.MovieStandaloneList(
+        bases=[
+            s.MovieStandaloneOut(
+                **_item_out(base).model_dump(),
+                movies=[_item_out(mov) for mov in sorted(base.collection_members, key=_sort_key)],
             )
-            for mov in movies
-        ],
+            for base in bases
+        ]
     )
 
 
-def add_movie_to_collection(db: Session, form_data: s.MovieCollectionAdd) -> m.Movie:
-    """Link a movie to the target's collection. A standalone target becomes the base of a new collection."""
-    if form_data.relation_type == s.RelatedMovie.BASE:
-        raise CollectionError("Relation type 'base' is assigned automatically")
+def update_collection(db: Session, form_data: s.MovieEditCollection) -> None:
+    """Sync collection members with the form. The base movie is never deleted and its type is fixed;
+    only its order can change."""
+    base = _get_movie(db, form_data.base_movie_key)
 
-    movie = get_movie_or_error(db, form_data.movie_key)
-    target = get_movie_or_error(db, form_data.target_movie_key)
+    if base.collection_base_movie_id:
+        raise CollectionError("Movie is a member of another collection and cannot be a base")
+    is_new_base = base.relation_type != BASE
+    if is_new_base and base.relation_type:
+        raise CollectionError("Movie has an invalid relation state")
 
-    if movie.id == target.id:
-        raise CollectionError("A movie cannot be linked to itself")
-    if movie.relation_type or movie.collection_base_movie_id:
-        raise CollectionError("Movie is already in a collection")
+    # The base may be in the list, but only to change its order (its type is fixed)
+    base_item = next((item for item in form_data.movies if item.movie_key == base.key), None)
+    if base_item and base_item.relation_type != s.RelatedMovie.BASE:
+        raise CollectionError("Base movie type cannot be changed")
+    items = [item for item in form_data.movies if item is not base_item]
 
-    base = get_collection_base(target)
-    if base is None:
-        base = target
-        base.relation_type = BASE
-        base.collection_base_movie_id = None
-        base.collection_order = 1
+    keys = [item.movie_key for item in items]
+    if len(set(keys)) != len(keys):
+        raise CollectionError("Duplicate movies in the list")
+    if any(item.relation_type == s.RelatedMovie.BASE for item in items):
+        raise CollectionError("Relation type 'base' cannot be assigned to a member")
 
-    movies = get_collection_movies(db, base)
-    movie.relation_type = form_data.relation_type.value
-    movie.collection_base_movie_id = base.id
-    _renumber(movies, movie, form_data.collection_order)
-    db.flush()
-    return base
+    if base_item:
+        base_order = base_item.collection_order
+    else:
+        base_order = 1 if is_new_base or base.collection_order is None else base.collection_order
+        # Members removed before the base shift it up, like the members that follow them
+        base_order -= sum(
+            1
+            for mov in base.collection_members
+            if mov.key not in keys
+            and mov.collection_order is not None
+            and not is_new_base
+            and mov.collection_order < base_order
+        )
+        base_order = max(base_order, 1)
+        member_orders = {item.collection_order for item in items}
+        if base_order in member_orders:
+            # Members were reordered around the base: it takes the first free slot (e.g. 1,3 -> base 2)
+            base_order = next(n for n in range(1, len(member_orders) + 2) if n not in member_orders)
+    orders = [item.collection_order for item in items] + [base_order]
+    if len(set(orders)) != len(orders):
+        raise CollectionError("Duplicate order values in the list")
 
+    current = {mov.key: mov for mov in base.collection_members}
 
-def update_collection_movie(db: Session, form_data: s.MovieCollectionUpdate) -> m.Movie:
-    movie = get_movie_or_error(db, form_data.movie_key)
-    base = get_collection_base(movie)
-    if base is None:
-        raise CollectionError("Movie is not in a collection", 404)
+    new_members: dict[str, m.Movie] = {}
+    for key in keys:
+        if key in current:
+            continue
+        movie = _get_movie(db, key)
+        if movie.relation_type or movie.collection_base_movie_id:
+            raise CollectionError(f"Movie [{key}] is already in a collection")
+        new_members[key] = movie
 
-    if form_data.relation_type is not None:
-        if movie.id == base.id:
-            if form_data.relation_type != s.RelatedMovie.BASE:
-                raise CollectionError("Base movie relation type cannot be changed")
-        elif form_data.relation_type == s.RelatedMovie.BASE:
-            raise CollectionError("Only one base movie is allowed in a collection")
-        else:
-            movie.relation_type = form_data.relation_type.value
-
-    if form_data.collection_order is not None:
-        _renumber(get_collection_movies(db, base), movie, form_data.collection_order)
-
-    db.flush()
-    return base
-
-
-def remove_movie_from_collection(db: Session, movie_key: str) -> m.Movie | None:
-    """Unlink a movie. Returns the collection base left, or None if the collection was dissolved."""
-    movie = get_movie_or_error(db, movie_key)
-    base = get_collection_base(movie)
-    if base is None:
-        raise CollectionError("Movie is not in a collection", 404)
-
-    movies = get_collection_movies(db, base)
-    remaining = [mov for mov in movies if mov is not movie]
-
-    movie.relation_type = None
-    movie.collection_base_movie_id = None
-    movie.collection_order = None
-
-    if len(remaining) <= 1:
-        # A collection of one movie makes no sense: dissolve it
-        for mov in remaining:
-            mov.relation_type = None
-            mov.collection_base_movie_id = None
-            mov.collection_order = None
+    if not items:
+        # A base without members is not a collection: dissolve it
+        for movie in current.values():
+            movie.relation_type = None
+            movie.collection_base_movie_id = None
+            movie.collection_order = None
+        if not is_new_base:
+            base.relation_type = None
+            base.collection_order = None
         db.flush()
-        return None
+        return
 
-    if movie.id == base.id:
-        # Promote the first remaining movie to base
-        new_base = remaining[0]
-        new_base.relation_type = BASE
-        new_base.collection_base_movie_id = None
-        for mov in remaining[1:]:
-            mov.collection_base_movie_id = new_base.id
-        base = new_base
+    if is_new_base:
+        base.relation_type = BASE
+    base.collection_order = base_order
 
-    _renumber(remaining)
+    for key, movie in current.items():
+        if key not in keys:
+            movie.relation_type = None
+            movie.collection_base_movie_id = None
+            movie.collection_order = None
+
+    members = {**current, **new_members}
+    for item in items:
+        movie = members[item.movie_key]
+        movie.relation_type = item.relation_type.value
+        movie.collection_base_movie_id = base.id
+        movie.collection_order = item.collection_order
+
     db.flush()
-    return base

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 import app.models as m
 from api.controllers.movie import get_ranked_similar_movies
+from api.utils import normalize_query
 import app.schema as s
 from app.logger import log
 
@@ -30,13 +31,16 @@ MOVIE_SPECIFICATIONS_UPDATED = "movie.specifications.updated"
 MOVIE_KEYWORDS_UPDATED = "movie.keywords.updated"
 MOVIE_ACTION_TIMES_UPDATED = "movie.action_times.updated"
 MOVIE_SIMILAR_MOVIES_UPDATED = "movie.similar_movies.updated"
+MOVIE_COLLECTION_UPDATED = "movie.collection.updated"
 SIMILAR_MOVIES_AUDIT_LIMIT = 5
 
 # To add or change events, edit this registry: each category is a mutually exclusive filter.
 EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
     "content": (
         MOVIE_CREATED,
+        MOVIE_RATING_CREATED,
         MOVIE_DESCRIPTION_UPDATED,
+        MOVIE_RATING_UPDATED,
         MOVIE_TITLE_UPDATED,
         MOVIE_DETAILS_UPDATED,
         MOVIE_BOX_OFFICE_UPDATED,
@@ -48,10 +52,10 @@ EVENT_CATEGORIES: dict[str, tuple[str, ...]] = {
         MOVIE_SPECIFICATIONS_UPDATED,
         MOVIE_KEYWORDS_UPDATED,
         MOVIE_ACTION_TIMES_UPDATED,
+        MOVIE_COLLECTION_UPDATED,
+        MOVIE_VISITED,
     ),
     "similar_movies": (MOVIE_SIMILAR_MOVIES_UPDATED,),
-    "ratings": (MOVIE_RATING_CREATED, MOVIE_RATING_UPDATED),
-    "visits": (MOVIE_VISITED,),
 }
 
 DEFAULT_EVENT_CATEGORY = "content"
@@ -338,6 +342,32 @@ def record_similar_movies_change(db: Session, movie_id: int, user: m.User, old: 
     )
 
 
+def snapshot_movie_collection(db: Session, base_movie_id: int) -> list[dict]:
+    """Localized snapshot of a collection (base included) in collection order.
+
+    Queries instead of relationships so it is accurate right after the collection was edited in the same session.
+    A movie that is not (or no longer) a collection base yields an empty list.
+    """
+    movies = db.scalars(
+        sa.select(m.Movie)
+        .where(
+            sa.or_(m.Movie.id == base_movie_id, m.Movie.collection_base_movie_id == base_movie_id),
+            m.Movie.relation_type.is_not(None),
+        )
+        .order_by(sa.nulls_last(m.Movie.collection_order), m.Movie.id)
+    ).all()
+    return [
+        {
+            "key": movie.key,
+            "title": _localized(movie.translations, "title"),
+            "poster": movie.poster,
+            "relation_type": movie.relation_type,
+            "order": movie.collection_order,
+        }
+        for movie in movies
+    ]
+
+
 def encode_cursor(created_at: datetime, log_id: int) -> str:
     return base64.urlsafe_b64encode(f"{created_at.isoformat()}|{log_id}".encode()).decode()
 
@@ -457,9 +487,12 @@ def get_general_audit_history(
     if date_to:
         query = query.where(m.AuditLog.created_at < _local_midnight_utc(date_to + timedelta(days=1)))
     if search:
-        pattern = "%" + search.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        normalized_search = normalize_query(search)
         any_title = sa.exists().where(
-            m.MovieTranslation.movie_id == movie.id, m.MovieTranslation.title.ilike(pattern, escape="\\")
+            m.MovieTranslation.movie_id == movie.id,
+            sa.func.regexp_replace(sa.func.lower(m.MovieTranslation.title), r"[^a-zA-Zа-яА-Я0-9 ]", "", "g").ilike(
+                f"%{normalized_search}%"
+            ),
         )
         query = query.where(any_title)
 

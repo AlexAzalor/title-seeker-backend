@@ -27,11 +27,8 @@ from api.controllers.create_movie import (
 )
 from api.controllers.collection import (
     CollectionError,
-    add_movie_to_collection,
-    build_collection_out,
-    get_movie_or_error,
-    remove_movie_from_collection,
-    update_collection_movie,
+    get_standalone_movies_data,
+    update_collection,
 )
 from api.controllers.movie import (
     build_movie_query,
@@ -43,6 +40,7 @@ from api.controllers.audit_log import (
     MOVIE_ACTION_TIMES_UPDATED,
     MOVIE_ACTORS_UPDATED,
     MOVIE_BOX_OFFICE_UPDATED,
+    MOVIE_COLLECTION_UPDATED,
     MOVIE_CREATED,
     MOVIE_DESCRIPTION_UPDATED,
     MOVIE_DETAILS_UPDATED,
@@ -57,6 +55,7 @@ from api.controllers.audit_log import (
     log_movie_visit,
     record_similar_movies_change,
     snapshot_similar_movies,
+    snapshot_movie_collection,
     snapshot_movie_actors,
     snapshot_movie_directors,
     snapshot_movie_filter,
@@ -1741,103 +1740,61 @@ def change_movie_poster(
 
 
 @movie_router.get(
-    "/collection/{movie_key}",
+    "/standalone/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieCollectionOut,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Movie not found"}},
+    response_model=s.MovieStandaloneList,
 )
-def get_movie_collection(
-    movie_key: str,
-    current_user: m.User = Depends(get_admin),
+def get_standalone_movies_list(
+    lang: s.Language = s.Language.UK,
+    current_user: m.User = Depends(get_owner),
     db: Session = Depends(get_db),
 ):
-    """Get related movies (collection) of the movie, ordered. Standalone movie returns itself only"""
+    """Get a list of standalone movies (`relation_type == None`)"""
 
-    try:
-        return build_collection_out(db, get_movie_or_error(db, movie_key))
-    except CollectionError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.message)
-
-
-@movie_router.post(
-    "/collection/",
-    status_code=status.HTTP_201_CREATED,
-    response_model=s.MovieCollectionOut,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid relation"},
-        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
-    },
-)
-def add_collection_movie(
-    form_data: s.MovieCollectionAdd,
-    current_user: m.User = Depends(get_admin),
-    db: Session = Depends(get_db),
-):
-    """Link a movie to a collection. If the target is standalone, it becomes the base of a new collection"""
-
-    try:
-        base = add_movie_to_collection(db, form_data)
-        db.commit()
-    except CollectionError as e:
-        db.rollback()
-        log(log.ERROR, "Collection add failed [%s]: %s", form_data.movie_key, e.message)
-        raise HTTPException(status_code=e.status_code, detail=e.message)
-
-    log(log.INFO, "Movie [%s] linked to collection of [%s]", form_data.movie_key, form_data.target_movie_key)
-    return build_collection_out(db, base)
+    return get_standalone_movies_data(db, lang=lang)
 
 
 @movie_router.put(
     "/collection/",
     status_code=status.HTTP_200_OK,
-    response_model=s.MovieCollectionOut,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid relation"},
-        status.HTTP_404_NOT_FOUND: {"description": "Movie not found or not in a collection"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Error updating collection"},
+        status.HTTP_404_NOT_FOUND: {"description": "Movie not found"},
     },
 )
-def update_collection_movie_relation(
-    form_data: s.MovieCollectionUpdate,
+def edit_collection(
+    form_data: s.MovieEditCollection,
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Change relation type and/or order of a movie in its collection"""
+    """Edit related movies of a base movie. The list replaces the collection members (the base itself is never changed)"""
 
     try:
-        base = update_collection_movie(db, form_data)
+        base_id = db.scalar(sa.select(m.Movie.id).where(m.Movie.key == form_data.base_movie_key))
+        old_collection = snapshot_movie_collection(db, base_id) if base_id else []
+        update_collection(db, form_data)
+        if base_id:
+            record_audit(
+                db,
+                entity_type=MOVIE_ENTITY,
+                entity_id=base_id,
+                event_type=MOVIE_COLLECTION_UPDATED,
+                user=current_user,
+                old={"collection": old_collection},
+                new={"collection": snapshot_movie_collection(db, base_id)},
+                # Full old/new lists are needed (not only the changed items)
+                trim_lists=False,
+            )
         db.commit()
+        log(log.INFO, "Collection of [%s] successfully updated", form_data.base_movie_key)
     except CollectionError as e:
         db.rollback()
-        log(log.ERROR, "Collection update failed [%s]: %s", form_data.movie_key, e.message)
+        log(log.ERROR, "Error updating collection [%s]: %s", form_data.base_movie_key, e.message)
         raise HTTPException(status_code=e.status_code, detail=e.message)
-
-    return build_collection_out(db, base)
-
-
-@movie_router.delete(
-    "/collection/{movie_key}",
-    status_code=status.HTTP_200_OK,
-    response_model=s.MovieCollectionOut,
-    responses={status.HTTP_404_NOT_FOUND: {"description": "Movie not found or not in a collection"}},
-)
-def remove_collection_movie(
-    movie_key: str,
-    current_user: m.User = Depends(get_admin),
-    db: Session = Depends(get_db),
-):
-    """Unlink a movie from its collection. Returns the remaining collection (empty if it was dissolved)"""
-
-    try:
-        base = remove_movie_from_collection(db, movie_key)
-        db.commit()
-    except CollectionError as e:
+    except Exception as e:
         db.rollback()
-        log(log.ERROR, "Collection remove failed [%s]: %s", movie_key, e.message)
-        raise HTTPException(status_code=e.status_code, detail=e.message)
-
-    if base is None:
-        return s.MovieCollectionOut(base_movie_key=None, movies=[])
-    return build_collection_out(db, base)
+        log(log.ERROR, "Error updating collection [%s]: %s", form_data.base_movie_key, e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error updating collection - {e}")
 
 
 # TODO: remove later
