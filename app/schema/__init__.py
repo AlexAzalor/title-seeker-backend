@@ -52,6 +52,13 @@ from .movie import (
     PaginationDataOut,
     MovieDescriptionOut,
     MovieEditDescription,
+    MovieEditTitle,
+    MovieEditDetails,
+    MovieCollectionItem,
+    MovieStandaloneItemOut,
+    MovieStandaloneOut,
+    MovieStandaloneList,
+    MovieEditCollection,
     MovieEditActors,
     MovieGetActors,
     MovieGetDirectors,
@@ -162,3 +169,12 @@ from .knowledge_base.dto import (
 )
 
 from .dashboard import DashboardStatsOut
+from .audit_log import (
+    AuditLogOut,
+    AuditLogListOut,
+    AuditLogSummaryOut,
+    AuditLogDayGroupOut,
+    AuditLogSummaryListOut,
+    AuditLogUserOut,
+    AuditLogUserListOut,
+)

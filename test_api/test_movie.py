@@ -1,3 +1,6 @@
+import datetime
+from typing import Any
+
 import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -499,6 +502,65 @@ def test_get_random_movies(client: TestClient):
 #     assert data.similar_movies
 
 
+def test_similar_movies_audit(client: TestClient, db: Session, auth_user_owner: m.User):
+    from api.controllers.audit_log import record_similar_movies_change, snapshot_similar_movies
+
+    movies = db.scalars(sa.select(m.Movie).where(m.Movie.collection_base_movie_id.is_(None))).all()
+    assert len(movies) >= 7
+    base, others = movies[0], movies[1:7]
+
+    db.execute(sa.delete(m.MovieSimilarity))
+    for idx, other in enumerate(others):
+        a_id, b_id = sorted((base.id, other.id))
+        db.add(m.MovieSimilarity(movie_a_id=a_id, movie_b_id=b_id, score=0.9 - idx * 0.1))
+    db.commit()
+
+    snapshot = snapshot_similar_movies(db, base.id)
+    assert len(snapshot) == 5  # top 5 only
+    assert [e["rank"] for e in snapshot] == [1, 2, 3, 4, 5]
+    assert snapshot[0]["similarity_score"] >= snapshot[-1]["similarity_score"]
+    assert {"en", "uk"} <= set(snapshot[0]["title"])
+    assert "poster" in snapshot[0]
+
+    # first generation: old list is empty
+    assert record_similar_movies_change(db, base.id, auth_user_owner, old=[])
+    # same list again: nothing to record
+    assert record_similar_movies_change(db, base.id, auth_user_owner, old=snapshot) is None
+    db.commit()
+
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == base.id, m.AuditLog.event_type == "movie.similar_movies.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.changes["similar_movies"]["old"] == []
+    assert audit.changes["similar_movies"]["new"] == snapshot
+
+    response = client.get("/api/movies/similar/", params={"movie_key": base.key})
+    assert response.status_code == status.HTTP_200_OK
+    assert [x["key"] for x in response.json()["similar_movies"]][:5] == [e["key"] for e in snapshot]
+
+
+def test_recalculate_similarities_audit(client: TestClient, db: Session, auth_user_owner: m.User):
+    db.execute(sa.delete(m.MovieSimilarity))
+    db.execute(sa.delete(m.AuditLog))
+    db.commit()
+
+    response = client.post("/api/movies/recalculate-similarities/", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+
+    db.expire_all()
+    logs = db.scalars(sa.select(m.AuditLog).where(m.AuditLog.event_type == "movie.similar_movies.updated")).all()
+    pairs = db.scalar(sa.select(sa.func.count()).select_from(m.MovieSimilarity))
+    assert bool(logs) == bool(pairs)
+    for entry in logs:
+        assert entry.user_id == auth_user_owner.id
+        change = entry.changes["similar_movies"]
+        assert change["old"] == []
+        assert 1 <= len(change["new"]) <= 5
+
+
 def test_get_movie_description(client: TestClient, db: Session):
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
     assert movie
@@ -543,6 +605,298 @@ def test_edit_description(client: TestClient, db: Session, auth_user_owner: m.Us
         params={"user_uuid": auth_simple_user.uuid},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_title(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieEditTitle(
+        movie_key=movie.key,
+        title_en="Updated title EN",
+        title_uk="Updated title UK",
+    )
+    response = client.put(
+        "/api/movies/title/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.get_title(s.Language.EN) == form_data.title_en
+    assert movie.get_title(s.Language.UK) == form_data.title_uk
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.title.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.user_id == auth_user_owner.id
+    assert audit.changes["en"]["new"] == form_data.title_en
+    assert audit.changes["uk"]["new"] == form_data.title_uk
+
+    response = client.put(
+        "/api/movies/title/",
+        json=form_data.model_dump(),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_edit_movie_details(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+
+    form_data = s.MovieEditDetails(
+        movie_key=movie.key,
+        release_date=datetime.datetime(2025, 3, 4),
+        duration=123,
+        location_en="Updated location EN",
+        location_uk="Updated location UK",
+    )
+    response = client.put(
+        "/api/movies/details/",
+        json=form_data.model_dump(mode="json"),
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    db.refresh(movie)
+    assert movie.release_date is not None
+    assert movie.release_date.isoformat() == form_data.release_date.isoformat()
+    assert movie.duration == form_data.duration
+    assert movie.get_location(s.Language.EN) == form_data.location_en
+    assert movie.get_location(s.Language.UK) == form_data.location_uk
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.details.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.user_id == auth_user_owner.id
+    assert audit.changes["release_date"]["new"] == form_data.release_date.isoformat()
+    assert audit.changes["duration"]["new"] == form_data.duration
+    assert audit.changes["en"]["new"] == {"location": form_data.location_en}
+    assert audit.changes["uk"]["new"] == {"location": form_data.location_uk}
+
+    response = client.put(
+        "/api/movies/details/",
+        json=form_data.model_dump(mode="json"),
+        params={"user_uuid": auth_simple_user.uuid},
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_general_audit_history_excludes_event_types(client: TestClient, db: Session, auth_user_owner: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    db.add_all(
+        [
+            m.AuditLog(
+                entity_type="movie",
+                entity_id=movie.id,
+                event_type="movie.description.updated",
+                user_id=auth_user_owner.id,
+                changes={},
+            ),
+            m.AuditLog(
+                entity_type="movie",
+                entity_id=movie.id,
+                event_type="movie.created",
+                user_id=auth_user_owner.id,
+                changes={},
+            ),
+        ]
+    )
+    db.flush()
+    db.commit()
+    params = {"user_uuid": auth_user_owner.uuid, "event_type": ["movie.description.updated", "movie.created"]}
+
+    response = client.get(
+        "/api/audit-logs",
+        params={**params, "exclude_event_type": "movie.description.updated"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    events = [item["event_type"] for group in response.json()["groups"] for item in group["items"]]
+    assert events == ["movie.created"]
+
+    response = client.get(
+        "/api/audit-logs",
+        params={
+            **params,
+            "exclude_event_type": ["movie.description.updated", "movie.created"],
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["groups"] == []
+
+
+def test_edit_description_audit_log(client: TestClient, db: Session, auth_user_owner: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    old_en = movie.get_description(s.Language.EN)
+    old_uk = movie.get_description(s.Language.UK)
+
+    def edit(en: str, uk: str):
+        return client.put(
+            "/api/movies/description/",
+            json={"movie_key": movie.key, "description_en": en, "description_uk": uk},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+
+    assert edit("New EN", old_uk).status_code == status.HTTP_200_OK
+    assert edit("New EN", "New UK").status_code == status.HTTP_200_OK
+
+    url = f"/api/audit-logs/movie/{movie.key}"
+    response = client.get(url, params={"user_uuid": auth_user_owner.uuid, "limit": 1})
+    assert response.status_code == status.HTTP_200_OK
+    page1 = response.json()
+    assert len(page1["items"]) == 1 and page1["next_cursor"]
+    assert page1["items"][0]["event_type"] == "movie.description.updated"
+    assert page1["items"][0]["user_id"] == auth_user_owner.id
+    assert page1["items"][0]["changes"] == {"uk": {"old": old_uk, "new": "New UK"}}
+
+    response = client.get(url, params={"user_uuid": auth_user_owner.uuid, "limit": 1, "cursor": page1["next_cursor"]})
+    page2 = response.json()
+    assert page2["next_cursor"] is None
+    assert page2["items"][0]["changes"] == {"en": {"old": old_en, "new": "New EN"}}
+
+    response = client.get(url, params={"user_uuid": auth_user_owner.uuid, "cursor": "bad"})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    response = client.get("/api/audit-logs/movie/no-such-movie", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    response = client.get(f"/api/audit-logs/unknown/{movie.key}", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_general_audit_history(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    for text in ("A", "B"):
+        response = client.put(
+            "/api/movies/description/",
+            json={"movie_key": movie.key, "description_en": text, "description_uk": text},
+            params={"user_uuid": auth_user_owner.uuid},
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    params: dict[str, Any] = {"user_uuid": auth_user_owner.uuid, "limit": 1}
+    response = client.get("/api/audit-logs", params=params)
+    assert response.status_code == status.HTTP_200_OK
+    page1 = response.json()
+    assert len(page1["groups"]) == 1 and page1["next_cursor"]
+    assert len(page1["groups"][0]["items"]) == 1
+    item = page1["groups"][0]["items"][0]
+    assert page1["groups"][0]["date"] == item["created_at"][:10]
+    assert item["user_id"] == auth_user_owner.id
+    assert "user_name" in item
+    assert item["user_role"] == auth_user_owner.role
+    assert item["event_type"] == "movie.description.updated"
+    assert item["entity_type"] == "movie"
+    assert item["entity_key"] == movie.key
+    assert "changes" not in item
+
+    response = client.get("/api/audit-logs", params={**params, "cursor": page1["next_cursor"]})
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["groups"][0]["items"][0]["id"] < item["id"]
+
+    response = client.get("/api/audit-logs", params={**params, "event_type": "movie.visited"})
+    assert response.status_code == status.HTTP_200_OK
+    assert all(i["event_type"] == "movie.visited" for g in response.json()["groups"] for i in g["items"])
+
+    latest = page1["latest_event"]
+    assert latest["id"] == item["id"]
+
+    assert item["entity_title"] and "entity_poster" in item
+
+    base: dict[str, Any] = {"user_uuid": auth_user_owner.uuid, "limit": 100}
+
+    def ids(**extra):
+        response = client.get("/api/audit-logs", params={**base, **extra})
+        assert response.status_code == status.HTTP_200_OK
+        return [i["id"] for g in response.json()["groups"] for i in g["items"]]
+
+    everything = ids()
+    assert ids(sort="asc") == everything[::-1]
+    assert ids(user_id=auth_user_owner.id) == everything
+    assert ids(user_id=auth_user_owner.id + 9999) == []
+    assert ids(entity_type="movie", entity_key=movie.key) == everything
+    assert ids(entity_type="movie", entity_key="no-such-movie") == []
+    assert ids(category="content") == everything
+    assert ids(event_type="movie.rating.created") == []
+    assert ids(event_type="movie.description.updated") == everything
+    assert ids(event_type=["movie.description.updated", "movie.created"]) == everything
+    assert ids(event_type="movie.keywords.updated") == []
+    description_ids = ids(event_type="movie.description.updated")
+    assert ids(exclude_event_type="movie.description.updated") == [
+        event_id for event_id in everything if event_id not in description_ids
+    ]
+    assert (
+        ids(
+            event_type=["movie.description.updated", "movie.created"],
+            exclude_event_type="movie.description.updated",
+        )
+        == []
+    )
+    assert ids(category="similar_movies") == []
+    assert ids(search="Shawshank!") == everything
+    assert ids(search="zzzzzz-nothing") == []
+    today = item["created_at"][:10]
+    assert ids(date_from=today, date_to=today, timezone="UTC") == everything
+    assert ids(date_to="2000-01-01") == []
+    assert ids(sort="asc", limit=1)
+
+    for bad in (
+        {"category": "nope"},
+        {"category": "ratings"},
+        {"category": "visits"},
+        {"category": "content", "event_type": "movie.similar_movies.updated"},
+        {"category": "content", "exclude_event_type": "movie.similar_movies.updated"},
+        {"entity_key": "x"},
+        {"entity_type": "unknown"},
+        {"date_from": "2026-02-01", "date_to": "2026-01-01"},
+    ):
+        response = client.get("/api/audit-logs", params={**base, **bad})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST, bad
+
+    response = client.get("/api/audit-logs", params={**params, "cursor": "bad"})
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    response = client.get("/api/audit-logs/users", params={"user_uuid": auth_user_owner.uuid})
+    assert response.status_code == status.HTTP_200_OK
+    users = response.json()["users"]
+    assert any(u["id"] == auth_user_owner.id and u["role"] == auth_user_owner.role and u["full_name"] for u in users)
+
+    response = client.get("/api/audit-logs", params={"user_uuid": auth_simple_user.uuid})
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    response = client.get("/api/audit-logs/users", params={"user_uuid": auth_simple_user.uuid})
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_general_audit_history_search_normalizes_query(client: TestClient, db: Session, auth_user_owner: m.User):
+    movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
+    assert movie
+    db.add(
+        m.AuditLog(
+            entity_type="movie",
+            entity_id=movie.id,
+            event_type="movie.description.updated",
+            user_id=auth_user_owner.id,
+            changes={},
+        )
+    )
+    db.commit()
+
+    response = client.get(
+        "/api/audit-logs",
+        params={"user_uuid": auth_user_owner.uuid, "search": "Shawshank!"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    events = [item for group in response.json()["groups"] for item in group["items"]]
+    assert any(item["entity_key"] == movie.key for item in events)
 
 
 def test_get_actors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
@@ -600,6 +954,19 @@ def test_edit_actors(client: TestClient, db: Session, auth_user_owner: m.User, a
     assert not any(a.id in old_actor_ids for a in movie.actors)
     assert not any(rel.character_id in old_char_ids for rel in movie.characters)
 
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.actors.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    new_list = audit.changes["actors"]["new"]
+    assert len(new_list) == 1
+    assert new_list[0]["key"] == new_actor.key
+    assert new_list[0]["character_key"] == new_character.key
+    assert {"key", "name", "avatar", "character_key", "character_name"} == set(new_list[0])
+    assert audit.changes["actors"]["old"]
+
     # Test with simple user - should fail
     response = client.put(
         "/api/movies/actors/",
@@ -643,6 +1010,15 @@ def test_edit_directors(client: TestClient, db: Session, auth_user_owner: m.User
     db.refresh(movie)
     assert any(d.key == director.key for d in movie.directors)
 
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.directors.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    if audit:  # no row when the seed already had exactly this director
+        assert [d["key"] for d in audit.changes["directors"]["new"]] == [director.key]
+        assert {"key", "name", "avatar"} == set(audit.changes["directors"]["new"][0])
+
     # Test with simple user - should fail
     response = client.put(
         "/api/movies/directors/",
@@ -655,6 +1031,8 @@ def test_edit_directors(client: TestClient, db: Session, auth_user_owner: m.User
 def test_edit_box_office(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):
     movie = db.scalar(sa.select(m.Movie).where(m.Movie.key == "the-shawshank-redemption"))
     assert movie
+
+    old = {"budget": movie.budget, "domestic_gross": movie.domestic_gross, "worldwide_gross": movie.worldwide_gross}
 
     form_data = s.MovieBoxOfficeIn(
         movie_key=movie.key,
@@ -674,6 +1052,17 @@ def test_edit_box_office(client: TestClient, db: Session, auth_user_owner: m.Use
     assert movie.budget == form_data.budget
     assert movie.domestic_gross == form_data.domestic_gross
     assert movie.worldwide_gross == form_data.worldwide_gross
+
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.box_office.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    assert audit.user_id == auth_user_owner.id
+    assert audit.changes == {
+        key: {"old": old[key], "new": getattr(form_data, key)} for key in old if old[key] != getattr(form_data, key)
+    }
 
     # Test with simple user - should fail
     response = client.put(
@@ -735,8 +1124,199 @@ def test_get_movie_genres_subgenres(client: TestClient, db: Session, auth_user_o
     assert genre_pm == test_genre.percentage_match
     assert subgenre_pm == test_subgenre.percentage_match
 
+    db.expire_all()
+    audit = db.scalar(
+        sa.select(m.AuditLog)
+        .where(m.AuditLog.entity_id == movie.id, m.AuditLog.event_type == "movie.genres.updated")
+        .order_by(m.AuditLog.id.desc())
+    )
+    assert audit
+    if audit.changes.get("genres", {}).get("new"):
+        entry = audit.changes["genres"]["new"][0]
+        assert entry["key"] == test_genre.key and entry["percentage_match"] == test_genre.percentage_match
+        assert {"en", "uk"} <= set(entry["name"])
+    if audit.changes.get("subgenres", {}).get("new"):
+        entry = audit.changes["subgenres"]["new"][0]
+        assert entry["key"] == test_subgenre.key and entry["percentage_match"] == test_subgenre.percentage_match
+        assert entry["genre"]["key"] and {"en", "uk"} <= set(entry["genre"]["name"])
+
     # Test with simple user - should fail
     response = client.get(
         "/api/movies/genres-subgenres/", params={"movie_key": movie.key, "user_uuid": auth_simple_user.uuid}
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_manage_movie_collection(client: TestClient, db: Session, auth_user_owner: m.User):
+    movies = db.scalars(
+        sa.select(m.Movie).where(m.Movie.relation_type.is_(None), m.Movie.collection_base_movie_id.is_(None))
+    ).all()
+    assert len(movies) >= 3
+    a, b, c = movies[:3]
+    params = {"user_uuid": auth_user_owner.uuid}
+    url = "/api/movies/collection/"
+
+    def bases():
+        response = client.get("/api/movies/standalone/", params=params)
+        assert response.status_code == status.HTTP_200_OK
+        return {x.key: x for x in s.MovieStandaloneList.model_validate(response.json()).bases}
+
+    def collection():
+        db.refresh(a)
+        members = db.scalars(
+            sa.select(m.Movie).where(m.Movie.collection_base_movie_id == a.id).order_by(m.Movie.collection_order)
+        ).all()
+        return a, members
+
+    assert a.key in bases()
+
+    # standalone movie becomes a base (order 1 by default)
+    form: dict[str, Any] = {
+        "base_movie_key": a.key,
+        "movies": [
+            {"movie_key": b.key, "relation_type": "sequel", "collection_order": 3},
+            {"movie_key": c.key, "relation_type": "prequel", "collection_order": 2},
+        ],
+    }
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    base, members = collection()
+    assert [x.key for x in members] == [c.key, b.key]
+    assert base.collection_order == 1
+
+    # base order can be changed, its type cannot
+    base_row = {"movie_key": a.key, "relation_type": "base", "collection_order": 5}
+    form["movies"] = [*form["movies"], base_row]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    assert collection()[0].collection_order == 5
+    base_row["relation_type"] = "sequel"
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_400_BAD_REQUEST
+    base_row["relation_type"] = "base"
+    base_row["collection_order"] = 1
+    form["movies"] = form["movies"][:2] + [base_row]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    assert collection()[0].collection_order == 1
+    form["movies"] = form["movies"][:2]
+
+    # members take the base's order, base omitted: it moves to the free slot
+    form["movies"] = [
+        {"movie_key": c.key, "relation_type": "prequel", "collection_order": 1},
+        {"movie_key": b.key, "relation_type": "sequel", "collection_order": 3},
+    ]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    base, members = collection()
+    assert base.collection_order == 2
+    assert [x.key for x in members] == [c.key, b.key]
+    form["movies"] = form["movies"][:1] + [{"movie_key": b.key, "relation_type": "sequel", "collection_order": 3}]
+
+    # reorder + remove a member
+    form["movies"] = [{"movie_key": b.key, "relation_type": "spin_off", "collection_order": 2}]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    base, members = collection()
+    assert [(x.key, x.relation_type) for x in members] == [(b.key, "spin_off")]
+    db.refresh(c)
+    assert c.relation_type is None and c.collection_base_movie_id is None
+
+    # empty list dissolves the collection
+    form["movies"] = []
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    assert a.key in bases()
+    db.refresh(a)
+    db.refresh(b)
+    assert a.relation_type is None and b.relation_type is None
+
+
+def test_edit_collection_audit_log(client: TestClient, db: Session, auth_user_owner: m.User):
+    a, b, c = db.scalars(
+        sa.select(m.Movie).where(m.Movie.relation_type.is_(None), m.Movie.collection_base_movie_id.is_(None))
+    ).all()[:3]
+    params = {"user_uuid": auth_user_owner.uuid}
+    url = "/api/movies/collection/"
+    form: dict[str, Any] = {
+        "base_movie_key": a.key,
+        "movies": [
+            {"movie_key": b.key, "relation_type": "sequel", "collection_order": 3},
+            {"movie_key": c.key, "relation_type": "prequel", "collection_order": 2},
+        ],
+    }
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+
+    def logs():
+        return db.scalars(
+            sa.select(m.AuditLog)
+            .where(m.AuditLog.entity_id == a.id, m.AuditLog.event_type == "movie.collection.updated")
+            .order_by(m.AuditLog.id)
+        ).all()
+
+    change = logs()[0].changes["collection"]
+    assert change["old"] == []
+    assert [(x["key"], x["relation_type"], x["order"]) for x in change["new"]] == [
+        (a.key, "base", 1),
+        (c.key, "prequel", 2),
+        (b.key, "sequel", 3),
+    ]
+    assert set(change["new"][0]) == {"key", "title", "poster", "relation_type", "order"}
+    assert set(change["new"][0]["title"]) >= {"en", "uk"}
+
+    # adding a member and changing a relation type: full lists on both sides
+    d = db.scalars(
+        sa.select(m.Movie).where(m.Movie.relation_type.is_(None), m.Movie.collection_base_movie_id.is_(None))
+    ).first()
+    assert d is not None
+    form["movies"] = [
+        {"movie_key": b.key, "relation_type": "spin_off", "collection_order": 3},
+        {"movie_key": c.key, "relation_type": "prequel", "collection_order": 2},
+        {"movie_key": d.key, "relation_type": "sequel", "collection_order": 4},
+    ]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    change = logs()[-1].changes["collection"]
+    assert [x["key"] for x in change["old"]] == [a.key, c.key, b.key]
+    assert [x["key"] for x in change["new"]] == [a.key, c.key, b.key, d.key]
+    assert change["old"][2]["relation_type"] == "sequel" and change["new"][2]["relation_type"] == "spin_off"
+    form["movies"] = form["movies"][:2]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    count = len(logs())
+
+    # unchanged resubmit logs nothing; dissolving logs the removal
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    assert len(logs()) == count
+    form["movies"] = []
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    last = logs()[-1].changes["collection"]
+    assert last["new"] == [] and len(last["old"]) == 3
+
+
+def test_collection_base_order_shifts_when_earlier_member_removed(
+    client: TestClient, db: Session, auth_user_owner: m.User
+):
+    a, b, c, d = db.scalars(
+        sa.select(m.Movie).where(m.Movie.relation_type.is_(None), m.Movie.collection_base_movie_id.is_(None))
+    ).all()[:4]
+    params = {"user_uuid": auth_user_owner.uuid}
+    url = "/api/movies/collection/"
+    form = {
+        "base_movie_key": a.key,
+        "movies": [
+            {"movie_key": b.key, "relation_type": "prequel", "collection_order": 1},
+            {"movie_key": c.key, "relation_type": "prequel", "collection_order": 2},
+            {"movie_key": d.key, "relation_type": "sequel", "collection_order": 4},
+        ],
+    }
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    db.refresh(a)
+    assert a.collection_order == 3
+
+    # base at 3: remove the member at 1, the others move up and so does the base
+    form["movies"] = [
+        {"movie_key": b.key, "relation_type": "prequel", "collection_order": 1},
+        {"movie_key": c.key, "relation_type": "prequel", "collection_order": 2},
+        {"movie_key": d.key, "relation_type": "sequel", "collection_order": 4},
+        {"movie_key": a.key, "relation_type": "base", "collection_order": 3},
+    ]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    form["movies"] = [
+        {"movie_key": c.key, "relation_type": "prequel", "collection_order": 1},
+        {"movie_key": d.key, "relation_type": "sequel", "collection_order": 3},
+    ]
+    assert client.put(url, json=form, params=params).status_code == status.HTTP_200_OK
+    db.expire_all()
+    assert a.collection_order == 2

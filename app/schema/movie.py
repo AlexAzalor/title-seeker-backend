@@ -178,6 +178,7 @@ class MovieOut(BaseMovie):
     shared_universe_order: int | None = None
 
     updated_at: datetime
+    created_at: datetime
 
 
 class MoviePreviewOut(BaseMovie):
@@ -315,6 +316,50 @@ class MovieEditDescription(BaseModel):
     movie_key: str
     description_en: str
     description_uk: str
+
+
+class MovieEditTitle(BaseModel):
+    movie_key: str
+    title_en: str
+    title_uk: str
+
+
+class MovieEditDetails(BaseModel):
+    movie_key: str
+    release_date: datetime
+    duration: int
+    location_en: str
+    location_uk: str
+
+
+class MovieCollectionItem(BaseModel):
+    movie_key: str
+    relation_type: RelatedMovie
+    collection_order: int = Field(ge=1)
+
+
+class MovieStandaloneItemOut(BaseMovie):
+    poster: str
+    relation_type: RelatedMovie | None = None
+    collection_order: int | None = None
+    key: str
+    name: str
+
+
+class MovieStandaloneOut(MovieStandaloneItemOut):
+    # Non-base movies of the collection, ordered
+    movies: list[MovieStandaloneItemOut]
+
+
+class MovieStandaloneList(BaseModel):
+    bases: list[MovieStandaloneOut]
+
+
+class MovieEditCollection(BaseModel):
+    # An existing base movie, or a standalone movie that becomes the base
+    base_movie_key: str
+    # Full list of collection members (without the base)
+    movies: list[MovieCollectionItem]
 
 
 class MovieEditActors(BaseModel):

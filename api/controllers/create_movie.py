@@ -1,8 +1,11 @@
 from datetime import datetime
+from io import BytesIO
 import json
 import os
+import re
 import sqlalchemy as sa
 from fastapi import UploadFile
+from PIL import Image
 
 from api.dependency.s3_client import get_s3_connect
 from api.utils import get_quick_movie_file_path, process_movie_rating
@@ -147,6 +150,57 @@ def add_image_to_s3_bucket(file: UploadFile, upload_directory: str, file_name: s
     except Exception as e:
         log(log.ERROR, "Error uploading image to S3 Bucket [%s]: %s", file_name, e)
         e.args = (*e.args, "Error uploading image to S3 Bucket")
+        raise e
+
+
+def get_image_metadata(content: bytes) -> dict:
+    with Image.open(BytesIO(content)) as img:
+        width, height = img.size
+        image_format = img.format
+    return {
+        "size_kb": round(len(content) / 1000, 1),
+        "dimensions": f"width: {width}, height: {height}",
+        "format": image_format,
+    }
+
+
+def get_poster_metadata(poster: str | None, upload_directory: str) -> dict:
+    """Best-effort metadata of the currently stored poster; never raises."""
+
+    if not poster:
+        return {}
+
+    try:
+        if CFG.ENV == "production":
+            response = get_s3_connect().get_object(Bucket=CFG.AWS_S3_BUCKET_NAME, Key=f"posters/{poster}")
+            content = response["Body"].read()
+        else:
+            with open(f"{upload_directory}{poster}", "rb") as f:
+                content = f.read()
+        return get_image_metadata(content)
+    except Exception as e:
+        log(log.WARNING, "Could not read metadata of old poster [%s]: %s", poster, e)
+        return {}
+
+
+def get_versioned_poster_filename(old_poster: str | None, filename: str | None) -> str:
+    """Return the upload filename with a version suffix: old poster version + 1, or v2 if it has none."""
+
+    stem, ext = os.path.splitext(filename or "poster")
+    stem = re.sub(r"_v\d+$", "", stem)
+
+    old_match = re.search(r"_v(\d+)$", os.path.splitext(old_poster or "")[0])
+    version = int(old_match.group(1)) + 1 if old_match else 2
+
+    return f"{stem}_v{version}{ext}"
+
+
+def delete_image_from_s3_bucket(upload_directory: str, file_name: str):
+    try:
+        get_s3_connect().delete_object(Bucket=CFG.AWS_S3_BUCKET_NAME, Key=f"{upload_directory}/{file_name}")
+    except Exception as e:
+        log(log.ERROR, "Error deleting image from S3 Bucket [%s]: %s", file_name, e)
+        e.args = (*e.args, "Error deleting image from S3 Bucket")
         raise e
 
 

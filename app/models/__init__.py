@@ -44,3 +44,4 @@ from .knowledge_base.category.orm import KnowledgeBaseCategory
 from .knowledge_base.technology.orm import KnowledgeBaseTechnology
 from .knowledge_base.question_answer.orm import KnowledgeBaseQuestionAnswer
 from .movie_similarity import MovieSimilarity
+from .audit_log import AuditLog
