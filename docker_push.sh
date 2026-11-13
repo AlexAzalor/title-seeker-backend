@@ -4,13 +4,31 @@
 # Add docker login?
 # Variables?
 
-echo "Do you check Quick Movies? (yes/no):"
+echo "Have you checked that the new changes don't write unnecessary data to the Audit log? (yes/no):"
 read -r answer
 
-if [[ "$answer" == "yes" && "$answer" == "y" ]]; then
-    echo "Script stopped. Please check Quick Movies first."
-    exit 1
-fi
+case "$answer" in
+    yes|y)
+        echo "Audit log check passed."
+        ;;
+    *)
+        echo "Script aborted. Please check Audit log changes first."
+        exit 1
+        ;;
+esac
+
+echo "Have you checked Quick Movies? (yes/no):"
+read -r answer
+
+case "$answer" in
+    yes|y)
+        echo "Quick Movies check passed."
+        ;;
+    *)
+        echo "Script aborted. Please check Quick Movies first."
+        exit 1
+        ;;
+esac
 
 echo "Proceeding with Docker build and push..."
 
