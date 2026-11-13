@@ -27,7 +27,13 @@ def tournament_db():
             )
             for i in range(5)
         ]
-        specs = [m.Specification(key=f"spec-{i}") for i in range(5)]
+        specs = [
+            m.Specification(
+                key=f"spec-{i}",
+                translations=[m.SpecificationTranslation(language="en", name=f"Spec {i}", description="")],
+            )
+            for i in range(5)
+        ]
         movies = [
             m.Movie(
                 key=f"movie-{i}",
@@ -87,7 +93,16 @@ def test_random_pool_and_card_fields(tournament_client: TestClient, size: Litera
     data = s.MovieTournamentOut.model_validate(response.json())
     assert data.total == 40
     assert len(data.movies) == len({movie.key for movie in data.movies}) == size
-    assert all(movie.title.startswith("Movie ") and movie.main_genre and movie.rating == 0 for movie in data.movies)
+    assert all(
+        movie.title.startswith("Movie ")
+        and movie.poster == "poster.jpg"
+        and movie.release_date == datetime(2000, 1, 1)
+        and movie.duration == "2h 0m"
+        and movie.description == ""
+        and all(genre.startswith("Genre ") for genre in movie.genres)
+        and all(specification.startswith("Spec ") for specification in movie.specifications)
+        for movie in data.movies
+    )
     sql = str(tournament_query(s.MovieTournamentIn(size=size)))
     assert "ORDER BY random()" in sql
     assert "JOIN ratings" not in sql
@@ -363,9 +378,7 @@ def test_authenticated_pool_does_not_require_ratings(tournament_client, tourname
     response = post_pool(tournament_client, exclude_movies=[f"movie-{i}" for i in range(16, 40)])
     assert response.status_code == 200
     assert response.json()["total"] == 16
-    ratings = {movie["key"]: movie["rating"] for movie in response.json()["movies"]}
-    assert ratings["movie-0"] == 8.5
-    assert ratings["movie-1"] == 0
+    assert all("rating" not in movie for movie in response.json()["movies"])
     response = tournament_client.get("/api/movies/?lang=en&page=1&size=16")
     assert response.status_code == 200
     assert response.json()["total"] == 1

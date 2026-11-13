@@ -37,7 +37,7 @@ from api.controllers.movie import (
     get_ranked_similar_movies,
     movies_to_previews,
 )
-from api.controllers.tournament import get_tournament_pool
+from api.controllers.tournament import get_tournament_pool, movies_details
 from api.controllers.audit_log import (
     MOVIE_ACTION_TIMES_UPDATED,
     MOVIE_ACTORS_UPDATED,
@@ -1804,7 +1804,7 @@ def generate_movie_tournament(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"message": "Not enough matching movies", "available_movies": total},
         )
-    return s.MovieTournamentOut(movies=movies_to_previews(db, movies, lang, current_user), total=total)
+    return s.MovieTournamentOut(movies=movies_details(movies, lang), total=total)
 
 
 # TODO: remove later

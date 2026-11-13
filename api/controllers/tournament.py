@@ -1,9 +1,27 @@
+from datetime import datetime
+
 import sqlalchemy as sa
 from sqlalchemy.orm import Session, selectinload
 
 import app.models as m
 import app.schema as s
 from api.controllers.super_search import genre_match_condition, specification_match_condition
+
+
+def movies_details(movies: list[m.Movie], lang: s.Language) -> list[s.MovieDetailOut]:
+    return [
+        s.MovieDetailOut(
+            key=movie.key,
+            title=movie.get_title(lang),
+            poster=movie.poster,
+            release_date=movie.release_date if movie.release_date else datetime.now(),
+            duration=movie.formatted_duration(lang.value),
+            genres=[genre.get_name(lang) for genre in movie.genres],
+            specifications=[spec.get_name(lang) for spec in movie.specifications],
+            description=movie.get_description(lang),
+        )
+        for movie in movies
+    ]
 
 
 def tournament_query(settings: s.MovieTournamentIn):

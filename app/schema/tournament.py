@@ -1,9 +1,8 @@
+from datetime import datetime
 from enum import Enum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
-
-from app.schema.movie import MoviePreviewOut
 
 
 TournamentKey = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
@@ -55,6 +54,17 @@ class MovieTournamentIn(BaseModel):
         return keys
 
 
+class MovieDetailOut(BaseModel):
+    key: str
+    title: str
+    poster: str
+    release_date: datetime
+    duration: str
+    description: str
+    genres: list[str]
+    specifications: list[str]
+
+
 class MovieTournamentOut(BaseModel):
-    movies: list[MoviePreviewOut]
+    movies: list[MovieDetailOut]
     total: int

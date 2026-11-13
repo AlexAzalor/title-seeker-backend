@@ -65,7 +65,7 @@ from .movie import (
     MovieEditDirectors,
     MovieBoxOfficeIn,
 )
-from .tournament import MovieTournamentIn, MovieTournamentOut, TournamentCollectionType
+from .tournament import MovieTournamentIn, MovieTournamentOut, TournamentCollectionType, MovieDetailOut
 from .people import (
     PersonExportCreate,
     PersonJSONFile,
