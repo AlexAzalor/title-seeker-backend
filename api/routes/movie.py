@@ -35,7 +35,9 @@ from api.controllers.movie import (
     get_main_genres_for_movies,
     get_movie_data,
     get_ranked_similar_movies,
+    movies_to_previews,
 )
+from api.controllers.tournament import get_tournament_pool
 from api.controllers.audit_log import (
     MOVIE_ACTION_TIMES_UPDATED,
     MOVIE_ACTORS_UPDATED,
@@ -112,24 +114,7 @@ def get_movies(
     base_query = build_movie_query(sort_by, is_reverse, current_user)
 
     def transform_movies_to_preview(movies: Sequence[m.Movie]) -> Sequence[s.MoviePreviewOut]:
-        movie_ids = [movie.id for movie in movies]
-        main_genre_map = get_main_genres_for_movies(db, movie_ids, lang)
-
-        return [
-            s.MoviePreviewOut(
-                key=movie.key,
-                title=movie.get_title(lang),
-                poster=movie.poster,
-                # TODO: fix none release date
-                release_date=movie.release_date if movie.release_date else datetime.now(),
-                duration=movie.formatted_duration(lang.value),
-                main_genre=main_genre_map.get(movie.id, "No main genre"),
-                rating=next((t.rating for t in movie.ratings if t.user_id == current_user.id), 0.0)
-                if current_user
-                else 0.0,
-            )
-            for movie in movies
-        ]
+        return movies_to_previews(db, list(movies), lang, current_user)
 
     return paginate(db, base_query, params, transformer=transform_movies_to_preview)
 
@@ -1795,6 +1780,31 @@ def edit_collection(
         db.rollback()
         log(log.ERROR, "Error updating collection [%s]: %s", form_data.base_movie_key, e)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error updating collection - {e}")
+
+
+# Movie Tournament here
+
+
+@movie_router.post(
+    "/tournament/",
+    status_code=status.HTTP_200_OK,
+    response_model=s.MovieTournamentOut,
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Not enough matching movies"}},
+)
+def generate_movie_tournament(
+    settings: s.MovieTournamentIn,
+    lang: s.Language = s.Language.UK,
+    current_user: m.User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate an initial movie pool without persisting tournament state."""
+    movies, total = get_tournament_pool(db, settings)
+    if total < settings.size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"message": "Not enough matching movies", "available_movies": total},
+        )
+    return s.MovieTournamentOut(movies=movies_to_previews(db, movies, lang, current_user), total=total)
 
 
 # TODO: remove later

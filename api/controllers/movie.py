@@ -274,6 +274,26 @@ def get_main_genres_for_movies(db: Session, movie_ids: list[int], lang: s.Langua
     return main_genre_map
 
 
+def movies_to_previews(
+    db: Session, movies: list[m.Movie], lang: s.Language, current_user: m.User | None
+) -> list[s.MoviePreviewOut]:
+    main_genre_map = get_main_genres_for_movies(db, [movie.id for movie in movies], lang)
+    return [
+        s.MoviePreviewOut(
+            key=movie.key,
+            title=movie.get_title(lang),
+            poster=movie.poster,
+            release_date=movie.release_date if movie.release_date else datetime.now(),
+            duration=movie.formatted_duration(lang.value),
+            main_genre=main_genre_map.get(movie.id, "No main genre"),
+            rating=next((rating.rating for rating in movie.ratings if rating.user_id == current_user.id), 0.0)
+            if current_user
+            else 0.0,
+        )
+        for movie in movies
+    ]
+
+
 def get_user_order(sort_by: s.SortBy, is_reverse: bool):
     """Get the order for authenticated user"""
 

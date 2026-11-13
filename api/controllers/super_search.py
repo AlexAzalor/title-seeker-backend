@@ -60,6 +60,26 @@ def get_rating_query_conditions(
     return [m.Movie.ratings.any(sa.and_(*row_conditions))]
 
 
+def genre_match_condition(key: str, minimum: float, maximum: float):
+    return m.Movie.genres.any(
+        sa.and_(
+            m.Genre.key == key,
+            m.movie_genres.c.percentage_match >= minimum,
+            m.movie_genres.c.percentage_match <= maximum,
+        )
+    )
+
+
+def specification_match_condition(key: str, minimum: float, maximum: float):
+    return m.Movie.specifications.any(
+        sa.and_(
+            m.Specification.key == key,
+            m.movie_specifications.c.percentage_match >= minimum,
+            m.movie_specifications.c.percentage_match <= maximum,
+        )
+    )
+
+
 def get_genre_query_conditions(genre: list[str], subgenre: list[str], db: Session):
     genres_keys = extract_word(genre)
     genres_values: list[list[int]] = extract_values(genre)
@@ -73,15 +93,7 @@ def get_genre_query_conditions(genre: list[str], subgenre: list[str], db: Sessio
     if genres_keys and genres_values:
         for genre_key, value_range in zip(genres_keys, genres_values):
             if value_range:
-                genre_conditions.append(
-                    m.Movie.genres.any(
-                        sa.and_(
-                            m.Genre.key == genre_key,
-                            m.movie_genres.c.percentage_match >= value_range[0],
-                            m.movie_genres.c.percentage_match <= value_range[1],
-                        )
-                    )
-                )
+                genre_conditions.append(genre_match_condition(genre_key, value_range[0], value_range[1]))
 
     if subgenres_keys and subgenres_values:
         for subgenre_key, value_range in zip(subgenres_keys, subgenres_values):
@@ -116,15 +128,7 @@ def get_filter_query_conditions(specification: list[str], keyword: list[str], ac
     if specifications_keys and specifications_values:
         for specification_key, value_range in zip(specifications_keys, specifications_values):
             if value_range:
-                spec_conditions.append(
-                    m.Movie.specifications.any(
-                        sa.and_(
-                            m.Specification.key == specification_key,
-                            m.movie_specifications.c.percentage_match >= value_range[0],
-                            m.movie_specifications.c.percentage_match <= value_range[1],
-                        )
-                    )
-                )
+                spec_conditions.append(specification_match_condition(specification_key, value_range[0], value_range[1]))
     if keywords_keys and keywords_values:
         for keyword_key, value_range in zip(keywords_keys, keywords_values):
             if value_range:
