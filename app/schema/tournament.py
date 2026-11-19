@@ -4,6 +4,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
+from app.schema.people import PersonWithAvatar
+
 
 TournamentKey = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 
@@ -63,6 +65,8 @@ class MovieDetailOut(BaseModel):
     description: str
     genres: list[str]
     specifications: list[str]
+    actors: list[PersonWithAvatar]
+    directors: list[PersonWithAvatar]
 
 
 class MovieTournamentOut(BaseModel):

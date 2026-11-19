@@ -19,6 +19,22 @@ def movies_details(movies: list[m.Movie], lang: s.Language) -> list[s.MovieDetai
             genres=[genre.get_name(lang) for genre in movie.genres],
             specifications=[spec.get_name(lang) for spec in movie.specifications],
             description=movie.get_description(lang),
+            actors=[
+                s.PersonWithAvatar(
+                    key=actor.key,
+                    full_name=actor.full_name(lang),
+                    avatar_url=actor.avatar,
+                )
+                for actor in movie.actors[:5]
+            ],
+            directors=[
+                s.PersonWithAvatar(
+                    key=director.key,
+                    full_name=director.full_name(lang),
+                    avatar_url=director.avatar if director.avatar else "",
+                )
+                for director in movie.directors[:1]
+            ],
         )
         for movie in movies
     ]
