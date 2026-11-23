@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import sqlalchemy as sa
 
 from fastapi import status
@@ -6,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import models as m
 
 from app import schema as s
+from api.routes.user import _latest_datetime
 from config import config
 
 CFG = config()
@@ -92,6 +95,13 @@ def test_rate_movie(client: TestClient, db: Session):
     overall = audit.changes["overall_rating"]
     assert overall["rating"]["new"] == movie.average_rating
     assert "ratings_count" not in overall  # an edit doesn't change the votes count
+
+
+def test_latest_datetime_handles_mixed_timezones():
+    aware = datetime(2024, 1, 1, tzinfo=UTC)
+    naive = datetime(2030, 1, 1)
+
+    assert _latest_datetime(aware, naive) is naive
 
 
 def test_get_time_rate_chart_movies(client: TestClient, auth_user_owner: m.User):

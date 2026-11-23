@@ -21,7 +21,7 @@ class CreatableMixin:
 
 class UpdatableMixin:
     updated_at: orm.Mapped[datetime] = orm.mapped_column(
-        sa.DateTime,
+        sa.DateTime(timezone=True),
         default=sa.func.now(),
         onupdate=sa.func.now(),
     )

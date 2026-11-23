@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status
 from api.controllers.audit_log import (
     MOVIE_ENTITY,
@@ -23,6 +23,13 @@ from config import config
 CFG = config()
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
+
+
+def _latest_datetime(first: datetime, second: datetime) -> datetime:
+    """Compare timestamps as UTC, treating legacy naive values as UTC."""
+    first_utc = first.replace(tzinfo=UTC) if first.tzinfo is None else first.astimezone(UTC)
+    second_utc = second.replace(tzinfo=UTC) if second.tzinfo is None else second.astimezone(UTC)
+    return first if first_utc >= second_utc else second
 
 
 @user_router.post(
@@ -191,11 +198,11 @@ def get_time_rate_movie(
     ).all()
 
     for rating in recent_rated_movies:
-        created_at = rating.created_at if rating.created_at > rating.updated_at else rating.updated_at
+        created_at = _latest_datetime(rating.created_at, rating.updated_at)
         data.append(
             s.TimeRateMovieOut(
                 # TODO: Implement Timezone
-                created_at=created_at + +timedelta(hours=3),
+                created_at=created_at + timedelta(hours=3),
                 rating=rating.rating,
                 movie_title=rating.movie.get_title(lang),
             )
@@ -260,7 +267,7 @@ def get_info_report(
         create_date = current_user.ratings[-1].created_at
         update_date = current_user.ratings[-1].updated_at
         # Compare the two dates and assign the later one to last_rating_date
-        last_rating_date = create_date if create_date > update_date else update_date
+        last_rating_date = _latest_datetime(create_date, update_date)
 
     actors_count = None
     directors_count = None
