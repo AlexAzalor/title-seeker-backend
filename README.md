@@ -109,6 +109,38 @@ poetry run pytest test_api/
 poetry run pytest test_flask/
 ```
 
+## Movie tournament pool
+
+`POST /api/movies/tournament/` generates a pool without saving a tournament. For example:
+
+```json
+{
+  "size": 16,
+  "include_genres": ["action", "drama"],
+  "genre_threshold": 60,
+  "exclude_genres": [],
+  "include_specifications": [],
+  "specification_threshold": 100,
+  "exclude_specifications": [],
+  "collection_type": "base",
+  "exclude_movies": ["movie-key"],
+  "exclude_shared_universes": ["star-wars"]
+}
+```
+
+Only `size` (16 or 32) is required. Thresholds range from 60 to 100 and default to 100;
+each is the minimum stored match percentage for an individual selected genre or specification,
+inclusive. As in super search's default mode, a movie is included if it matches **any** selected
+genre or specification at its respective threshold. Empty include lists add no filter; exclusions
+always apply. `exclude_movies` contains movie keys (excluding the selected movie and its collection
+members); `exclude_shared_universes` contains shared-universe keys (for example, `star-wars`) and
+excludes all movies assigned to any selected universe. Omit `collection_type` for no collection
+filter. `base` selects designated collection bases, while `standalone` excludes collection
+members and shared-universe movies. The optional `lang` and `user_uuid` query parameters
+work as on the movie list. The response contains `movies` (movie previews) and `total`
+(the count before sampling). If there are too few matches, HTTP 400 returns
+`{"detail": {"message": "Not enough matching movies", "available_movies": 15}}`.
+
 ## 🔧 Code Quality
 
 ```bash
