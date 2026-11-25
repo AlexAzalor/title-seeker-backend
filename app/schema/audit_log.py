@@ -17,6 +17,12 @@ class AuditLogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AuditLogSimilarMovieSourceMovieOut(BaseModel):
+    key: str
+    title: str
+    poster: str
+
+
 class AuditLogSummaryOut(BaseModel):
     """General history entry: the fact that something changed, without the change details."""
 
@@ -29,12 +35,19 @@ class AuditLogSummaryOut(BaseModel):
     user_id: int | None
     user_name: str | None
     user_role: str | None
+    source_movie: AuditLogSimilarMovieSourceMovieOut | None = None
     created_at: datetime
 
 
-class AuditLogDayGroupOut(BaseModel):
-    date: dt.date  # UTC day
+class AuditLogSummaryGroupOut(AuditLogSummaryOut):
+    """Collapsible daily summary for one user/entity or all anonymous actions."""
+
     items: list[AuditLogSummaryOut]
+
+
+class AuditLogDayGroupOut(BaseModel):
+    date: dt.date
+    items: list[AuditLogSummaryGroupOut]
 
 
 class AuditLogSummaryListOut(BaseModel):

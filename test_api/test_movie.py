@@ -16,6 +16,10 @@ PAGE_SIZE = 30
 PAGE = 1
 
 
+def _general_audit_events(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return [event for day in payload["groups"] for group in day["items"] for event in group["items"]]
+
+
 def test_get_movies(client: TestClient, db: Session, auth_user_owner: m.User):
     movies = db.scalars(sa.select(m.Movie)).all()
     assert movies
@@ -503,11 +507,16 @@ def test_get_random_movies(client: TestClient):
 
 
 def test_similar_movies_audit(client: TestClient, db: Session, auth_user_owner: m.User):
-    from api.controllers.audit_log import record_similar_movies_change, snapshot_similar_movies
+    from api.controllers.audit_log import (
+        record_similar_movies_change,
+        snapshot_movie_reference,
+        snapshot_similar_movies,
+    )
 
     movies = db.scalars(sa.select(m.Movie).where(m.Movie.collection_base_movie_id.is_(None))).all()
     assert len(movies) >= 7
     base, others = movies[0], movies[1:7]
+    source_movie = snapshot_movie_reference(base)
 
     db.execute(sa.delete(m.MovieSimilarity))
     for idx, other in enumerate(others):
@@ -523,9 +532,18 @@ def test_similar_movies_audit(client: TestClient, db: Session, auth_user_owner: 
     assert "poster" in snapshot[0]
 
     # first generation: old list is empty
-    assert record_similar_movies_change(db, base.id, auth_user_owner, old=[])
+    assert record_similar_movies_change(db, base.id, auth_user_owner, old=[], source_movie=source_movie)
     # same list again: nothing to record
-    assert record_similar_movies_change(db, base.id, auth_user_owner, old=snapshot) is None
+    assert (
+        record_similar_movies_change(
+            db,
+            base.id,
+            auth_user_owner,
+            old=snapshot,
+            source_movie=source_movie,
+        )
+        is None
+    )
     db.commit()
 
     audit = db.scalar(
@@ -536,6 +554,16 @@ def test_similar_movies_audit(client: TestClient, db: Session, auth_user_owner: 
     assert audit
     assert audit.changes["similar_movies"]["old"] == []
     assert audit.changes["similar_movies"]["new"] == snapshot
+    assert audit.changes["source_movie"] == source_movie
+    assert isinstance(audit.changes["source_movie"]["title"], str)
+
+    history_response = client.get(
+        f"/api/audit-logs/movie/{base.key}",
+        params={"user_uuid": auth_user_owner.uuid},
+    )
+    assert history_response.status_code == status.HTTP_200_OK
+    history_item = next(item for item in history_response.json()["items"] if item["id"] == audit.id)
+    assert history_item["changes"]["source_movie"] == source_movie
 
     response = client.get("/api/movies/similar/", params={"movie_key": base.key})
     assert response.status_code == status.HTTP_200_OK
@@ -543,11 +571,16 @@ def test_similar_movies_audit(client: TestClient, db: Session, auth_user_owner: 
 
 
 def test_recalculate_similarities_audit(client: TestClient, db: Session, auth_user_owner: m.User):
+    source_movie = db.scalar(sa.select(m.Movie).where(m.Movie.is_deleted.is_(False)).order_by(m.Movie.id))
+    assert source_movie
     db.execute(sa.delete(m.MovieSimilarity))
     db.execute(sa.delete(m.AuditLog))
     db.commit()
 
-    response = client.post("/api/movies/recalculate-similarities/", params={"user_uuid": auth_user_owner.uuid})
+    response = client.post(
+        "/api/movies/recalculate-similarities/",
+        params={"user_uuid": auth_user_owner.uuid, "source_movie_key": source_movie.key},
+    )
     assert response.status_code == status.HTTP_200_OK
 
     db.expire_all()
@@ -559,6 +592,38 @@ def test_recalculate_similarities_audit(client: TestClient, db: Session, auth_us
         change = entry.changes["similar_movies"]
         assert change["old"] == []
         assert 1 <= len(change["new"]) <= 5
+        assert entry.changes["source_movie"] == {
+            "key": source_movie.key,
+            "title": next(
+                translation.title
+                for translation in source_movie.translations
+                if translation.language == s.Language.EN.value
+            ),
+            "poster": source_movie.poster,
+        }
+
+    summary_response = client.get(
+        "/api/audit-logs",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+            "category": "similar_movies",
+            "limit": 100,
+        },
+    )
+    assert summary_response.status_code == status.HTTP_200_OK
+    summary_events = _general_audit_events(summary_response.json())
+    assert len(summary_events) == len(logs)
+    assert all(
+        event["source_movie"] == entry.changes["source_movie"]
+        for event in summary_events
+        for entry in logs
+        if event["id"] == entry.id
+    )
+    latest_event = summary_response.json()["latest_event"]
+    assert latest_event["event_type"] == "movie.similar_movies.updated"
+    latest_log = max(logs, key=lambda entry: entry.id)
+    assert latest_event["id"] == latest_log.id
+    assert latest_event["source_movie"] == latest_log.changes["source_movie"]
 
 
 def test_get_movie_description(client: TestClient, db: Session):
@@ -718,7 +783,7 @@ def test_general_audit_history_excludes_event_types(client: TestClient, db: Sess
         params={**params, "exclude_event_type": "movie.description.updated"},
     )
     assert response.status_code == status.HTTP_200_OK
-    events = [item["event_type"] for group in response.json()["groups"] for item in group["items"]]
+    events = [item["event_type"] for item in _general_audit_events(response.json())]
     assert events == ["movie.created"]
 
     response = client.get(
@@ -789,7 +854,10 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     page1 = response.json()
     assert len(page1["groups"]) == 1 and page1["next_cursor"]
     assert len(page1["groups"][0]["items"]) == 1
-    item = page1["groups"][0]["items"][0]
+    summary_group = page1["groups"][0]["items"][0]
+    assert len(summary_group["items"]) == 1
+    item = summary_group["items"][0]
+    assert summary_group["id"] == item["id"]
     assert page1["groups"][0]["date"] == item["created_at"][:10]
     assert item["user_id"] == auth_user_owner.id
     assert "user_name" in item
@@ -801,11 +869,11 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
 
     response = client.get("/api/audit-logs", params={**params, "cursor": page1["next_cursor"]})
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["groups"][0]["items"][0]["id"] < item["id"]
+    assert _general_audit_events(response.json())[0]["id"] < item["id"]
 
     response = client.get("/api/audit-logs", params={**params, "event_type": "movie.visited"})
     assert response.status_code == status.HTTP_200_OK
-    assert all(i["event_type"] == "movie.visited" for g in response.json()["groups"] for i in g["items"])
+    assert all(i["event_type"] == "movie.visited" for i in _general_audit_events(response.json()))
 
     latest = page1["latest_event"]
     assert latest["id"] == item["id"]
@@ -817,7 +885,7 @@ def test_general_audit_history(client: TestClient, db: Session, auth_user_owner:
     def ids(**extra):
         response = client.get("/api/audit-logs", params={**base, **extra})
         assert response.status_code == status.HTTP_200_OK
-        return [i["id"] for g in response.json()["groups"] for i in g["items"]]
+        return [i["id"] for i in _general_audit_events(response.json())]
 
     everything = ids()
     assert ids(sort="asc") == everything[::-1]
@@ -895,8 +963,75 @@ def test_general_audit_history_search_normalizes_query(client: TestClient, db: S
         params={"user_uuid": auth_user_owner.uuid, "search": "Shawshank!"},
     )
     assert response.status_code == status.HTTP_200_OK
-    events = [item for group in response.json()["groups"] for item in group["items"]]
+    events = _general_audit_events(response.json())
     assert any(item["entity_key"] == movie.key for item in events)
+
+
+def test_general_audit_history_groups_by_day_user_and_movie(
+    client: TestClient,
+    db: Session,
+    auth_user_owner: m.User,
+    auth_simple_user: m.User,
+):
+    movies = db.scalars(sa.select(m.Movie).order_by(m.Movie.id).limit(2)).all()
+    assert len(movies) == 2
+    movie_a, movie_b = movies
+    day = datetime.datetime(2026, 1, 10)
+    rows = [
+        (movie_a, auth_user_owner.id, day.replace(hour=13)),
+        (movie_a, auth_simple_user.id, day.replace(hour=12)),
+        (movie_b, auth_user_owner.id, day.replace(hour=11)),
+        (movie_a, auth_user_owner.id, day.replace(hour=10)),
+        (movie_b, None, day.replace(hour=9)),
+        (movie_a, None, day.replace(hour=8)),
+        (movie_a, auth_user_owner.id, day.replace(day=9, hour=23)),
+    ]
+    db.add_all(
+        [
+            m.AuditLog(
+                entity_type="movie",
+                entity_id=movie.id,
+                event_type="movie.title.updated",
+                user_id=user_id,
+                changes={},
+                created_at=created_at,
+            )
+            for movie, user_id, created_at in rows
+        ]
+    )
+    db.commit()
+
+    response = client.get(
+        "/api/audit-logs",
+        params={
+            "user_uuid": auth_user_owner.uuid,
+            "event_type": "movie.title.updated",
+            "date_from": "2026-01-09",
+            "date_to": "2026-01-10",
+            "timezone": "UTC",
+            "limit": 100,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    groups_by_day = response.json()["groups"]
+    assert [group["date"] for group in groups_by_day] == ["2026-01-10", "2026-01-09"]
+    assert len(groups_by_day[0]["items"]) == 4
+    assert len(groups_by_day[1]["items"]) == 1
+
+    first_day_groups = {(group["user_id"], group["entity_key"]): group for group in groups_by_day[0]["items"]}
+    owner_movie_a = first_day_groups[(auth_user_owner.id, movie_a.key)]
+    assert [item["created_at"] for item in owner_movie_a["items"]] == sorted(
+        [item["created_at"] for item in owner_movie_a["items"]], reverse=True
+    )
+    assert len(owner_movie_a["items"]) == 2
+    assert len(first_day_groups[(auth_simple_user.id, movie_a.key)]["items"]) == 1
+    assert len(first_day_groups[(auth_user_owner.id, movie_b.key)]["items"]) == 1
+
+    anonymous_groups = [group for group in groups_by_day[0]["items"] if group["user_id"] is None]
+    assert len(anonymous_groups) == 1
+    assert len(anonymous_groups[0]["items"]) == 2
+    assert {item["entity_key"] for item in anonymous_groups[0]["items"]} == {movie_a.key, movie_b.key}
 
 
 def test_get_actors(client: TestClient, db: Session, auth_user_owner: m.User, auth_simple_user: m.User):

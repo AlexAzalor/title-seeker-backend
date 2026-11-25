@@ -174,6 +174,7 @@ from .audit_log import (
     AuditLogOut,
     AuditLogListOut,
     AuditLogSummaryOut,
+    AuditLogSummaryGroupOut,
     AuditLogDayGroupOut,
     AuditLogSummaryListOut,
     AuditLogUserOut,

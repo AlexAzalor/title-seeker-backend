@@ -63,7 +63,8 @@ def get_general_history(
 ):
     """Get the general history of all entities, without change details.
 
-    Items are grouped by day in `timezone` (`groups`); a day can continue on the next page.
+    Items are grouped by day in `timezone` (`groups`), then by user and entity.
+    Anonymous actions form one group per day. A day can continue on the next page.
     Keep the same filters and `sort` while paginating with `next_cursor`.
     """
 

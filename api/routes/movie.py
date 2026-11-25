@@ -56,6 +56,7 @@ from api.controllers.audit_log import (
     record_audit,
     log_movie_visit,
     record_similar_movies_change,
+    snapshot_movie_reference,
     snapshot_similar_movies,
     snapshot_movie_collection,
     snapshot_movie_actors,
@@ -859,15 +860,27 @@ def get_similar_movies(
     "/recalculate-similarities/",
     status_code=status.HTTP_200_OK,
     response_model=s.RecalculateSimilaritiesOut,
-    responses={status.HTTP_403_FORBIDDEN: {"description": "Admin access required"}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {"description": "Admin access required"},
+        status.HTTP_404_NOT_FOUND: {"description": "Source movie not found"},
+    },
 )
 def recalculate_similarities(
+    source_movie_key: str = Query(..., min_length=1),
     current_user: m.User = Depends(get_admin),
     db: Session = Depends(get_db),
 ):
-    """Recalculate filter counts and then recompute all pairwise similarity scores."""
+    """Recalculate all similarities and attribute resulting audit events to source_movie_key."""
     from app.commands.recalculate_filter_counts import recalculate_filter_counts
     from app.commands.calculate_similarities import calculate_similarities
+
+    source_movie = db.scalar(
+        sa.select(m.Movie).options(selectinload(m.Movie.translations)).where(m.Movie.key == source_movie_key)
+    )
+    if source_movie is None:
+        log(log.ERROR, "Source movie [%s] not found", source_movie_key)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source movie not found")
+    source_movie_snapshot = snapshot_movie_reference(source_movie)
 
     movie_ids = list(db.scalars(sa.select(m.Movie.id).where(m.Movie.is_deleted.is_(False))))
     old_snapshots = {movie_id: snapshot_similar_movies(db, movie_id) for movie_id in movie_ids}
@@ -878,7 +891,13 @@ def recalculate_similarities(
 
     # The calculation runs in its own transaction, so audit rows are committed separately.
     for movie_id in movie_ids:
-        record_similar_movies_change(db, movie_id, current_user, old_snapshots[movie_id])
+        record_similar_movies_change(
+            db,
+            movie_id,
+            current_user,
+            old_snapshots[movie_id],
+            source_movie_snapshot,
+        )
     db.commit()
     return s.RecalculateSimilaritiesOut(
         pairs_upserted=pairs_upserted,

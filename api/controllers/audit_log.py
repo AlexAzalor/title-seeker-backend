@@ -326,7 +326,22 @@ def snapshot_similar_movies(db: Session, movie_id: int, limit: int = SIMILAR_MOV
     ]
 
 
-def record_similar_movies_change(db: Session, movie_id: int, user: m.User, old: list[dict]) -> m.AuditLog | None:
+def snapshot_movie_reference(movie: m.Movie) -> dict[str, Any]:
+    """Snapshot the public movie fields used to identify an audit-log source."""
+    return {
+        "key": movie.key,
+        "title": _en_name(movie.translations, "title"),
+        "poster": movie.poster,
+    }
+
+
+def record_similar_movies_change(
+    db: Session,
+    movie_id: int,
+    user: m.User,
+    old: list[dict],
+    source_movie: dict[str, Any],
+) -> m.AuditLog | None:
     """Log a new top-N similar list, only when the movies or their ranking changed (not on score drift)."""
     new = snapshot_similar_movies(db, movie_id)
     if [e["key"] for e in old] == [e["key"] for e in new]:
@@ -339,6 +354,7 @@ def record_similar_movies_change(db: Session, movie_id: int, user: m.User, old: 
         user=user,
         old={"similar_movies": old},
         new={"similar_movies": new},
+        context={"source_movie": source_movie},
     )
 
 
@@ -389,6 +405,8 @@ def _summary_query(lang: s.Language) -> tuple[Any, sa.Select]:
             m.AuditLog.id,
             m.AuditLog.event_type,
             m.AuditLog.entity_type,
+            m.AuditLog.entity_id,
+            m.AuditLog.changes,
             m.AuditLog.created_at,
             m.AuditLog.user_id,
             m.User.first_name,
@@ -417,18 +435,15 @@ def _summary_item(row: Any) -> s.AuditLogSummaryOut:
         user_id=row.user_id,
         user_name=f"{row.first_name or ''} {row.last_name or ''}".strip() or None,
         user_role=row.role,
+        source_movie=row.changes.get("source_movie") if row.changes else None,
         created_at=row.created_at,
     )
 
 
 def get_latest_audit_event(db: Session, lang: s.Language) -> s.AuditLogSummaryOut | None:
-    """Most recent non-similar-movies event, independent of all other filters."""
+    """Most recent audit event, independent of all filters."""
     _, query = _summary_query(lang)
-    row = db.execute(
-        query.where(m.AuditLog.event_type != MOVIE_SIMILAR_MOVIES_UPDATED)
-        .order_by(m.AuditLog.created_at.desc(), m.AuditLog.id.desc())
-        .limit(1)
-    ).first()
+    row = db.execute(query.order_by(m.AuditLog.created_at.desc(), m.AuditLog.id.desc()).limit(1)).first()
     return _summary_item(row) if row else None
 
 
@@ -515,12 +530,32 @@ def get_general_audit_history(
     rows = rows[:limit]
 
     groups: list[s.AuditLogDayGroupOut] = []
+    grouped_items: dict[tuple[Any, ...], s.AuditLogSummaryGroupOut] = {}
     for row in rows:
         item = _summary_item(row)
         day = row.created_at.replace(tzinfo=UTC).astimezone(tz).date()
         if not groups or groups[-1].date != day:
             groups.append(s.AuditLogDayGroupOut(date=day, items=[]))
-        groups[-1].items.append(item)
+            grouped_items = {}
+
+        grouping_key: tuple[Any, ...]
+        if row.user_id is None:
+            grouping_key = ("anonymous",)
+        elif row.event_type == MOVIE_SIMILAR_MOVIES_UPDATED:
+            grouping_key = (
+                row.user_id,
+                row.entity_type,
+                row.entity_id,
+                item.source_movie.key if item.source_movie else None,
+            )
+        else:
+            grouping_key = (row.user_id, row.entity_type, row.entity_id)
+        summary_group = grouped_items.get(grouping_key)
+        if summary_group is None:
+            summary_group = s.AuditLogSummaryGroupOut(**item.model_dump(), items=[])
+            groups[-1].items.append(summary_group)
+            grouped_items[grouping_key] = summary_group
+        summary_group.items.append(item)
 
     return s.AuditLogSummaryListOut(
         latest_event=get_latest_audit_event(db, lang),
